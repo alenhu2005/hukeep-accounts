@@ -18,7 +18,22 @@ import {
   addToTripLotteryPoolFromSelect,
 } from './trip-lottery.js';
 
+function openPhotoLightbox(src) {
+  if (!src) return;
+  const lb = document.getElementById('photo-lightbox');
+  const img = document.getElementById('photo-lightbox-img');
+  if (!lb || !img) return;
+  img.src = src;
+  lb.classList.add('open');
+}
+function closePhotoLightbox() {
+  const lb = document.getElementById('photo-lightbox');
+  if (lb) lb.classList.remove('open');
+}
+
 Object.assign(window, {
+  openPhotoLightbox,
+  closePhotoLightbox,
   navigate,
   cancelDialog,
   openBackupMenu: actions.openBackupMenu,

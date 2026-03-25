@@ -41,6 +41,12 @@
     <span style="font-size:13px;color:var(--text-muted)">載入資料中…</span>
   </div>
 
+  <!-- Photo lightbox -->
+  <div id="photo-lightbox" class="photo-lightbox" onclick="closePhotoLightbox()">
+    <button type="button" class="photo-lightbox-close" aria-label="關閉">&times;</button>
+    <img id="photo-lightbox-img" class="photo-lightbox-img" alt="照片" onclick="event.stopPropagation()">
+  </div>
+
   <!-- Toast -->
   <div id="toast-container"></div>
   <div id="update-badge" class="update-badge" role="status" aria-live="polite">
@@ -79,7 +85,7 @@
           onchange="handleEditPhotoSelected(event)"
         >
         <div class="edit-photo-preview-row">
-          <img id="edit-photo-preview" class="edit-photo-preview hidden" alt="照片預覽">
+          <img id="edit-photo-preview" class="edit-photo-preview hidden" alt="照片預覽" onclick="openPhotoLightbox(this.src)" style="cursor:pointer" title="點擊放大">
           <button
             type="button"
             id="edit-photo-remove-btn"

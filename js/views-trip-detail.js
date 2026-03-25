@@ -106,6 +106,11 @@ function memberAvatarPill(name, cssClass) {
   return `<span class="${cssClass}" style="background:${color.bg};color:${color.fg};border-color:${color.fg}30" title="${esc(name)}">${esc(name.charAt(0))}</span>`;
 }
 
+function tripPhotoThumb(e) {
+  if (!e.photoUrl) return '';
+  return `<img class="record-photo-thumb" src="${e.photoUrl}" alt="照片" onclick="event.stopPropagation();openPhotoLightbox('${e.photoUrl.replace(/'/g, "\\'")}')" title="點擊放大">`;
+}
+
 function tripExpenseHTML(e, totalMembers) {
   const label = e.splitAmong.length === totalMembers ? '均分' : e.splitAmong.join('、');
   const noteEl = e.note ? `<div class="record-note">${esc(e.note)}</div>` : '';
@@ -115,6 +120,7 @@ function tripExpenseHTML(e, totalMembers) {
       <svg viewBox="0 0 24 24"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></svg>
     </button>`;
   const clickAttr = e._voided ? '' : `onclick='openEditRecordById(${jq(e.id)},true)' style="cursor:pointer" title="點擊編輯"`;
+  const photoEl = tripPhotoThumb(e);
 
   if (e.payers && Array.isArray(e.payers)) {
     const payerStr = e.payers.map(p => `${esc(p.name)} NT$${Math.round(p.amount)}`).join(' ＋ ');
@@ -130,6 +136,7 @@ function tripExpenseHTML(e, totalMembers) {
         <div class="record-meta">${esc(e.date)} · ${payerStr} · 每人 NT$${perPerson}</div>
         ${noteEl}
       </div>
+      ${photoEl}
       <div class="record-amount" style="${e._voided ? 'color:#9ca3af;text-decoration:line-through' : ''}">NT$${Math.round(e.amount)}</div>
       ${voidBtn}
     </div>`;
@@ -146,6 +153,7 @@ function tripExpenseHTML(e, totalMembers) {
       <div class="record-meta">${esc(e.date)} · ${esc(e.paidBy)}付 · 每人 NT$${Math.round(e.amount / (e.splitAmong.length || 1))}</div>
       ${noteEl}
     </div>
+    ${photoEl}
     <div class="record-amount" style="${e._voided ? 'color:#9ca3af;text-decoration:line-through' : ''}">NT$${Math.round(e.amount)}</div>
     ${voidBtn}
   </div>`;

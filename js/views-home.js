@@ -216,6 +216,11 @@ function recordAvatarHTML(name, cssClass, clickable = false) {
   return `<div class="record-avatar ${cssClass}">${inner}</div>`;
 }
 
+function photoThumbHTML(r) {
+  if (!r.photoUrl) return '';
+  return `<img class="record-photo-thumb" src="${r.photoUrl}" alt="照片" onclick="event.stopPropagation();openPhotoLightbox('${r.photoUrl.replace(/'/g, "\\'")}')" title="點擊放大">`;
+}
+
 function dailyRecordHTML(r, runBal) {
   const isHu = r.paidBy === USER_A;
   const a = parseFloat(r.amount) || 0;
@@ -226,6 +231,7 @@ function dailyRecordHTML(r, runBal) {
     </button>`;
 
   const clickAttr = r._voided ? '' : `onclick='openEditRecordById(${jq(r.id)},false)' style="cursor:pointer" title="點擊編輯"`;
+  const photoEl = photoThumbHTML(r);
 
   if (r.type === 'settlement') {
     return `<div class="record-item is-settlement${r._voided ? ' is-voided' : ''}">
@@ -262,6 +268,7 @@ function dailyRecordHTML(r, runBal) {
         <div class="record-meta">${esc(r.date)} · ${metaDetail}</div>
         ${noteEl}
       </div>
+      ${photoEl}
       <div class="record-amount-wrap">
         <div class="record-amount" style="${r._voided ? 'color:#9ca3af;text-decoration:line-through' : ''}">NT$${Math.round(a)}</div>
         ${runningHTML(runBal)}
@@ -282,6 +289,7 @@ function dailyRecordHTML(r, runBal) {
       <div class="record-meta">${esc(r.date)} · ${esc(r.paidBy)}付</div>
       ${noteEl}
     </div>
+    ${photoEl}
     <div class="record-amount-wrap">
       <div class="record-amount" style="${r._voided ? 'color:#9ca3af;text-decoration:line-through' : ''}">NT$${Math.round(a)}</div>
       ${runningHTML(runBal)}

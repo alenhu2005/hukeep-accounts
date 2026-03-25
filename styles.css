@@ -1285,6 +1285,43 @@
     }
     .sync-status-text { flex: 1; min-width: 0; }
 
+    /* ── Photo lightbox ── */
+    .photo-lightbox {
+      position: fixed; inset: 0; z-index: 10000;
+      background: rgba(0,0,0,.88);
+      display: none; align-items: center; justify-content: center;
+      padding: 24px;
+      animation: lbFadeIn .2s ease both;
+    }
+    .photo-lightbox.open { display: flex; }
+    @keyframes lbFadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .photo-lightbox-img {
+      max-width: 100%; max-height: 90vh;
+      border-radius: 12px; object-fit: contain;
+      box-shadow: 0 8px 40px rgba(0,0,0,.5);
+      animation: lbImgIn .25s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes lbImgIn { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .photo-lightbox-close {
+      position: absolute; top: 16px; right: 16px;
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(255,255,255,.15); border: none;
+      color: #fff; font-size: 22px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+    .photo-lightbox-close:hover { background: rgba(255,255,255,.25); }
+
+    /* ── Record photo thumbnail ── */
+    .record-photo-thumb {
+      width: 44px; height: 34px; border-radius: 8px;
+      object-fit: cover; flex-shrink: 0; cursor: pointer;
+      border: 1px solid var(--border);
+      transition: transform .12s, box-shadow .15s;
+    }
+    .record-photo-thumb:hover { transform: scale(1.08); box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+    .record-photo-thumb:active { transform: scale(0.95); }
+
     /* ── Toast ── */
     #toast-container {
       position: fixed; bottom: 84px; left: 50%; transform: translateX(-50%);
