@@ -4,13 +4,20 @@
 
 ## 專案檔案
 
-| 檔案 | 說明 |
+| 路徑 | 說明 |
 |------|------|
 | `index.html` | 頁面結構、主題切換（避免深色模式閃爍的內嵌 script） |
 | `styles.css` | 樣式 |
-| `app.js` | 邏輯、API、匯出與行程統計 |
+| `js/main.js` | 入口（ES module） |
+| `js/config.js` | `API_URL`、逾時與快取鍵（可選：`window.__LEDGER_API_URL__` 覆寫網址） |
+| `js/time.js` | 台北時區日期、`todayStr`、分析頁區間 |
+| `js/api.js` / `js/data.js` / `js/finance.js` | GAS 同步、事件列衍生、結算計算 |
+| `js/views-*.js` / `js/trip-stats.js` | 畫面渲染 |
+| `js/actions.js` | 表單與按鈕動作 |
+| `js/navigation.js` + `js/render-registry.js` | 分頁導覽（避免模組循環依賴） |
+| `js/globals.js` | 將 `onclick` 所需函式掛到 `window` |
 
-將三者放在同一資料夾後，用瀏覽器開啟 `index.html`，或以靜態伺服器提供（建議，避免部分瀏覽器對 `file://` 的限制）。
+請以**靜態伺服器**開啟專案根目錄（`index.html` 與 `js/` 同層）。ES modules 在部分瀏覽器以 `file://` 開啟會無法載入，建議使用本機伺服器（例如 `python3 -m http.server`）。
 
 ## GitHub Pages
 
@@ -20,7 +27,7 @@
 
 （實際網址以 GitHub 專案 **Settings → Pages** 顯示為準。）
 
-部署後請在 `app.js` 確認 `API_URL` 指向你已部署的 GAS Web App。
+部署後請在 `js/config.js` 確認 `API_URL` 指向你已部署的 GAS Web App，或在載入 `js/main.js` **之前**於頁面設定 `window.__LEDGER_API_URL__ = '你的 GAS URL'`。
 
 ## Google Apps Script 部署注意
 
@@ -29,7 +36,7 @@
 3. **具有存取權的使用者**：  
    - 僅自己用：可選「只有我自己」。  
    - 公開給他人開同一個前端 URL：需選 **「所有人」**（或組織內），否則匿名 `fetch` / POST 會失敗。  
-4. 重新發布程式後 **部署 ID / URL 會變**，請同步更新前端 `API_URL`。
+4. 重新發布程式後 **部署 ID / URL 會變**，請同步更新前端 `js/config.js` 的 `API_URL`（或 `__LEDGER_API_URL__`）。
 
 試算表需配合你的 GAS 讀寫邏輯（欄位與事件列格式依你的後端實作）。
 
