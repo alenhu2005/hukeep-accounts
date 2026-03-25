@@ -444,27 +444,47 @@
     /* Backup */
     .backup-actions { display: flex; flex-direction: column; gap: 10px; }
 
-    /* Trip: payer stats & day groups */
-    .payer-stats-body { padding-top: 0; }
+    /* Trip: stats & day groups */
+    .trip-stats-body { padding-top: 0; }
+    .trip-stats-section { margin-bottom: 18px; }
+    .trip-stats-section:last-child { margin-bottom: 0; }
+    .trip-stats-label {
+      font-size: 11px; font-weight: 700; color: var(--text-muted); letter-spacing: .04em;
+      margin-bottom: 8px;
+    }
+    .trip-stats-foot {
+      font-size: 11px; color: var(--text-muted); margin-top: 8px; padding: 0 2px; line-height: 1.45;
+    }
+    .trip-stats-note { font-size: 11px; color: var(--warning); margin-top: 10px; line-height: 1.4; }
+
     .payer-stats-list { display: flex; flex-direction: column; gap: 8px; }
     .payer-stats-row {
       display: flex; align-items: center; gap: 10px;
       font-size: 13px; padding: 8px 10px; background: var(--bg-secondary); border-radius: 8px;
     }
+    .payer-stats-row-plain { background: transparent; border: 1px solid var(--border); }
     .payer-stats-rank {
       width: 22px; height: 22px; border-radius: 6px; background: var(--primary-light); color: var(--primary-dark);
       font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
     html.dark .payer-stats-rank { background: rgba(59,130,246,.2); color: #93c5fd; }
-    .payer-stats-name { flex: 1; font-weight: 600; }
-    .payer-stats-amt { font-weight: 700; color: var(--text); }
+    .payer-stats-name { flex: 1; font-weight: 600; min-width: 0; }
+    .payer-stats-amt { font-weight: 700; color: var(--text); text-align: right; white-space: nowrap; }
+    .payer-stats-pct { font-size: 11px; color: var(--text-muted); margin-left: 6px; font-weight: 600; }
+    .payer-stats-amt.net-pos { color: var(--success); }
+    .payer-stats-amt.net-neg { color: var(--danger); }
     .payer-stats-empty { font-size: 13px; color: var(--text-muted); padding: 4px 0; }
 
     .trip-day-group { margin-bottom: 14px; }
     .trip-day-group:last-child { margin-bottom: 0; }
     .trip-day-label {
+      display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 12px;
       font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em;
       padding: 6px 16px 8px; border-bottom: 1px solid var(--border); margin-bottom: 6px;
+    }
+    .trip-day-label span:first-child { text-transform: uppercase; letter-spacing: .06em; }
+    .trip-day-sub {
+      font-size: 12px; font-weight: 700; color: var(--text); text-transform: none; letter-spacing: 0;
     }
     .trip-day-items .record-item:first-child { border-radius: var(--radius) var(--radius) 0 0; }
     .trip-day-items .record-item:last-child { border-radius: 0 0 var(--radius) var(--radius); }
