@@ -1,6 +1,9 @@
 import { appState } from './state.js';
 import { render } from './render-registry.js';
 import { persistSessionSnapshot } from './session-ui.js';
+import { cancelHomeBalanceAnim } from './views-home.js';
+import { cancelAnalysisCountAnim } from './views-analysis.js';
+import { cancelTripSettlementAnim } from './views-trip-detail.js';
 
 /**
  * @param {string} page
@@ -10,6 +13,15 @@ import { persistSessionSnapshot } from './session-ui.js';
 export function navigate(page, tripId = null, opts = {}) {
   const { restoreScrollY } = opts;
   const prevPage = appState.currentPage;
+  if (prevPage === 'home' && page !== 'home') {
+    cancelHomeBalanceAnim();
+  }
+  if (prevPage === 'analysis' && page !== 'analysis') {
+    cancelAnalysisCountAnim();
+  }
+  if (prevPage === 'tripDetail' && page !== 'tripDetail') {
+    cancelTripSettlementAnim();
+  }
   appState.currentPage = page;
   appState.currentTripId = tripId;
   /** 每次進入「日常」（含已在日常再點一次底欄）都刷金額；還原捲動的 session 載入除外 */

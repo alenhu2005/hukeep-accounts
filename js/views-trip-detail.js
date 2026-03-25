@@ -10,6 +10,11 @@ import { renderTripLotteryCard } from './trip-lottery.js';
 
 let tripSettleAnimGen = 0;
 
+/** 離開行程明細時中止結算條／金額動畫 */
+export function cancelTripSettlementAnim() {
+  tripSettleAnimGen++;
+}
+
 function tripPrefersReducedMotion() {
   return typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 }

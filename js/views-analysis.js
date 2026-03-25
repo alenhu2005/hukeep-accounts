@@ -6,6 +6,11 @@ import { makePieChartSVG, CAT_PIE_COLORS } from './pie-chart.js';
 
 let analysisCountGen = 0;
 
+/** 切換離開分析頁時呼叫，中止數字刷動避免佔用主執行緒、底欄需點兩次才切頁 */
+export function cancelAnalysisCountAnim() {
+  analysisCountGen++;
+}
+
 function persistPieLabelOpts() {
   try {
     localStorage.setItem(
