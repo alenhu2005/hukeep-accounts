@@ -48,7 +48,7 @@ export function renderTrips() {
     html += active.map(t => tripCardHTML(t, i++)).join('');
   }
   if (closed.length > 0) {
-    html += `<div class="section-label" style="margin:18px 0 8px;padding:0 4px;font-size:12px;font-weight:600;color:var(--text-muted);letter-spacing:.05em;text-transform:uppercase">已結束行程</div>`;
+    html += `<div class="trip-section-label">已結束行程</div>`;
     html += closed.map(t => tripCardHTML(t, i++)).join('');
   }
   el.innerHTML = html;

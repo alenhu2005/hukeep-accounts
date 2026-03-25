@@ -1066,7 +1066,7 @@
 
     /* ── Trip cards ── */
     .trip-card {
-      padding: 12px 16px; display: flex; align-items: center; gap: 12px;
+      padding: 14px 18px; display: flex; align-items: center; gap: 14px;
       border-bottom: 1px solid var(--border); cursor: pointer;
       transition: background 0.2s ease, transform 0.18s var(--ease-soft);
       animation: tripCardIn 0.38s var(--ease-out) both;
@@ -1081,14 +1081,14 @@
     }
     .trip-card-wrap { position: relative; }
     .trip-icon {
-      width: 40px; height: 40px; border-radius: 50%;
+      width: 44px; height: 44px; border-radius: 50%;
       background: var(--primary-light); display: flex; align-items: center;
       justify-content: center; flex-shrink: 0;
       border: none; cursor: pointer; padding: 0;
       transition: transform .12s;
     }
     .trip-icon:active { transform: scale(0.88); }
-    .trip-icon svg { width: 20px; height: 20px; }
+    .trip-icon svg { width: 22px; height: 22px; }
 
     .trip-color-picker {
       display: flex; justify-content: center; gap: 10px;
@@ -1107,10 +1107,15 @@
       border-color: var(--surface);
       box-shadow: 0 0 0 2px var(--text);
     }
+    .trip-section-label {
+      margin: 20px 0 10px; padding: 0 18px;
+      font-size: 12px; font-weight: 700; color: var(--text-muted);
+      letter-spacing: .06em; text-transform: uppercase;
+    }
     .trip-info { flex: 1; min-width: 0; }
-    .trip-name { font-size: 14px; font-weight: 600; }
+    .trip-name { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     .trip-members {
-      font-size: 12px; color: var(--text-muted); margin-top: 2px;
+      font-size: 12.5px; color: var(--text-muted); margin-top: 3px;
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
 
