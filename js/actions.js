@@ -876,6 +876,22 @@ export function openAvatarPickerForMember(memberName) {
   inp.click();
 }
 
+export function setApiUrl(url) {
+  const u = String(url || '').trim();
+  if (!u) {
+    toast('請輸入 GAS Web App URL');
+    return;
+  }
+  try {
+    localStorage.setItem('ledger_api_url_v1', u);
+  } catch {
+    toast('無法儲存 API URL（可能無法使用 localStorage）');
+    return;
+  }
+  toast('已更新 API URL，重新整理中…');
+  setTimeout(() => location.reload(), 300);
+}
+
 export async function handleAvatarSelected(ev) {
   const memberName = avatarUploadMemberName;
   avatarUploadMemberName = null;

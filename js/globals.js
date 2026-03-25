@@ -34,6 +34,7 @@ Object.assign(window, {
   removeEditPhoto: actions.removeEditPhoto,
   openAvatarPickerForMember: actions.openAvatarPickerForMember,
   handleAvatarSelected: actions.handleAvatarSelected,
+  setApiUrl: actions.setApiUrl,
   recordSettlement: actions.recordSettlement,
   recordTripSettlementOneAction: actions.recordTripSettlementOneAction,
   toggleCollapsible: actions.toggleCollapsible,

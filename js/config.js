@@ -10,8 +10,18 @@ export const USER_B = '詹';
 const DEFAULT_API =
   'https://script.google.com/macros/s/AKfycbzDxvHzVV8TR3PR5IMS3zgZE_t1Dq3CDw1yEGGm3FkiQzikl7WnaCOvNMf8rvrcO9Jz/exec';
 
+function readApiOverrideFromLocalStorage() {
+  try {
+    return typeof localStorage !== 'undefined' ? localStorage.getItem('ledger_api_url_v1') : null;
+  } catch {
+    return null;
+  }
+}
+
 export const API_URL =
-  (typeof window !== 'undefined' && window.__LEDGER_API_URL__) || DEFAULT_API;
+  (typeof window !== 'undefined' && window.__LEDGER_API_URL__) ||
+  readApiOverrideFromLocalStorage() ||
+  DEFAULT_API;
 
 export const CACHE_DAILY = 'gasRows_daily_v2';
 export const CACHE_TRIP = 'gasRows_trip_v2';
