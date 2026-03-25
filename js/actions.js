@@ -76,8 +76,6 @@ export function addPayerRow(membersOverride) {
   list.appendChild(row);
 }
 
-export { updateMultiPayTotal, updatePerPerson };
-
 export function toggleSplit(name) {
   if (appState.detailSplitAmong.includes(name)) {
     if (appState.detailSplitAmong.length <= 1) return;
