@@ -1216,27 +1216,6 @@
       transform: scale(0.94);
     }
 
-    /* 手機金額輸入：右下角「完成」收鍵盤（垂直位置由 JS 依鍵盤高度微調） */
-    .kbd-done-btn {
-      position: fixed;
-      right: 12px;
-      bottom: 112px;
-      z-index: 420;
-      padding: 10px 18px;
-      border-radius: 999px;
-      border: none;
-      font-size: 14px;
-      font-weight: 700;
-      color: #fff;
-      background: var(--primary);
-      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.38);
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-    }
-    html.dark .kbd-done-btn {
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
-    }
-
     /* ── Sync status (above bottom nav) ── */
     #sync-status-bar {
       position: fixed; bottom: 56px; left: 50%; transform: translateX(-50%);

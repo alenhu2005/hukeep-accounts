@@ -45,71 +45,6 @@ function sanitizeDigits(el) {
   });
 }
 
-function wantsMobileKbdDone() {
-  return typeof matchMedia !== 'undefined' && matchMedia('(max-width: 640px)').matches;
-}
-
-/** @type {(() => void) | null} */
-let kbdDoneVvCleanup = null;
-
-function positionKbdDone() {
-  const btn = document.getElementById('kbd-done-btn');
-  if (!btn || btn.hidden) return;
-  const minBottom = 112;
-  const vv = window.visualViewport;
-  if (vv) {
-    const gap = window.innerHeight - vv.height - vv.offsetTop;
-    btn.style.bottom = `${Math.max(gap + 10, minBottom)}px`;
-  } else {
-    btn.style.bottom = `${minBottom}px`;
-  }
-}
-
-function bindKbdDoneViewport() {
-  unbindKbdDoneViewport();
-  const vv = window.visualViewport;
-  if (!vv) return;
-  const handler = () => positionKbdDone();
-  vv.addEventListener('resize', handler);
-  vv.addEventListener('scroll', handler);
-  kbdDoneVvCleanup = () => {
-    vv.removeEventListener('resize', handler);
-    vv.removeEventListener('scroll', handler);
-  };
-}
-
-function unbindKbdDoneViewport() {
-  if (kbdDoneVvCleanup) {
-    kbdDoneVvCleanup();
-    kbdDoneVvCleanup = null;
-  }
-}
-
-function showKbdDone() {
-  if (!wantsMobileKbdDone()) return;
-  const btn = document.getElementById('kbd-done-btn');
-  if (!btn) return;
-  btn.hidden = false;
-  positionKbdDone();
-  bindKbdDoneViewport();
-}
-
-function hideKbdDone() {
-  const btn = document.getElementById('kbd-done-btn');
-  if (btn) btn.hidden = true;
-  unbindKbdDoneViewport();
-}
-
-function scheduleHideKbdDoneIfLeavingAmount() {
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      const ae = document.activeElement;
-      if (ae && isAmountInput(ae)) return;
-      hideKbdDone();
-    });
-  });
-}
-
 function onFocusIn(e) {
   const el = e.target;
   if (!isAmountInput(el)) return;
@@ -117,7 +52,6 @@ function onFocusIn(e) {
   el.setAttribute('spellcheck', 'false');
   el.setAttribute('autocapitalize', 'off');
   el.setAttribute('autocorrect', 'off');
-  showKbdDone();
 }
 
 /** 擋住組字插入（備援，與 keydown 229 並用） */
@@ -164,26 +98,11 @@ function onCompositionEnd(e) {
 function onFocusOut(e) {
   if (!isAmountInput(e.target)) return;
   sanitizeDigits(e.target);
-  scheduleHideKbdDoneIfLeavingAmount();
 }
 
 export function initAmountInputs() {
   const app = document.getElementById('app');
   if (!app) return;
-
-  const kbdBtn = document.getElementById('kbd-done-btn');
-  if (kbdBtn) {
-    kbdBtn.addEventListener(
-      'pointerdown',
-      e => {
-        e.preventDefault();
-        const ae = document.activeElement;
-        if (ae instanceof HTMLElement && isAmountInput(ae)) ae.blur();
-      },
-      { passive: false },
-    );
-  }
-
   app.addEventListener('focusin', onFocusIn, true);
   app.addEventListener('beforeinput', onBeforeInput, true);
   app.addEventListener('keydown', onKeydown, true);
