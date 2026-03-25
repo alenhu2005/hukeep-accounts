@@ -101,9 +101,25 @@ function closePhotoLightbox() {
   });
 })();
 
+async function clearLocalCache() {
+  const { showConfirm } = await import('./dialog.js');
+  const ok = await showConfirm('清除本地快取？', '將清除本機暫存的帳務資料，下次開啟會重新從伺服器載入。');
+  if (!ok) return;
+  const { clearLedgerLocalStorage } = await import('./api.js');
+  clearLedgerLocalStorage();
+  try {
+    localStorage.removeItem('ledger_sync_last_at_v1');
+    sessionStorage.clear();
+  } catch {}
+  const { toast } = await import('./utils.js');
+  toast('本地快取已清除，重新載入中…');
+  setTimeout(() => location.reload(), 800);
+}
+
 Object.assign(window, {
   openPhotoLightbox,
   closePhotoLightbox,
+  clearLocalCache,
   navigate,
   cancelDialog,
   openBackupMenu: actions.openBackupMenu,

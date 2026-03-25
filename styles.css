@@ -1741,6 +1741,13 @@
     .backup-sheet-actions { display: flex; flex-direction: column; gap: 10px; }
     .backup-tech-btn { font-size: 12px; }
     .backup-close-btn { margin-top: 4px; }
+    .clear-cache-link {
+      display: block; margin: 16px auto 0; padding: 4px 8px;
+      background: none; border: none; cursor: pointer;
+      font-size: 11px; color: var(--text-muted); opacity: .4;
+      transition: opacity .15s;
+    }
+    .clear-cache-link:hover { opacity: .7; }
     html.dark .btn-ghost.backup-tech-btn:hover { background: var(--bg-tertiary); }
 
     /* Trip: stats & day groups */

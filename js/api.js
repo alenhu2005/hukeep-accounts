@@ -94,7 +94,7 @@ export function saveCache() {
 }
 
 /** 移除 localStorage 內帳本相關快取（不動 theme 等其它鍵）。成功從 GAS 拉資料並覆寫前呼叫。 */
-function clearLedgerLocalStorage() {
+export function clearLedgerLocalStorage() {
   try {
     localStorage.removeItem(CACHE_DAILY);
     localStorage.removeItem(CACHE_TRIP);

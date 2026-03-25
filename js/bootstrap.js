@@ -1,6 +1,6 @@
 import { POLL_MS } from './config.js';
 import { appState } from './state.js';
-import { loadCache, loadData } from './api.js';
+import { loadCache, loadData, clearLedgerLocalStorage } from './api.js';
 import { render } from './render-registry.js';
 import { updateThemeIcon } from './theme.js';
 import { updateSyncUI } from './sync-ui.js';
@@ -8,7 +8,7 @@ import { registerOverlayFocusTrap } from './dialog-a11y.js';
 import { initAmountInputs } from './amount-input.js';
 import * as actions from './actions.js';
 import { cancelDialog } from './dialog.js';
-import { isSyncPauseTarget, syncPausedForUserInput } from './sync-pause.js';
+import { syncPausedForUserInput } from './sync-pause.js';
 import { navigate } from './navigation.js';
 import { getTripById } from './data.js';
 import {
@@ -17,6 +17,11 @@ import {
   readLastRouteFromLocalStorage,
   applyAnalysisPeriodFromSnapshot,
 } from './session-ui.js';
+
+const COOLDOWN_MS = 30_000;
+let lastSyncFinished = 0;
+let hiddenAt = 0;
+let navSyncTimer = 0;
 
 function showUpdateBadge() {
   const el = document.getElementById('update-badge');
@@ -32,7 +37,7 @@ function showUpdateBadge() {
   }, 3200);
 }
 
-function renderWithScrollPreserved() {
+function renderCurrentPage() {
   const y = window.scrollY;
   const id = document.activeElement && document.activeElement.id;
   render();
@@ -41,30 +46,30 @@ function renderWithScrollPreserved() {
     if (id) {
       const el = document.getElementById(id);
       if (el && typeof el.focus === 'function') {
-        try {
-          el.focus({ preventScroll: true });
-        } catch {
-          el.focus();
-        }
+        try { el.focus({ preventScroll: true }); } catch { el.focus(); }
       }
     }
   });
 }
 
+function withinCooldown() {
+  return Date.now() - lastSyncFinished < COOLDOWN_MS;
+}
+
 async function pollForChanges(opts = {}) {
   if (document.hidden) return schedulePoll();
-  if (syncPausedForUserInput()) {
-    schedulePoll();
-    return;
-  }
+  if (syncPausedForUserInput()) { schedulePoll(); return; }
+  if (opts.respectCooldown && withinCooldown()) { schedulePoll(); return; }
+
   let unchanged = true;
   try {
     unchanged = await loadData({ backgroundPoll: true });
   } catch {
     unchanged = true;
   }
+  lastSyncFinished = Date.now();
   if (!unchanged) {
-    renderWithScrollPreserved();
+    renderCurrentPage();
     if (!opts.quiet) showUpdateBadge();
   }
   schedulePoll();
@@ -75,10 +80,6 @@ function schedulePoll() {
   appState._pollTimer = setTimeout(pollForChanges, POLL_MS);
 }
 
-/**
- * 還原上次瀏覽畫面：優先同分頁 session（含捲動），否則用 localStorage 的上次頁面。
- * @returns {boolean} 是否已還原（已呼叫 navigate，不需再 render）
- */
 function tryRestoreSessionFromStorage() {
   const fromSession = readSessionSnapshot();
   const fromDisk = readLastRouteFromLocalStorage();
@@ -105,14 +106,12 @@ function tryRestoreSessionFromStorage() {
   return false;
 }
 
-/**
- * 手機觸控時以 touchstart 立即導覽，解決慣性滾動期間需點兩次的問題。
- * touchstart 比 pointerdown 更可靠地在 iOS 慣性捲動期間觸發。
- * preventDefault 阻止後續的 click 事件（避免重複導覽），滑鼠仍依 onclick。
- */
 function syncOnNavigate() {
-  clearTimeout(appState._pollTimer);
-  setTimeout(() => pollForChanges({ quiet: true }), 300);
+  clearTimeout(navSyncTimer);
+  navSyncTimer = setTimeout(() => {
+    clearTimeout(appState._pollTimer);
+    pollForChanges({ quiet: true, respectCooldown: true });
+  }, 350);
 }
 
 function initBottomNavTouchNavigate() {
@@ -166,45 +165,23 @@ export async function initApp() {
   initAmountInputs();
 
   const unchangedAfterFetch = await loadData();
-  if (!unchangedAfterFetch) renderWithScrollPreserved();
+  lastSyncFinished = Date.now();
+  if (!unchangedAfterFetch) renderCurrentPage();
   schedulePoll();
 
   window.addEventListener('pagehide', () => persistSessionSnapshot());
 
-  const appEl = document.getElementById('app');
-  let focusoutTimer = 0;
-  if (appEl) {
-    appEl.addEventListener(
-      'focusout',
-      e => {
-        if (!isSyncPauseTarget(e.target)) return;
-        clearTimeout(focusoutTimer);
-        focusoutTimer = setTimeout(() => {
-          if (syncPausedForUserInput()) return;
-          clearTimeout(appState._pollTimer);
-          pollForChanges({ quiet: true });
-        }, 1500);
-      },
-      true,
-    );
-    appEl.addEventListener(
-      'focusin',
-      e => {
-        if (isSyncPauseTarget(e.target)) clearTimeout(focusoutTimer);
-      },
-      true,
-    );
-  }
-
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) {
       clearTimeout(appState._pollTimer);
-      if (!syncPausedForUserInput()) {
-        pollForChanges();
+      const away = Date.now() - hiddenAt;
+      if (away > 30_000 && !syncPausedForUserInput()) {
+        pollForChanges({ quiet: true });
       } else {
         schedulePoll();
       }
     } else {
+      hiddenAt = Date.now();
       clearTimeout(appState._pollTimer);
     }
   });
