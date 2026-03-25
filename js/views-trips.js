@@ -4,9 +4,7 @@ import { emptyHTML } from './views-shared.js';
 
 function tripCardHTML(t, listIndex = 0) {
   const color = getTripColor(t.id);
-  const deleteBtn = t._closed
-    ? ''
-    : `<button class="btn btn-ghost btn-icon btn-danger-ghost" title="刪除" onclick='event.stopPropagation();deleteTripAction(${jq(t.id)})' aria-label="刪除行程 ${esc(t.name)}">
+  const deleteBtn = `<button class="btn btn-ghost btn-icon btn-danger-ghost" title="刪除" onclick='event.stopPropagation();deleteTripAction(${jq(t.id)})' aria-label="刪除行程 ${esc(t.name)}">
       <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
     </button>`;
   const closedBadge = t._closed
