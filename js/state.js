@@ -1,3 +1,5 @@
+import { USER_A } from './config.js';
+
 /**
  * Central mutable UI / session state (single object avoids circular import issues).
  * @property {'idle'|'syncing'|'synced'|'cache_only'|'error'} syncStatus
@@ -12,7 +14,7 @@ export const appState = {
   currentPage: 'home',
   currentTripId: null,
 
-  homePaidBy: '胡',
+  homePaidBy: USER_A,
   homeSplitMode: '均分',
   homeShowAll: false,
   /** 從其他分頁切換到「日常」時，結算金額是否做數字刷動 */

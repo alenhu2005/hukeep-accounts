@@ -1,3 +1,4 @@
+import { USER_A, USER_B } from './config.js';
 import { appState } from './state.js';
 import { getDailyRecords } from './data.js';
 import { computeBalance } from './finance.js';
@@ -61,6 +62,32 @@ export function renderHome() {
 
   const absAmt = balance === 0 ? 0 : Math.round(Math.abs(balance));
 
+  function applyBalanceAmount() {
+    settleBtn.style.display = 'inline-block';
+    if (wantBalanceAnim) {
+      main.textContent = 'NT$ 0';
+      settleBtn.textContent = '✓ 還款 NT$0';
+      runBalanceAmountCountUp(main, settleBtn, 0, absAmt, () => {
+        appState.homeBalanceAbsShown = absAmt;
+      });
+    } else if (
+      typeof deltaFromAbs === 'number' &&
+      !prefersReducedMotion() &&
+      deltaFromAbs !== absAmt
+    ) {
+      const from = Math.max(0, Math.round(deltaFromAbs));
+      main.textContent = 'NT$ ' + from;
+      settleBtn.textContent = '✓ 還款 NT$' + from;
+      runBalanceAmountCountUp(main, settleBtn, from, absAmt, () => {
+        appState.homeBalanceAbsShown = absAmt;
+      }, 760);
+    } else {
+      main.textContent = 'NT$ ' + absAmt;
+      settleBtn.textContent = '✓ 還款 NT$' + absAmt;
+      appState.homeBalanceAbsShown = absAmt;
+    }
+  }
+
   if (balance === 0) {
     bar.className = 'balance-bar';
     iconWrap.style.cssText = 'background:#eff6ff';
@@ -77,74 +104,16 @@ export function renderHome() {
     svg.style.cssText = 'fill:#10b981';
     svg.innerHTML =
       '<path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>';
-    who.textContent = '詹欠胡';
-    settleBtn.style.display = 'inline-block';
-    if (wantBalanceAnim) {
-      main.textContent = 'NT$ 0';
-      settleBtn.textContent = '✓ 還款 NT$0';
-      runBalanceAmountCountUp(main, settleBtn, 0, absAmt, () => {
-        appState.homeBalanceAbsShown = absAmt;
-      });
-    } else if (
-      typeof deltaFromAbs === 'number' &&
-      !prefersReducedMotion() &&
-      deltaFromAbs !== absAmt
-    ) {
-      const from = Math.max(0, Math.round(deltaFromAbs));
-      main.textContent = 'NT$ ' + from;
-      settleBtn.textContent = '✓ 還款 NT$' + from;
-      runBalanceAmountCountUp(
-        main,
-        settleBtn,
-        from,
-        absAmt,
-        () => {
-          appState.homeBalanceAbsShown = absAmt;
-        },
-        760,
-      );
-    } else {
-      main.textContent = 'NT$ ' + absAmt;
-      settleBtn.textContent = '✓ 還款 NT$' + absAmt;
-      appState.homeBalanceAbsShown = absAmt;
-    }
+    who.textContent = `${USER_B}欠${USER_A}`;
+    applyBalanceAmount();
   } else {
     bar.className = 'balance-bar danger';
     iconWrap.style.cssText = 'background:#fee2e2';
     svg.style.cssText = 'fill:#ef4444';
     svg.innerHTML =
       '<path d="M16 18l2.29-2.29-4.88-4.88-4 4L2 7.41 3.41 6l6 6 4-4 6.3 6.29L22 12v6z"/>';
-    who.textContent = '胡欠詹';
-    settleBtn.style.display = 'inline-block';
-    if (wantBalanceAnim) {
-      main.textContent = 'NT$ 0';
-      settleBtn.textContent = '✓ 還款 NT$0';
-      runBalanceAmountCountUp(main, settleBtn, 0, absAmt, () => {
-        appState.homeBalanceAbsShown = absAmt;
-      });
-    } else if (
-      typeof deltaFromAbs === 'number' &&
-      !prefersReducedMotion() &&
-      deltaFromAbs !== absAmt
-    ) {
-      const from = Math.max(0, Math.round(deltaFromAbs));
-      main.textContent = 'NT$ ' + from;
-      settleBtn.textContent = '✓ 還款 NT$' + from;
-      runBalanceAmountCountUp(
-        main,
-        settleBtn,
-        from,
-        absAmt,
-        () => {
-          appState.homeBalanceAbsShown = absAmt;
-        },
-        760,
-      );
-    } else {
-      main.textContent = 'NT$ ' + absAmt;
-      settleBtn.textContent = '✓ 還款 NT$' + absAmt;
-      appState.homeBalanceAbsShown = absAmt;
-    }
+    who.textContent = `${USER_A}欠${USER_B}`;
+    applyBalanceAmount();
   }
   sub.textContent = expCount > 0 ? '共 ' + expCount + ' 筆消費' : '';
 
@@ -155,7 +124,7 @@ export function renderHome() {
     if (!r._voided) {
       const a = parseFloat(r.amount) || 0;
       if (r.type === 'settlement') {
-        if (r.paidBy === '胡') running += a;
+        if (r.paidBy === USER_A) running += a;
         else running -= a;
       } else if (r.splitMode === '兩人付') {
         const hu = parseFloat(r.paidHu) || 0;
@@ -172,7 +141,7 @@ export function renderHome() {
         } else {
           shareZhan = a;
         }
-        if (r.paidBy === '胡') running += shareZhan;
+        if (r.paidBy === USER_A) running += shareZhan;
         else running -= shareHu;
       }
     }
@@ -232,12 +201,12 @@ function runningHTML(val) {
   if (val === undefined) return '';
   const rounded = Math.round(val);
   if (rounded === 0) return `<div class="record-running zero">±0</div>`;
-  if (rounded > 0) return `<div class="record-running pos">詹欠 +${rounded}</div>`;
-  return `<div class="record-running neg">胡欠 ${rounded}</div>`;
+  if (rounded > 0) return `<div class="record-running pos">${USER_B}欠 +${rounded}</div>`;
+  return `<div class="record-running neg">${USER_A}欠 ${rounded}</div>`;
 }
 
 function dailyRecordHTML(r, runBal) {
-  const isHu = r.paidBy === '胡';
+  const isHu = r.paidBy === USER_A;
   const a = parseFloat(r.amount) || 0;
   const voidBtn = r._voided
     ? ''

@@ -76,8 +76,10 @@ export function saveCache() {
   try {
     localStorage.setItem(CACHE_DAILY, JSON.stringify(appState.allRows.filter(isDailyRow)));
     localStorage.setItem(CACHE_TRIP, JSON.stringify(appState.allRows.filter(isTripRow)));
-  } catch {
-    /* ignore quota */
+  } catch (e) {
+    if (e && e.name === 'QuotaExceededError') {
+      import('./utils.js').then(m => m.toast('儲存空間已滿，快取寫入失敗'));
+    }
   }
 }
 
@@ -134,6 +136,10 @@ function ledgerRowSortKey(r) {
 function rowsDataEqual(a, b) {
   if (a === b) return true;
   if (!a || !b || a.length !== b.length) return false;
+  const strA = JSON.stringify(a);
+  const strB = JSON.stringify(b);
+  if (strA === strB) return true;
+  if (strA.length !== strB.length) return false;
   const sa = [...a].sort((x, y) => ledgerRowSortKey(x).localeCompare(ledgerRowSortKey(y)));
   const sb = [...b].sort((x, y) => ledgerRowSortKey(x).localeCompare(ledgerRowSortKey(y)));
   for (let i = 0; i < sa.length; i++) {

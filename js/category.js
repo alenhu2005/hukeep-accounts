@@ -1,5 +1,15 @@
 import { esc } from './utils.js';
 
+/** Centralized category list — keep in sync with index.html <select#edit-category>. */
+export const CATEGORIES = [
+  { value: '餐飲', emoji: '🍽', label: '🍽 餐飲' },
+  { value: '交通', emoji: '🚌', label: '🚌 交通' },
+  { value: '購物', emoji: '🛍', label: '🛍 購物' },
+  { value: '娛樂', emoji: '🎉', label: '🎉 娛樂' },
+  { value: '生活', emoji: '🏠', label: '🏠 生活' },
+  { value: '其他', emoji: '📦', label: '📦 其他' },
+];
+
 export const CATEGORY_STYLE = {
   餐飲: 'background:#fef3c7;color:#92400e',
   交通: 'background:#dbeafe;color:#1e40af',

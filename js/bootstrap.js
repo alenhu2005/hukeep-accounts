@@ -106,8 +106,9 @@ function tryRestoreSessionFromStorage() {
 }
 
 /**
- * 手機觸控時以 pointerdown 立即導覽並 preventDefault，避免延遲的 click／需點兩次；
- * 滑鼠與鍵盤仍依 index.html 的 onclick。nav-btn--pressed 對應 :active 的小縮放。
+ * 手機觸控時以 touchstart 立即導覽，解決慣性滾動期間需點兩次的問題。
+ * touchstart 比 pointerdown 更可靠地在 iOS 慣性捲動期間觸發。
+ * preventDefault 阻止後續的 click 事件（避免重複導覽），滑鼠仍依 onclick。
  */
 function initBottomNavTouchNavigate() {
   const pairs = [
@@ -120,18 +121,16 @@ function initBottomNavTouchNavigate() {
     if (!el) continue;
     const clearPress = () => el.classList.remove('nav-btn--pressed');
     el.addEventListener(
-      'pointerdown',
+      'touchstart',
       e => {
-        if (e.pointerType !== 'touch' && e.pointerType !== 'pen') return;
         e.preventDefault();
         el.classList.add('nav-btn--pressed');
         navigate(page);
       },
       { passive: false },
     );
-    el.addEventListener('pointerup', clearPress);
-    el.addEventListener('pointercancel', clearPress);
-    el.addEventListener('pointerleave', clearPress);
+    el.addEventListener('touchend', clearPress);
+    el.addEventListener('touchcancel', clearPress);
   }
 }
 

@@ -3,6 +3,10 @@
 // ──────────────────────────────────────────────────────────────────────────────
 export const TIMEZONE = 'Asia/Taipei';
 
+/** 日常帳兩位使用者名稱（影響結算顯示、分攤邏輯、表單按鈕等） */
+export const USER_A = '胡';
+export const USER_B = '詹';
+
 const DEFAULT_API =
   'https://script.google.com/macros/s/AKfycbzDxvHzVV8TR3PR5IMS3zgZE_t1Dq3CDw1yEGGm3FkiQzikl7WnaCOvNMf8rvrcO9Jz/exec';
 

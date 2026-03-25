@@ -1,3 +1,4 @@
+import { USER_A, USER_B } from './config.js';
 import { appState } from './state.js';
 import { todayStr } from './time.js';
 import { uid, toast, esc, jqAttr } from './utils.js';
@@ -16,6 +17,12 @@ import {
   updateMultiPayTotal,
 } from './views-trip-detail.js';
 import { buildTripSettlementSummaryText } from './trip-stats.js';
+
+/** Safely remove an optimistic row by object reference (handles concurrent ops). */
+function undoOptimisticPush(row) {
+  const idx = appState.allRows.lastIndexOf(row);
+  if (idx !== -1) appState.allRows.splice(idx, 1);
+}
 
 function snapshotPendingHomeBalanceFromAbs() {
   const b = computeBalance(getDailyRecords());
@@ -218,7 +225,7 @@ export async function recordTripSettlementOneAction(el) {
     await postRow(row);
     toast('已記錄還款');
   } catch (e) {
-    appState.allRows.pop();
+    undoOptimisticPush(row);
     renderTripDetail();
     toast(formatPostError(e));
   }
@@ -229,8 +236,8 @@ export async function recordSettlement() {
   const balance = computeBalance(records);
   if (balance === 0) return;
 
-  const debtor = balance > 0 ? '詹' : '胡';
-  const creditor = balance > 0 ? '胡' : '詹';
+  const debtor = balance > 0 ? USER_B : USER_A;
+  const creditor = balance > 0 ? USER_A : USER_B;
   const amount = Math.round(Math.abs(balance));
 
   const ok = await showConfirm('記錄還款', `${debtor} 還給 ${creditor} NT$${amount}，記錄後餘額歸零。`);
@@ -244,7 +251,7 @@ export async function recordSettlement() {
     await postRow(row);
     toast('已記錄還款！');
   } catch (e) {
-    appState.allRows.pop();
+    undoOptimisticPush(row);
     cancelHomeBalanceAnim();
     renderHome();
     toast(formatPostError(e));
@@ -305,7 +312,7 @@ export async function submitDailyRecord() {
     await postRow(row);
     toast('已記帳！');
   } catch (e) {
-    appState.allRows.pop();
+    undoOptimisticPush(row);
     cancelHomeBalanceAnim();
     renderHome();
     toast(formatPostError(e));
@@ -338,7 +345,7 @@ export async function voidDailyRecord(id) {
     await postRow(row);
     toast('已撤回');
   } catch (e) {
-    appState.allRows.pop();
+    undoOptimisticPush(row);
     cancelHomeBalanceAnim();
     renderHome();
     toast(formatPostError(e));
@@ -422,7 +429,7 @@ export async function createTrip() {
     await postRow(row);
     toast(`「${name}」行程已建立`);
   } catch (e) {
-    appState.allRows.pop();
+    undoOptimisticPush(row);
     toast(formatPostError(e));
   }
 
@@ -442,7 +449,7 @@ export async function deleteTripAction(id) {
     await postRow(row);
     toast('行程已刪除');
   } catch (e) {
-    appState.allRows.pop();
+    undoOptimisticPush(row);
     renderTrips();
     toast(formatPostError(e));
   }
@@ -460,7 +467,7 @@ export async function closeTripAction(id) {
     await postRow(row);
     toast('行程已結束');
   } catch (e) {
-    appState.allRows.pop();
+    undoOptimisticPush(row);
     renderTripDetail();
     toast(formatPostError(e));
   }
@@ -476,7 +483,7 @@ export async function reopenTripAction(id) {
     await postRow(row);
     toast(`「${trip.name}」已重新開啟`);
   } catch (e) {
-    appState.allRows.pop();
+    undoOptimisticPush(row);
     renderTripDetail();
     toast(formatPostError(e));
   }
@@ -500,7 +507,7 @@ export async function addDetailMember() {
   try {
     await postRow(row);
   } catch (e) {
-    appState.allRows.pop();
+    undoOptimisticPush(row);
     renderTripDetail();
     toast(formatPostError(e));
   }
@@ -518,7 +525,7 @@ export async function removeMemberAction(name) {
   try {
     await postRow(row);
   } catch (e) {
-    appState.allRows.pop();
+    undoOptimisticPush(row);
     renderTripDetail();
     toast(formatPostError(e));
   }
@@ -593,7 +600,7 @@ export async function submitTripExpense() {
     await postRow(row);
     toast('已記帳！');
   } catch (e) {
-    appState.allRows.pop();
+    undoOptimisticPush(row);
     renderTripDetail();
     toast(formatPostError(e));
   }
@@ -627,7 +634,7 @@ export async function voidTripExpenseAction(id) {
     await postRow(row);
     toast('已撤回');
   } catch (e) {
-    appState.allRows.pop();
+    undoOptimisticPush(row);
     renderTripDetail();
     toast(formatPostError(e));
   }
@@ -697,7 +704,7 @@ export async function submitEditRecord() {
     await postRow(row);
     toast('已更新');
   } catch (e) {
-    appState.allRows.pop();
+    undoOptimisticPush(row);
     doRender();
     toast(formatPostError(e));
   }

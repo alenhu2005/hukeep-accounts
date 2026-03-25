@@ -1,3 +1,4 @@
+import { USER_A, USER_B } from './config.js';
 import { appState } from './state.js';
 import { getDailyRecords } from './data.js';
 import { getAnalysisRange } from './time.js';
@@ -116,8 +117,8 @@ export function renderAnalysis() {
       total += hu + zhan;
     } else {
       total += a;
-      if (r.paidBy === '胡') huTotal += a;
-      else if (r.paidBy === '詹') zhanTotal += a;
+      if (r.paidBy === USER_A) huTotal += a;
+      else if (r.paidBy === USER_B) zhanTotal += a;
     }
     const cat = r.category || '未分類';
     catTotals[cat] = (catTotals[cat] || 0) + a;
@@ -195,11 +196,11 @@ export function renderAnalysis() {
     <div class="analysis-period">${periodLabel}</div>
     <div class="analysis-stats-grid">
       <div class="analysis-stat-card">
-        <div class="analysis-stat-label">胡 付出</div>
+        <div class="analysis-stat-label">${esc(USER_A)} 付出</div>
         <div class="analysis-stat-val analysis-stat-val--hu" data-analysis-count="${huR}" data-analysis-mode="currency">${statHuStart}</div>
       </div>
       <div class="analysis-stat-card">
-        <div class="analysis-stat-label">詹 付出</div>
+        <div class="analysis-stat-label">${esc(USER_B)} 付出</div>
         <div class="analysis-stat-val analysis-stat-val--zhan" data-analysis-count="${zhanR}" data-analysis-mode="currency">${statZhanStart}</div>
       </div>
     </div>

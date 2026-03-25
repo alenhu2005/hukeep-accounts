@@ -41,7 +41,7 @@
 
 | 路徑 | 說明 |
 |------|------|
-| `js/router.js` | 網址 hash / 路由與 `render` 觸發 |
+| `js/router.js` | 記憶體內路由分派與 `render` 觸發 |
 | `js/navigation.js` | 分頁切換 |
 | `js/render-registry.js` | `render` 委派（避免 navigation ↔ views 循環依賴） |
 | `js/views-home.js` | 日常首頁 |

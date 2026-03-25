@@ -1,11 +1,13 @@
-/** Daily ledger balance (胡 / 詹 semantics unchanged). */
+import { USER_A } from './config.js';
+
+/** Daily ledger balance: positive = USER_B owes USER_A, negative = USER_A owes USER_B. */
 export function computeBalance(records) {
   let net = 0;
   for (const r of records) {
     if (r._voided) continue;
     const a = parseFloat(r.amount) || 0;
     if (r.type === 'settlement') {
-      if (r.paidBy === '胡') net += a;
+      if (r.paidBy === USER_A) net += a;
       else net -= a;
       continue;
     }
@@ -25,7 +27,7 @@ export function computeBalance(records) {
     } else {
       shareZhan = a;
     }
-    if (r.paidBy === '胡') net += shareZhan;
+    if (r.paidBy === USER_A) net += shareZhan;
     else net -= shareHu;
   }
   return net;
