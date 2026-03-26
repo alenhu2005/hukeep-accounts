@@ -1477,7 +1477,7 @@
     }
     #edit-overlay.open, #backup-overlay.open {
       display: flex;
-      animation: overlayIn 0.22s ease both;
+      animation: overlayIn 0.30s ease both;
     }
     #edit-overlay.open.closing {
       animation: overlayOut 0.18s ease both;
@@ -1491,10 +1491,10 @@
       touch-action: pan-y;
     }
     #edit-overlay.open .edit-dialog {
-      animation: editSheetIn 0.42s var(--ease-spring) both;
+      animation: editSheetIn 0.62s var(--ease-spring) both;
     }
     #edit-overlay.open.closing .edit-dialog {
-      animation: editSheetOut 0.18s var(--ease-soft) both;
+      animation: editSheetOut 0.24s var(--ease-soft) both;
     }
     .edit-dialog-header {
       display: flex;
@@ -1516,8 +1516,8 @@
       width: 34px;
       height: 34px;
       border-radius: 10px;
-      border: 1px solid var(--border);
-      background: var(--surface);
+      border: 1px solid transparent;
+      background: transparent;
       color: var(--text-muted);
       cursor: pointer;
       display: inline-flex;
@@ -1526,8 +1526,16 @@
       flex-shrink: 0;
       transition: background 0.15s ease, transform 0.15s ease;
     }
-    .edit-dialog-close:hover { background: var(--bg-secondary); }
+    .edit-dialog-close:hover {
+      background: var(--bg-secondary);
+      border-color: var(--border);
+    }
     .edit-dialog-close:active { transform: scale(0.96); }
+    .edit-dialog-close:focus,
+    .edit-dialog-close:focus-visible {
+      outline: none;
+      box-shadow: none;
+    }
     .edit-dialog-close svg { width: 18px; height: 18px; fill: currentColor; display: block; }
     .edit-dialog .form-group { margin-bottom: 14px; }
     .edit-summary {
@@ -1542,12 +1550,12 @@
     }
 
     @keyframes editSheetIn {
-      from { transform: translateY(88px); opacity: 0; }
+      from { transform: translateY(140px); opacity: 0; }
       to { transform: translateY(0); opacity: 1; }
     }
     @keyframes editSheetOut {
       from { transform: translateY(0); opacity: 1; }
-      to { transform: translateY(70px); opacity: 0; }
+      to { transform: translateY(110px); opacity: 0; }
     }
 
     /* Drag-to-dismiss (JS sets inline transform) */

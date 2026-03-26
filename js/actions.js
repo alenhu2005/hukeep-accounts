@@ -1041,7 +1041,6 @@ function ensureEditSheetDragToDismiss() {
     overlay.classList.remove('sheet-dragging');
     dialog.style.transition = '';
     dialog.style.transform = '';
-    overlay.style.background = '';
     dragging = false;
   };
 
@@ -1074,10 +1073,6 @@ function ensureEditSheetDragToDismiss() {
 
       // Move sheet down
       dialog.style.transform = `translateY(${dy}px)`;
-
-      // Fade scrim slightly as you drag down
-      const alpha = Math.max(0, 0.4 - Math.min(0.22, dy / 900));
-      overlay.style.background = `rgba(0,0,0,${alpha})`;
     },
     { passive: true },
   );
