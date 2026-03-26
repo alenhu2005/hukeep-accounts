@@ -59,7 +59,13 @@
   <!-- Edit record dialog -->
   <div id="edit-overlay" onclick="if(event.target===this)closeEditRecord()">
     <div class="edit-dialog" role="dialog" aria-modal="true" aria-labelledby="edit-dialog-title">
-      <h3 id="edit-dialog-title">編輯紀錄</h3>
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <div class="edit-dialog-header">
+        <h3 id="edit-dialog-title">編輯紀錄</h3>
+        <button type="button" class="edit-dialog-close" onclick="closeEditRecord()" aria-label="關閉" title="關閉">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </div>
       <div id="edit-summary" class="edit-summary"></div>
       <div class="form-group" id="edit-category-group">
         <label class="form-label" style="display:flex;align-items:center;gap:6px">
@@ -116,6 +122,7 @@
         <input type="date" id="edit-date" class="form-input">
       </div>
       <div class="dialog-actions">
+        <button type="button" class="btn btn-destructive" id="edit-void-btn" onclick="voidEditingRecord()" style="display:none">撤回</button>
         <button class="btn btn-outline" onclick="closeEditRecord()">取消</button>
         <button class="btn btn-primary" onclick="submitEditRecord()">儲存</button>
       </div>

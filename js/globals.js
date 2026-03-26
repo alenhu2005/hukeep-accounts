@@ -130,6 +130,7 @@ Object.assign(window, {
   setPieLabelOption,
   closeEditRecord: actions.closeEditRecord,
   submitEditRecord: actions.submitEditRecord,
+  voidEditingRecord: actions.voidEditingRecord,
   openEditPhotoPicker: actions.openEditPhotoPicker,
   handleEditPhotoSelected: actions.handleEditPhotoSelected,
   removeEditPhoto: actions.removeEditPhoto,

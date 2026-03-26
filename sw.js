@@ -12,6 +12,7 @@ const STATIC_ASSETS = [
   './js/state.js',
   './js/model.js',
   './js/api.js',
+  './js/offline-queue.js',
   './js/data.js',
   './js/finance.js',
   './js/time.js',
@@ -72,7 +73,7 @@ self.addEventListener('fetch', event => {
           }
           return response;
         })
-        .catch(() => caches.match(event.request)),
+        .catch(async () => (await caches.match(event.request)) || caches.match('./index.html')),
     );
     return;
   }

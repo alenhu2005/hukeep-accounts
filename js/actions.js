@@ -1023,10 +1023,113 @@ async function fileToJpegDataUrl(file, { maxDim = 1024, quality = 0.78 } = {}) {
   }
 }
 
+function ensureEditSheetDragToDismiss() {
+  const overlay = document.getElementById('edit-overlay');
+  if (!overlay || overlay._dragDismissBound) return;
+  const dialog = overlay.querySelector('.edit-dialog');
+  const header = overlay.querySelector('.edit-dialog-header');
+  if (!dialog || !header) return;
+
+  overlay._dragDismissBound = true;
+
+  let startY = 0;
+  let lastY = 0;
+  let lastT = 0;
+  let dragging = false;
+
+  const reset = () => {
+    overlay.classList.remove('sheet-dragging');
+    dialog.style.transition = '';
+    dialog.style.transform = '';
+    overlay.style.background = '';
+    dragging = false;
+  };
+
+  header.addEventListener(
+    'touchstart',
+    e => {
+      if (!overlay.classList.contains('open')) return;
+      if (e.touches.length !== 1) return;
+      const t = e.touches[0];
+      startY = t.clientY;
+      lastY = startY;
+      lastT = Date.now();
+      dragging = true;
+      overlay.classList.add('sheet-dragging');
+      dialog.style.transition = 'none';
+    },
+    { passive: true },
+  );
+
+  header.addEventListener(
+    'touchmove',
+    e => {
+      if (!dragging) return;
+      if (e.touches.length !== 1) return;
+      const t = e.touches[0];
+      const y = t.clientY;
+      const dy = Math.max(0, y - startY);
+      lastY = y;
+      lastT = Date.now();
+
+      // Move sheet down
+      dialog.style.transform = `translateY(${dy}px)`;
+
+      // Fade scrim slightly as you drag down
+      const alpha = Math.max(0, 0.4 - Math.min(0.22, dy / 900));
+      overlay.style.background = `rgba(0,0,0,${alpha})`;
+    },
+    { passive: true },
+  );
+
+  header.addEventListener(
+    'touchend',
+    () => {
+      if (!dragging) return;
+      const dy = Math.max(0, lastY - startY);
+      const dt = Math.max(1, Date.now() - lastT);
+      const v = dy / dt; // px/ms rough
+
+      const shouldClose = dy > 120 || v > 1.2;
+      if (shouldClose) {
+        reset();
+        closeEditRecord();
+        return;
+      }
+
+      // Snap back
+      dialog.style.transition = 'transform 0.22s var(--ease-soft)';
+      dialog.style.transform = 'translateY(0)';
+      setTimeout(reset, 240);
+    },
+    { passive: true },
+  );
+
+  header.addEventListener(
+    'touchcancel',
+    () => {
+      if (!dragging) return;
+      dialog.style.transition = 'transform 0.22s var(--ease-soft)';
+      dialog.style.transform = 'translateY(0)';
+      setTimeout(reset, 240);
+    },
+    { passive: true },
+  );
+}
+
 export function openEditRecord(r) {
   if (r._voided) return;
   appState._editRecord = r;
   editPhotoPendingChange = null;
+
+  ensureEditSheetDragToDismiss();
+
+  const voidBtn = document.getElementById('edit-void-btn');
+  if (voidBtn) {
+    const canVoid = r && (r.type === 'daily' || r.type === 'settlement' || r.type === 'tripExpense') && r.id;
+    voidBtn.style.display = canVoid ? '' : 'none';
+    voidBtn.disabled = !canVoid;
+  }
 
   const summary = document.getElementById('edit-summary');
   if (summary) {
@@ -1079,12 +1182,54 @@ export function openEditRecordById(id, isTripExpense) {
 }
 
 export function closeEditRecord() {
-  document.getElementById('edit-overlay').classList.remove('open');
+  const overlay = document.getElementById('edit-overlay');
+  if (!overlay) return;
+  if (!overlay.classList.contains('open')) return;
+  if (overlay._closingTimer) clearTimeout(overlay._closingTimer);
+  overlay.classList.add('closing');
+  overlay._closingTimer = setTimeout(() => {
+    overlay.classList.remove('open');
+    overlay.classList.remove('closing');
+    overlay._closingTimer = null;
+  }, 180);
   appState._editRecord = null;
   editPhotoPendingChange = null;
 
   // Clear preview UI; next openEditRecord will reload stored photo.
   setEditPhotoPreview(null);
+}
+
+export async function voidEditingRecord() {
+  const r = appState._editRecord;
+  if (!r || !r.id || r._voided) return;
+  const isTrip = r.type === 'tripExpense';
+  const label = r.type === 'settlement' ? '還款' : (r.item || '消費');
+  const amount = parseFloat(r.amount) || 0;
+  const ok = await showConfirm(
+    '撤回這筆紀錄？',
+    `「${label}」— NT$${Math.round(amount)} 將標記為撤回，${isTrip ? '分帳' : '帳面'}隨之更動，紀錄仍保留。`,
+  );
+  if (!ok) return;
+
+  closeEditRecord();
+
+  const row = isTrip
+    ? { type: 'tripExpense', action: 'void', id: r.id }
+    : { type: 'daily', action: 'void', id: r.id };
+  if (!isTrip) snapshotPendingHomeBalanceFromAbs();
+  appState.allRows.push(row);
+  if (isTrip) renderTripDetail();
+  else renderHome();
+  try {
+    const pr = await postRow(row);
+    toast(pr.status === 'queued' ? '已暫存，連上網路後會自動上傳' : '已撤回');
+  } catch (e) {
+    undoOptimisticPush(row);
+    if (!isTrip) cancelHomeBalanceAnim();
+    if (isTrip) renderTripDetail();
+    else renderHome();
+    toast(formatPostError(e));
+  }
 }
 
 export async function submitEditRecord() {
@@ -1117,6 +1262,10 @@ export async function submitEditRecord() {
   }
 
   const hasPhoto = photoDataUrlToSend !== undefined;
+  if (hasPhoto && typeof navigator !== 'undefined' && navigator.onLine === false) {
+    toast('離線狀態無法上傳照片，請連上網路後再試');
+    return;
+  }
   const optimisticRow = {
     type: appState._editRecord.type,
     action: 'edit',
@@ -1139,7 +1288,8 @@ export async function submitEditRecord() {
   doRender();
   closeEditRecord();
   try {
-    const pr = await postRow(postPayload, { syncTarget: optimisticRow });
+    // 圖片不上離線佇列：避免 localStorage 容量問題 & 離線顯示不一致
+    const pr = await postRow(postPayload, { syncTarget: optimisticRow, allowQueue: !hasPhoto });
     toast(pr.status === 'queued' ? '已暫存，連上網路後會自動上傳' : '已更新');
   } catch (e) {
     undoOptimisticPush(optimisticRow);
@@ -1158,6 +1308,10 @@ export function openEditPhotoPicker() {
 export async function handleEditPhotoSelected(ev) {
   const rec = appState._editRecord;
   if (!rec || !rec.id) return;
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    toast('離線狀態無法上傳照片，請連上網路後再試');
+    return;
+  }
   const inp = ev && ev.target;
   const file = inp && inp.files && inp.files[0];
   if (!file) return;
@@ -1225,6 +1379,10 @@ export async function handleAvatarSelected(ev) {
   const inp = ev && ev.target;
   const file = inp && inp.files && inp.files[0];
   if (!memberName || !file) return;
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    toast('離線狀態無法上傳頭像，請連上網路後再試');
+    return;
+  }
 
   if (!String(file.type || '').startsWith('image/')) {
     toast('請選擇圖片檔');
@@ -1266,7 +1424,8 @@ export async function handleAvatarSelected(ev) {
         memberName,
         avatarDataUrl: dataUrl,
       },
-      { syncTarget: optimisticRow },
+      // 圖片不上離線佇列：避免 localStorage 容量問題 & 離線顯示不一致
+      { syncTarget: optimisticRow, allowQueue: false },
     );
     toast(pr.status === 'queued' ? '已暫存，連上網路後會自動上傳' : '頭像已更新');
   } catch (e) {

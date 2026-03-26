@@ -1418,6 +1418,10 @@
       from { opacity: 0; }
       to { opacity: 1; }
     }
+    @keyframes overlayOut {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
     .dialog {
       background: var(--surface); border-radius: 16px 16px 0 0;
       padding: 24px 20px; width: 100%; max-width: 480px;
@@ -1475,14 +1479,56 @@
       display: flex;
       animation: overlayIn 0.22s ease both;
     }
+    #edit-overlay.open.closing {
+      animation: overlayOut 0.18s ease both;
+    }
     .edit-dialog, .backup-dialog {
       animation: sheetUp 0.32s var(--ease-out) both;
     }
     .edit-dialog {
       background: var(--surface); border-radius: 16px 16px 0 0;
       padding: 24px 20px; width: 100%; max-width: 480px;
+      touch-action: pan-y;
     }
-    .edit-dialog h3 { font-size: 16px; font-weight: 600; margin-bottom: 12px; }
+    #edit-overlay.open .edit-dialog {
+      animation: editSheetIn 0.42s var(--ease-spring) both;
+    }
+    #edit-overlay.open.closing .edit-dialog {
+      animation: editSheetOut 0.18s var(--ease-soft) both;
+    }
+    .edit-dialog-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+      touch-action: pan-y;
+    }
+    .sheet-handle {
+      width: 44px;
+      height: 5px;
+      border-radius: 99px;
+      background: rgba(107, 114, 128, 0.35);
+      margin: 0 auto 10px;
+    }
+    .edit-dialog h3 { font-size: 16px; font-weight: 600; margin: 0; }
+    .edit-dialog-close {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text-muted);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.15s ease, transform 0.15s ease;
+    }
+    .edit-dialog-close:hover { background: var(--bg-secondary); }
+    .edit-dialog-close:active { transform: scale(0.96); }
+    .edit-dialog-close svg { width: 18px; height: 18px; fill: currentColor; display: block; }
     .edit-dialog .form-group { margin-bottom: 14px; }
     .edit-summary {
       background: var(--bg-secondary); border-radius: 10px;
@@ -1490,6 +1536,24 @@
     }
     .edit-summary-item { font-size: 15px; font-weight: 600; }
     .edit-summary-meta { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+    html.dark .edit-summary {
+      background: var(--bg-tertiary);
+      border: 1px solid rgba(148, 163, 184, 0.12);
+    }
+
+    @keyframes editSheetIn {
+      from { transform: translateY(88px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes editSheetOut {
+      from { transform: translateY(0); opacity: 1; }
+      to { transform: translateY(70px); opacity: 0; }
+    }
+
+    /* Drag-to-dismiss (JS sets inline transform) */
+    #edit-overlay.sheet-dragging { animation: none; }
+    #edit-overlay.sheet-dragging .edit-dialog { animation: none; }
+    #edit-overlay.sheet-dragging .edit-dialog-header { cursor: grab; }
 
     .record-avatar-img {
       width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block;

@@ -224,11 +224,6 @@ function photoThumbHTML(r) {
 function dailyRecordHTML(r, runBal) {
   const isHu = r.paidBy === USER_A;
   const a = parseFloat(r.amount) || 0;
-  const voidBtn = r._voided
-    ? ''
-    : `<button class="record-delete" title="撤回" onclick='voidDailyRecord(${jq(r.id)})'>
-      <svg viewBox="0 0 24 24"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></svg>
-    </button>`;
 
   const clickAttr = r._voided ? '' : `onclick='openEditRecordById(${jq(r.id)},false)' style="cursor:pointer" title="點擊編輯"`;
   const photoEl = photoThumbHTML(r);
@@ -247,7 +242,6 @@ function dailyRecordHTML(r, runBal) {
         <div class="record-amount" style="color:${r._voided ? '#9ca3af' : '#065f46'}">NT$${Math.round(a)}</div>
         ${runningHTML(runBal)}
       </div>
-      ${voidBtn}
     </div>`;
   }
 
@@ -273,7 +267,6 @@ function dailyRecordHTML(r, runBal) {
         <div class="record-amount" style="${r._voided ? 'color:#9ca3af;text-decoration:line-through' : ''}">NT$${Math.round(a)}</div>
         ${runningHTML(runBal)}
       </div>
-      ${voidBtn}
     </div>`;
   }
 
@@ -294,6 +287,5 @@ function dailyRecordHTML(r, runBal) {
       <div class="record-amount" style="${r._voided ? 'color:#9ca3af;text-decoration:line-through' : ''}">NT$${Math.round(a)}</div>
       ${runningHTML(runBal)}
     </div>
-    ${voidBtn}
   </div>`;
 }
