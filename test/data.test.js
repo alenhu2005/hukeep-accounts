@@ -3,6 +3,8 @@ import {
   getDailyRecordsFromRows,
   buildTripFromRows,
   getTripExpensesFromRows,
+  getTripPaletteColorId,
+  pickRandomTripColorId,
 } from '../js/data.js';
 
 describe('getDailyRecordsFromRows', () => {
@@ -48,6 +50,27 @@ describe('buildTripFromRows', () => {
     ];
     const t = buildTripFromRows(tripRow, allRows);
     expect(t.members).toEqual(['胡', '阿明']);
+  });
+});
+
+describe('trip palette (5 colors)', () => {
+  it('getTripPaletteColorId 使用行程 setColor', () => {
+    const rows = [
+      { type: 'trip', action: 'add', id: 't1', name: 'A', members: '[]', createdAt: '2024-01-01' },
+      { type: 'trip', action: 'setColor', id: 't1', colorId: 'violet' },
+    ];
+    expect(getTripPaletteColorId('t1', rows)).toBe('violet');
+  });
+
+  it('pickRandomTripColorId 在還有空色時避開已用色', () => {
+    const rows = [
+      { type: 'trip', action: 'add', id: 't1', name: 'A', members: '[]', createdAt: '2024-01-01' },
+      { type: 'trip', action: 'setColor', id: 't1', colorId: 'blue' },
+      { type: 'trip', action: 'add', id: 't2', name: 'B', members: '[]', createdAt: '2024-01-01' },
+      { type: 'trip', action: 'setColor', id: 't2', colorId: 'emerald' },
+    ];
+    const picked = pickRandomTripColorId(rows);
+    expect(['amber', 'violet', 'rose']).toContain(picked);
   });
 });
 

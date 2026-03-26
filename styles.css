@@ -1174,6 +1174,158 @@
     .member-chip-remove:hover { opacity: 1; }
     .member-chip-remove svg { width: 12px; height: 12px; fill: currentColor; }
 
+    /* 稀有／隱藏成員色：漸層框、光暈、微微閃（不要條紋） */
+    @keyframes memberRareBorder {
+      0%, 100% { filter: hue-rotate(0deg); }
+      50% { filter: hue-rotate(25deg); }
+    }
+    @keyframes memberRareShimmer {
+      0%, 100% { transform: translateX(-40%) rotate(16deg); opacity: .0; }
+      35% { opacity: .25; }
+      55% { opacity: .0; }
+    }
+    .member-chip--rare {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(168, 85, 247, 0.55);
+      background:
+        radial-gradient(120% 180% at 20% 0%, rgba(250, 204, 21, 0.18), transparent 55%),
+        radial-gradient(140% 200% at 90% 120%, rgba(34, 211, 238, 0.14), transparent 60%),
+        linear-gradient(125deg, rgba(168, 85, 247, 0.16), rgba(234, 179, 8, 0.10));
+      box-shadow:
+        0 0 0 1px rgba(250, 204, 21, 0.18),
+        0 2px 14px rgba(168, 85, 247, 0.14);
+    }
+    .member-chip--rare::before {
+      content: '';
+      position: absolute;
+      top: -40%;
+      left: -60%;
+      width: 120%;
+      height: 200%;
+      pointer-events: none;
+      opacity: 0;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+      transform: translateX(-40%) rotate(16deg);
+      animation: memberRareShimmer 2.8s ease-in-out infinite;
+    }
+    .member-chip-avatar--rare {
+      box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.55), 0 0 0 3px rgba(168, 85, 247, 0.35), 0 2px 8px rgba(6, 182, 212, 0.25);
+      border-color: rgba(250, 204, 21, 0.5) !important;
+    }
+    .member-chip-avatar-fallback--rare {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.35) !important;
+    }
+    .member-chip-avatar-fallback--rare::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(120% 120% at 25% 15%, rgba(255,255,255,.30), transparent 55%);
+      opacity: .55;
+    }
+
+    .known-member-bar-btn--rare {
+      border-color: rgba(168, 85, 247, 0.45) !important;
+      box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.15);
+    }
+    .known-member-bar-dot--rare {
+      box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.65), 0 0 8px rgba(168, 85, 247, 0.45);
+      position: relative;
+    }
+    .known-member-bar-dot--rare::after {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: 50%;
+      border: 1px dashed rgba(255, 255, 255, 0.55);
+      pointer-events: none;
+    }
+
+    .member-dir-item--rare {
+      position: relative;
+      background: linear-gradient(90deg, rgba(168, 85, 247, 0.07), transparent 56%);
+    }
+    .member-dir-item--rare::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 10px;
+      bottom: 10px;
+      width: 3px;
+      border-radius: 0 3px 3px 0;
+      background: linear-gradient(180deg, #fbbf24, #a855f7, #22d3ee);
+      pointer-events: none;
+    }
+    .member-dir-avatar--rare {
+      padding: 2px;
+      background: linear-gradient(145deg, #fbbf24, #a855f7, #22d3ee, #f472b6) !important;
+      background-size: 160% 160%;
+      animation: memberRareBorder 6s ease-in-out infinite;
+    }
+    .member-dir-avatar--rare .member-dir-avatar-img,
+    .member-dir-avatar--rare .member-dir-avatar-fallback {
+      border-radius: 50%;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .member-dir-avatar-fallback--rare {
+      position: relative;
+      overflow: hidden;
+    }
+    .member-dir-avatar-fallback--rare::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      pointer-events: none;
+      background: radial-gradient(120% 120% at 28% 18%, rgba(255,255,255,.26), transparent 58%);
+      opacity: .6;
+    }
+    .member-dir-avatar-img--rare {
+      border-radius: 50%;
+    }
+
+    .trip-lottery-avatar--rare {
+      box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.5), 0 0 10px rgba(168, 85, 247, 0.35);
+      border-color: rgba(168, 85, 247, 0.5) !important;
+    }
+    .trip-lottery-avatar-img--rare {
+      border-radius: 50%;
+    }
+    .trip-lottery-avatar-fallback--rare {
+      position: relative;
+      overflow: hidden;
+    }
+    .trip-lottery-avatar-fallback--rare::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      pointer-events: none;
+      background: radial-gradient(120% 120% at 26% 14%, rgba(255,255,255,.28), transparent 58%);
+      opacity: .62;
+    }
+    .trip-lottery-result-avatar-only .trip-lottery-avatar--rare {
+      box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.55), 0 0 24px rgba(168, 85, 247, 0.35);
+    }
+
+    html.dark .member-chip--rare {
+      border-color: rgba(192, 132, 252, 0.5);
+      background: linear-gradient(125deg, rgba(88, 28, 135, 0.25), rgba(120, 53, 15, 0.12));
+    }
+    html.dark .member-dir-item--rare {
+      background: linear-gradient(90deg, rgba(88, 28, 135, 0.2), transparent 56%);
+    }
+    html.dark .known-member-bar-btn--rare {
+      border-color: rgba(192, 132, 252, 0.4) !important;
+    }
+
     /* ── Split chips ── */
     .split-chips { display: flex; flex-wrap: wrap; gap: 6px; }
     .split-chip {
@@ -1439,6 +1591,17 @@
     #dialog-overlay.open {
       display: flex;
       animation: overlayIn 0.22s ease both;
+    }
+    #alert-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.45);
+      z-index: 1150; display: none; align-items: flex-end; justify-content: center;
+    }
+    #alert-overlay.open {
+      display: flex;
+      animation: overlayIn 0.22s ease both;
+    }
+    .alert-dialog .btn-primary {
+      width: 100%; height: 42px; font-size: 14px; margin-top: 4px;
     }
     @keyframes overlayIn {
       from { opacity: 0; }
@@ -1931,6 +2094,8 @@
       html { scroll-behavior: auto; }
       .page.active,
       #dialog-overlay.open,
+      #alert-overlay.open,
+      .member-dir-avatar--rare,
       #edit-overlay.open,
       #backup-overlay.open,
       .dialog,

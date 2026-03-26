@@ -1,9 +1,10 @@
-import { getTrips, getTripColor, TRIP_COLORS } from './data.js';
+import { getTrips, getTripColor, getTripPaletteColorId, TRIP_COLORS } from './data.js';
 import { esc, jq } from './utils.js';
 import { emptyHTML } from './views-shared.js';
 
 function tripCardHTML(t, listIndex = 0) {
   const color = getTripColor(t.id);
+  const paletteId = getTripPaletteColorId(t.id);
   const deleteBtn = `<button class="btn btn-ghost btn-icon btn-danger-ghost" title="刪除" onclick='event.stopPropagation();deleteTripAction(${jq(t.id)})' aria-label="刪除行程 ${esc(t.name)}">
       <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
     </button>`;
@@ -11,7 +12,7 @@ function tripCardHTML(t, listIndex = 0) {
     ? `<span class="badge" style="background:var(--bg-tertiary);color:var(--text-muted);font-size:10px">已結束</span>`
     : '';
   const colorDots = TRIP_COLORS.map(c =>
-    `<button type="button" class="trip-color-dot${c.id === color.id ? ' active' : ''}" style="background:${c.fg}" onclick='event.stopPropagation();setTripColor(${jq(t.id)},${jq(c.id)})'></button>`
+    `<button type="button" class="trip-color-dot${c.id === paletteId ? ' active' : ''}" style="background:${c.fg}" onclick='event.stopPropagation();setTripColor(${jq(t.id)},${jq(c.id)})'></button>`
   ).join('');
   return `<div class="trip-card-wrap" data-trip-id="${esc(t.id)}">
   <div class="trip-card${t._closed ? ' is-voided' : ''}" style="--trip-i:${listIndex}" role="button" tabindex="0" aria-label="查看行程 ${esc(t.name)}" onclick='navigate("tripDetail",${jq(t.id)})' onkeydown='if(event.key==="Enter"||event.key===" "){event.preventDefault();navigate("tripDetail",${jq(t.id)})}'>

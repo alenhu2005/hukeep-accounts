@@ -1,7 +1,7 @@
 import { appState } from './state.js';
 import { DAILY_TYPES, TRIP_TYPES } from './model.js';
 import { normalizeDate } from './time.js';
-import { parseArr } from './utils.js';
+import { parseArr, randomUniformIndex } from './utils.js';
 import { USER_A, USER_B } from './config.js';
 
 /**
@@ -162,7 +162,63 @@ export const MEMBER_COLORS = [
   { id: 'slate',   bg: '#f1f5f9', fg: '#64748b', darkBg: '#1e293b', darkFg: '#94a3b8' },
 ];
 
-export const TRIP_COLORS = MEMBER_COLORS;
+// Easter eggs: hidden colors (not in the 16-color cycle)
+export const HIDDEN_MEMBER_COLORS = [
+  { id: 'hidden-neon', label: '霓虹青', bg: '#ecfeff', fg: '#22d3ee', darkBg: '#042f2e', darkFg: '#67e8f9' },
+  { id: 'hidden-gold', label: '流金', bg: '#fffbeb', fg: '#d97706', darkBg: '#2b1600', darkFg: '#fbbf24' },
+  { id: 'hidden-cosmic', label: '星際紫', bg: '#f5f3ff', fg: '#7c3aed', darkBg: '#12002b', darkFg: '#c4b5fd' },
+  { id: 'hidden-lava', label: '熔岩橙', bg: '#fff7ed', fg: '#ea580c', darkBg: '#2a0a00', darkFg: '#fb923c' },
+  { id: 'hidden-mint', label: '薄荷綠', bg: '#ecfdf5', fg: '#059669', darkBg: '#022c22', darkFg: '#34d399' },
+];
+
+/** 行程地標／卡片色（5 色）；與成員 16 色分開 */
+export const TRIP_COLORS = [
+  MEMBER_COLORS.find(c => c.id === 'blue'),
+  MEMBER_COLORS.find(c => c.id === 'emerald'),
+  MEMBER_COLORS.find(c => c.id === 'amber'),
+  MEMBER_COLORS.find(c => c.id === 'violet'),
+  MEMBER_COLORS.find(c => c.id === 'rose'),
+].filter(Boolean);
+
+function tripIdHashDefaultColorIndex(tripId) {
+  const id = tripId ?? '';
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash);
+  return ((hash % TRIP_COLORS.length) + TRIP_COLORS.length) % TRIP_COLORS.length;
+}
+
+/**
+ * 用於色盤：若舊資料 setColor 不在 TRIP_COLORS，則用 id 雜湊對應 5 色之一（與 getTripColor 預設一致）。
+ * @param {string} tripId
+ * @param {import('./model.js').LedgerRow[]} [allRows]
+ */
+export function getTripPaletteColorId(tripId, allRows = appState.allRows) {
+  const id = tripId ?? '';
+  let colorId = null;
+  for (const r of allRows) {
+    if (r && r.type === 'trip' && r.action === 'setColor' && r.id === id && r.colorId) {
+      colorId = r.colorId;
+    }
+  }
+  if (colorId && TRIP_COLORS.some(c => c.id === colorId)) return colorId;
+  return TRIP_COLORS[tripIdHashDefaultColorIndex(id)].id;
+}
+
+/**
+ * 現有行程在 5 色盤上佔用的 colorId（含無 setColor 時的雜湊預設），供新行程隨機選色時避開。
+ * @param {import('./model.js').LedgerRow[]} allRows
+ */
+export function pickRandomTripColorId(allRows) {
+  const delIds = new Set(allRows.filter(r => r.type === 'trip' && r.action === 'delete').map(r => r.id));
+  const tripAdds = allRows.filter(r => r.type === 'trip' && r.action === 'add' && !delIds.has(r.id));
+  const used = new Set();
+  for (const tr of tripAdds) {
+    used.add(getTripPaletteColorId(tr.id, allRows));
+  }
+  const free = TRIP_COLORS.filter(c => !used.has(c.id));
+  const pool = free.length ? free : TRIP_COLORS;
+  return pool[randomUniformIndex(pool.length)].id;
+}
 
 /**
  * 全域成員頭像（每個成員最多以最後一次上傳為準）
@@ -228,7 +284,7 @@ export function getMemberColor(memberName) {
       if (who === name) colorId = String(r.colorId);
     }
   }
-  const picked = colorId && MEMBER_COLORS.find(c => c.id === colorId);
+  const picked = colorId && [...MEMBER_COLORS, ...HIDDEN_MEMBER_COLORS].find(c => c.id === colorId);
   if (picked) return resolveColor(picked);
 
   let hash = 0;
@@ -241,6 +297,11 @@ export function getMemberColorId(memberName) {
   return c?.id || '';
 }
 
+/** 是否為彩蛋隱藏色（用於 UI 加強樣式） */
+export function isHiddenMemberColorId(id) {
+  return typeof id === 'string' && HIDDEN_MEMBER_COLORS.some(h => h.id === id);
+}
+
 /** @returns {{ id: string, bg: string, fg: string }} */
 export function getTripColor(tripId) {
   const id = tripId ?? '';
@@ -250,11 +311,11 @@ export function getTripColor(tripId) {
       colorId = r.colorId;
     }
   }
-  const found = colorId && TRIP_COLORS.find(c => c.id === colorId);
-  if (found) return resolveColor(found);
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash);
-  return resolveColor(TRIP_COLORS[((hash % TRIP_COLORS.length) + TRIP_COLORS.length) % TRIP_COLORS.length]);
+  const inPalette = colorId && TRIP_COLORS.find(c => c.id === colorId);
+  if (inPalette) return resolveColor(inPalette);
+  const legacy = colorId && MEMBER_COLORS.find(c => c.id === colorId);
+  if (legacy) return resolveColor(legacy);
+  return resolveColor(TRIP_COLORS[tripIdHashDefaultColorIndex(id)]);
 }
 
 /**
@@ -301,17 +362,21 @@ export function getKnownMemberNames() {
       names.add(r.memberName);
     }
     if (r.type === 'memberProfile' && r.action === 'delete' && r.memberName) {
+      // Deletion should apply to the *display* name after rename resolution,
+      // otherwise deleting a renamed member appears to "not work".
+      deleted.add(resolveMemberName(r.memberName, renames));
       deleted.add(r.memberName);
     }
     if (r.type === 'memberProfile' && r.action === 'restore' && r.memberName) {
+      deleted.delete(resolveMemberName(r.memberName, renames));
       deleted.delete(r.memberName);
     }
   }
   const result = [];
   const seen = new Set();
   for (const n of names) {
-    if (deleted.has(n)) continue;
     const display = resolveMemberName(n, renames);
+    if (deleted.has(display) || deleted.has(n)) continue;
     if (!seen.has(display)) { seen.add(display); result.push(display); }
   }
   return result;

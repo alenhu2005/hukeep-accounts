@@ -24,3 +24,25 @@ export function cancelDialog() {
 export function closeDialog() {
   document.getElementById('dialog-overlay').classList.remove('open');
 }
+
+/** 單鍵提示（會蓋在畫面上直到使用者按下知道了） */
+export function showAlert(title, desc) {
+  return new Promise(resolve => {
+    const overlay = document.getElementById('alert-overlay');
+    const okBtn = document.getElementById('alert-dlg-ok');
+    document.getElementById('alert-dlg-title').textContent = title;
+    document.getElementById('alert-dlg-desc').textContent = desc;
+    const close = () => {
+      overlay.classList.remove('open');
+      overlay.onclick = null;
+      okBtn.onclick = null;
+      resolve();
+    };
+    overlay.onclick = e => {
+      if (e.target === overlay) close();
+    };
+    okBtn.onclick = () => close();
+    overlay.classList.add('open');
+    okBtn.focus();
+  });
+}

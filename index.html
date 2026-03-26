@@ -149,6 +149,15 @@
     </div>
   </div>
 
+  <!-- Single-button alert (e.g. hidden member color) -->
+  <div id="alert-overlay">
+    <div class="dialog alert-dialog" role="alertdialog" aria-modal="true" aria-labelledby="alert-dlg-title" onclick="event.stopPropagation()">
+      <h3 id="alert-dlg-title"></h3>
+      <p id="alert-dlg-desc"></p>
+      <button type="button" class="btn btn-primary" id="alert-dlg-ok">知道了</button>
+    </div>
+  </div>
+
   <!-- Backup sheet -->
   <div id="backup-overlay" onclick="if(event.target===this)closeBackupMenu()">
     <div class="edit-dialog backup-dialog" role="dialog" aria-modal="true" aria-labelledby="backup-dialog-title" onclick="event.stopPropagation()">

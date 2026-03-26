@@ -1,5 +1,13 @@
 import { appState } from './state.js';
-import { getTripById, getTripExpenses, getTripSettlementAdjustmentsFromRows, getAvatarUrlByMemberName, getKnownMemberNames, getMemberColor } from './data.js';
+import {
+  getTripById,
+  getTripExpenses,
+  getTripSettlementAdjustmentsFromRows,
+  getAvatarUrlByMemberName,
+  getKnownMemberNames,
+  getMemberColor,
+  isHiddenMemberColorId,
+} from './data.js';
 import { computeSettlements } from './finance.js';
 import { categoryBadgeHTML } from './category.js';
 import { esc, jq, jqAttr } from './utils.js';
@@ -191,9 +199,11 @@ export function renderDetailMemberChips(members) {
     .map(m => {
       const avatarUrl = getAvatarUrlByMemberName(m, 'trip');
       const color = getMemberColor(m);
+      const rare = isHiddenMemberColorId(color.id);
+      const avCls = rare ? ' member-chip-avatar--rare' : '';
       const avatarHtml = avatarUrl
-        ? `<img class="member-chip-avatar" src="${avatarUrl}" alt="${esc(m)} 頭像">`
-        : `<span class="member-chip-avatar member-chip-avatar--fallback" style="background:${color.bg};color:${color.fg}" aria-hidden="true">${esc(m.charAt(0))}</span>`;
+        ? `<img class="member-chip-avatar${avCls}" src="${avatarUrl}" alt="${esc(m)} 頭像">`
+        : `<span class="member-chip-avatar member-chip-avatar--fallback${rare ? ' member-chip-avatar-fallback--rare' : ''}" style="background:${color.bg};color:${color.fg}" aria-hidden="true">${esc(m.charAt(0))}</span>`;
 
       const removeBtn =
         members.length > 2
@@ -201,7 +211,7 @@ export function renderDetailMemberChips(members) {
            <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
          </button>`
           : '';
-      return `<span class="member-chip">
+      return `<span class="member-chip${rare ? ' member-chip--rare' : ''}">
           ${avatarHtml}
           <span class="member-chip-name">${esc(m)}</span>
           ${removeBtn}
@@ -220,8 +230,9 @@ function renderDetailKnownMembers(trip) {
     <span class="known-member-bar-label">快速加入</span>
     ${available.map(n => {
       const c = getMemberColor(n);
-      return `<button type="button" class="known-member-bar-btn" onclick="addDetailMemberByName(${jqAttr(n)})">
-        <span class="known-member-bar-dot" style="background:${c.fg}">${esc(n.charAt(0))}</span>${esc(n)}
+      const rare = isHiddenMemberColorId(c.id);
+      return `<button type="button" class="known-member-bar-btn${rare ? ' known-member-bar-btn--rare' : ''}" onclick="addDetailMemberByName(${jqAttr(n)})">
+        <span class="known-member-bar-dot${rare ? ' known-member-bar-dot--rare' : ''}" style="background:${c.fg}">${esc(n.charAt(0))}</span>${esc(n)}
       </button>`;
     }).join('')}
   </div>`;

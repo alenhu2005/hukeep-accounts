@@ -1,11 +1,25 @@
 import { USER_A, USER_B } from './config.js';
 import { appState } from './state.js';
 import { todayStr } from './time.js';
-import { uid, toast, esc, jqAttr } from './utils.js';
+import { uid, toast, esc, jqAttr, jq, randomUniformIndex } from './utils.js';
 import { postRow, formatPostError } from './api.js';
-import { getDailyRecords, getTripById, getTripExpenses, getTripSettlementAdjustmentsFromRows, getKnownMemberNames, getAvatarUrlByMemberName, getMemberColor, getMemberColorId, MEMBER_COLORS } from './data.js';
+import {
+  getDailyRecords,
+  getTripById,
+  getTripExpenses,
+  getTripSettlementAdjustmentsFromRows,
+  getKnownMemberNames,
+  getAvatarUrlByMemberName,
+  getMemberColor,
+  getMemberColorId,
+  isHiddenMemberColorId,
+  MEMBER_COLORS,
+  HIDDEN_MEMBER_COLORS,
+  TRIP_COLORS,
+  pickRandomTripColorId,
+} from './data.js';
 import { computeBalance, computeSettlements } from './finance.js';
-import { showConfirm } from './dialog.js';
+import { showConfirm, showAlert } from './dialog.js';
 import { guessCategoryFromItem } from './category.js';
 import { navigate } from './navigation.js';
 import { pauseSyncBriefly } from './sync-pause.js';
@@ -496,10 +510,12 @@ function renderNewTripMemberChips() {
     .map(m => {
       const avatarUrl = getAvatarUrlByMemberName(m);
       const color = getMemberColor(m);
+      const rare = isHiddenMemberColorId(color.id);
+      const avCls = rare ? ' member-chip-avatar--rare' : '';
       const avatarHtml = avatarUrl
-        ? `<img class="member-chip-avatar" src="${avatarUrl}" alt="${esc(m)} 頭像">`
-        : `<span class="member-chip-avatar member-chip-avatar--fallback" style="background:${color.bg};color:${color.fg}" aria-hidden="true">${esc(m.charAt(0))}</span>`;
-      return `<span class="member-chip">
+        ? `<img class="member-chip-avatar${avCls}" src="${avatarUrl}" alt="${esc(m)} 頭像">`
+        : `<span class="member-chip-avatar member-chip-avatar--fallback${rare ? ' member-chip-avatar-fallback--rare' : ''}" style="background:${color.bg};color:${color.fg}" aria-hidden="true">${esc(m.charAt(0))}</span>`;
+      return `<span class="member-chip${rare ? ' member-chip--rare' : ''}">
         ${avatarHtml}
         <span class="member-chip-name">${esc(m)}</span>
         <button class="member-chip-remove" onclick="removeNewTripMember(${jqAttr(m)})">
@@ -520,8 +536,9 @@ function renderKnownMemberPicker() {
     <span class="known-member-bar-label">快速加入</span>
     ${available.map(n => {
       const c = getMemberColor(n);
-      return `<button type="button" class="known-member-bar-btn" onclick="pickKnownMemberForTrip(${jqAttr(n)})">
-        <span class="known-member-bar-dot" style="background:${c.fg}">${esc(n.charAt(0))}</span>${esc(n)}
+      const rare = isHiddenMemberColorId(c.id);
+      return `<button type="button" class="known-member-bar-btn${rare ? ' known-member-bar-btn--rare' : ''}" onclick="pickKnownMemberForTrip(${jqAttr(n)})">
+        <span class="known-member-bar-dot${rare ? ' known-member-bar-dot--rare' : ''}" style="background:${c.fg}">${esc(n.charAt(0))}</span>${esc(n)}
       </button>`;
     }).join('')}
   </div>`;
@@ -545,6 +562,12 @@ export async function createTrip() {
     return;
   }
 
+  // New members get a random color by default (16-color cycle friendly).
+  for (const m of appState.newTripMembers) {
+    // eslint-disable-next-line no-await-in-loop
+    await ensureRandomMemberColor(m);
+  }
+
   const btn = document.getElementById('create-trip-btn');
   btn.disabled = true;
   btn.textContent = '建立中…';
@@ -557,7 +580,10 @@ export async function createTrip() {
     members: JSON.stringify(appState.newTripMembers),
     createdAt: todayStr(),
   };
+  const tripColorId = pickRandomTripColorId(appState.allRows);
+  const colorRow = { type: 'trip', action: 'setColor', id: row.id, colorId: tripColorId };
   appState.allRows.push(row);
+  appState.allRows.push(colorRow);
   hideCreateTripForm();
   pauseSyncBriefly(5000);
   navigate('tripDetail', row.id);
@@ -565,7 +591,14 @@ export async function createTrip() {
   try {
     const pr = await postRow(row);
     toast(pr.status === 'queued' ? '已暫存，連上網路後會自動上傳' : `「${name}」行程已建立`);
+    try {
+      await postRow(colorRow);
+    } catch (e2) {
+      undoOptimisticPush(colorRow);
+      toast(formatPostError(e2));
+    }
   } catch (e) {
+    undoOptimisticPush(colorRow);
     undoOptimisticPush(row);
     toast(formatPostError(e));
   }
@@ -652,17 +685,14 @@ function renderMemberDirectory() {
   body.innerHTML = members.map((name, idx) => {
     const url = getAvatarUrlByMemberName(name, 'trip');
     const color = getMemberColor(name);
+    const rare = isHiddenMemberColorId(color.id);
+    const avImgCls = `member-dir-avatar-img${rare ? ' member-dir-avatar-img--rare' : ''}`;
+    const fbCls = `member-dir-avatar-fallback${rare ? ' member-dir-avatar-fallback--rare' : ''}`;
     const avatarHtml = url
-      ? `<img class="member-dir-avatar-img" src="${url}" alt="${esc(name)}">`
-      : `<span class="member-dir-avatar-fallback" style="background:${color.bg};color:${color.fg}">${esc(name.charAt(0))}</span>`;
-    const pickerId = `mcp-${idx}`;
-    const activeId = getMemberColorId(name);
-    const dots = MEMBER_COLORS.map(c => {
-      const active = c.id === activeId ? ' active' : '';
-      return `<button type="button" class="trip-color-dot${active}" style="background:${c.fg}" onclick="setMemberColor(${jq(name)},${jq(c.id)})" aria-label="設定 ${esc(name)} 顏色為 ${esc(c.id)}"></button>`;
-    }).join('');
-    return `<div class="member-dir-item" data-member="${esc(name)}">
-      <button type="button" class="member-dir-avatar" onclick="openAvatarPickerForMember(${jqAttr(name)},'trip')" title="更換頭像" style="background:${color.bg}">
+      ? `<img class="${avImgCls}" src="${url}" alt="${esc(name)}">`
+      : `<span class="${fbCls}" style="background:${color.bg};color:${color.fg}">${esc(name.charAt(0))}</span>`;
+    return `<div class="member-dir-item${rare ? ' member-dir-item--rare' : ''}" data-member="${esc(name)}">
+      <button type="button" class="member-dir-avatar${rare ? ' member-dir-avatar--rare' : ''}" onclick="openAvatarPickerForMember(${jqAttr(name)},'trip')" title="更換頭像" style="background:${color.bg}">
         ${avatarHtml}
         <span class="member-dir-avatar-edit">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 7l1-2h4l1 2h3a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h3zm3 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10z"/></svg>
@@ -670,7 +700,7 @@ function renderMemberDirectory() {
       </button>
       <div class="member-dir-name">${esc(name)}</div>
       <div class="member-dir-actions">
-        <button type="button" class="member-dir-action-btn" onclick="toggleMemberColorPicker(${idx})" title="顏色">
+        <button type="button" class="member-dir-action-btn" onclick="cycleMemberColor(${jqAttr(name)})" title="換顏色">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a9 9 0 0 0 0 18h4a3 3 0 0 0 0-6h-1.5a1.5 1.5 0 1 1 0-3H16a3 3 0 0 0 0-6h-4zM7.5 12a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3-4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm6 4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></svg>
         </button>
         <button type="button" class="member-dir-action-btn" onclick="renameMemberPrompt(${jqAttr(name)})" title="改名">
@@ -680,33 +710,88 @@ function renderMemberDirectory() {
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
         </button>
       </div>
-      <div class="trip-color-picker member-color-picker" id="${pickerId}" style="display:none">${dots}</div>
     </div>`;
   }).join('');
 }
 
-export function toggleMemberColorPicker(idx) {
-  const el = document.getElementById('mcp-' + idx);
-  if (!el) return;
-  const wasOpen = el.style.display !== 'none';
-  document.querySelectorAll('.member-color-picker').forEach(p => { p.style.display = 'none'; });
-  if (!wasOpen) el.style.display = '';
-}
+export async function cycleMemberColor(memberName) {
+  const name = String(memberName || '').trim();
+  if (!name) return;
 
-export async function setMemberColor(memberName, colorId) {
-  const row = { type: 'memberProfile', action: 'setColor', memberName, colorId };
+  const curId = getMemberColorId(name);
+  const curIsHidden = HIDDEN_MEMBER_COLORS.some(h => h.id === curId);
+
+  // 5 hidden colors, each ~1% chance.
+  // Roll [0..99]: 0-4 => hidden[roll] (each 1%), otherwise normal cycle.
+  const roll = randomUniformIndex(100);
+  if (roll < 5) {
+    const hidden = HIDDEN_MEMBER_COLORS[roll];
+    if (hidden) {
+      const row = { type: 'memberProfile', action: 'setColor', memberName: name, colorId: hidden.id };
+      appState.allRows.push(row);
+      renderMemberDirectory();
+      const hueName = hidden.label || hidden.id;
+      await showAlert(
+        '稀有配色！',
+        `「${name}」刷到了隱藏色「${hueName}」。每次點換色約 1% 機率出現，恭喜。`,
+      );
+      try {
+        const pr = await postRow(row);
+        if (pr.status === 'queued') toast('已暫存，連上網路後會自動上傳');
+      } catch (e) {
+        undoOptimisticPush(row);
+        renderMemberDirectory();
+        toast(formatPostError(e));
+      }
+      return;
+    }
+  }
+
+  if (curIsHidden) {
+    const ok = await showConfirm(
+      '確定換掉隱藏色？',
+      '目前是稀有配色，換成一般顏色後要再出現只能靠運氣。',
+    );
+    if (!ok) return;
+  }
+
+  const idx = MEMBER_COLORS.findIndex(c => c.id === curId);
+  const next = MEMBER_COLORS[(idx >= 0 ? idx + 1 : 0) % MEMBER_COLORS.length];
+  if (!next) return;
+  const row = { type: 'memberProfile', action: 'setColor', memberName: name, colorId: next.id };
   appState.allRows.push(row);
   renderMemberDirectory();
-  refreshCurrentView();
   try {
     const pr = await postRow(row);
     if (pr.status === 'queued') toast('已暫存，連上網路後會自動上傳');
   } catch (e) {
     undoOptimisticPush(row);
     renderMemberDirectory();
-    refreshCurrentView();
     toast(formatPostError(e));
   }
+}
+
+function hasExplicitMemberColor(name) {
+  const n = String(name || '').trim();
+  if (!n) return false;
+  for (const r of appState.allRows) {
+    if (r && r.type === 'memberProfile' && r.action === 'setColor' && r.memberName === n && r.colorId) {
+      return true;
+    }
+  }
+  return false;
+}
+
+async function ensureRandomMemberColor(name) {
+  const n = String(name || '').trim();
+  if (!n) return;
+  if (hasExplicitMemberColor(n)) return;
+  const i = randomUniformIndex(MEMBER_COLORS.length);
+  const picked = MEMBER_COLORS[i];
+  if (!picked) return;
+  const row = { type: 'memberProfile', action: 'setColor', memberName: n, colorId: picked.id };
+  appState.allRows.push(row);
+  try { await postRow(row, { updateSyncUi: false }); } catch { /* ignore */ }
 }
 
 export function toggleTripColorPicker(tripId) {
@@ -718,6 +803,7 @@ export function toggleTripColorPicker(tripId) {
 }
 
 export async function setTripColor(tripId, colorId) {
+  if (!TRIP_COLORS.some(c => c.id === colorId)) return;
   const row = { type: 'trip', action: 'setColor', id: tripId, colorId };
   appState.allRows.push(row);
   renderTrips();
@@ -784,6 +870,7 @@ export async function addDetailMemberByName(name) {
   const trip = getTripById(appState.currentTripId);
   if (!trip) return;
   if (trip.members.includes(name)) { toast(`「${name}」已在名單中`); return; }
+  await ensureRandomMemberColor(name);
   const row = { type: 'tripMember', action: 'add', tripId: appState.currentTripId, memberName: name };
   appState.allRows.push(row);
   renderTripDetail();
@@ -807,6 +894,7 @@ export async function addDetailMember() {
     toast(`「${name}」已在名單中`);
     return;
   }
+  await ensureRandomMemberColor(name);
   const row = { type: 'tripMember', action: 'add', tripId: appState.currentTripId, memberName: name };
   appState.allRows.push(row);
   input.value = '';
