@@ -281,7 +281,7 @@ export function getMemberColor(memberName) {
   for (const r of appState.allRows) {
     if (r && r.type === 'memberProfile' && r.action === 'setColor' && r.memberName && r.colorId) {
       const who = resolveMemberName(r.memberName, renames);
-      if (who === name) colorId = String(r.colorId);
+      if (who === name) colorId = String(r.colorId).trim();
     }
   }
   const picked = colorId && [...MEMBER_COLORS, ...HIDDEN_MEMBER_COLORS].find(c => c.id === colorId);
@@ -299,7 +299,8 @@ export function getMemberColorId(memberName) {
 
 /** 是否為彩蛋隱藏色（用於 UI 加強樣式） */
 export function isHiddenMemberColorId(id) {
-  return typeof id === 'string' && HIDDEN_MEMBER_COLORS.some(h => h.id === id);
+  const v = typeof id === 'string' ? id.trim() : '';
+  return !!v && HIDDEN_MEMBER_COLORS.some(h => h.id === v);
 }
 
 /** @returns {{ id: string, bg: string, fg: string }} */

@@ -134,6 +134,15 @@ export function normalizeRow(r) {
     r.to = r.to ?? '';
     r.amount = r.amount ?? 0;
     r.date = normalizeDate(r.date);
+  } else if (r.type === 'memberProfile') {
+    r.action = r.action ?? '';
+    if (typeof r.memberName === 'string') r.memberName = r.memberName.trim();
+    if (typeof r.newName === 'string') r.newName = r.newName.trim();
+    if (typeof r.colorId === 'string') r.colorId = r.colorId.trim();
+  } else if (r.type === 'avatar') {
+    if (typeof r.memberName === 'string') r.memberName = r.memberName.trim();
+    if (typeof r.avatarUrl === 'string') r.avatarUrl = r.avatarUrl.trim();
+    if (typeof r.avatarScope === 'string') r.avatarScope = r.avatarScope.trim();
   }
   return r;
 }

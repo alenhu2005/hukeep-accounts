@@ -1,5 +1,5 @@
 // Bump this to force clients to refresh cached assets.
-const CACHE_NAME = 'ledger-v4';
+const CACHE_NAME = 'ledger-v5';
 
 const STATIC_ASSETS = [
   './',
