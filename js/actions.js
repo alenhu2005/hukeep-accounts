@@ -746,12 +746,16 @@ export function openHiddenStylePreview() {
     </span>`;
     const dot = `<span class="known-member-bar-dot known-member-bar-dot--rare${styleCls}" style="background:${h.fg}" aria-hidden="true">隱</span>`;
     const avatar = `<span class="trip-lottery-avatar trip-lottery-avatar--fallback trip-lottery-avatar--rare${styleCls} trip-lottery-avatar-fallback--rare${styleCls}" style="background:${h.bg};color:${h.fg}" aria-hidden="true">隱</span>`;
+    const frame = `<button type="button" class="member-dir-avatar member-dir-avatar--rare${styleCls}" style="background:${h.bg}" aria-label="${esc(label)} 框">
+      <span class="member-dir-avatar-fallback member-dir-avatar-fallback--rare" style="background:${h.bg};color:${h.fg}">隱</span>
+    </button>`;
     return `<div class="member-preview-row">
       <div class="member-preview-name">${esc(label)}</div>
       <div class="member-preview-samples">
         ${chip}
         <span class="member-preview-sample">${dot}</span>
         <span class="member-preview-sample">${avatar}</span>
+        <span class="member-preview-sample">${frame}</span>
       </div>
     </div>`;
   }).join('');

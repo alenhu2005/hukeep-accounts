@@ -1293,6 +1293,7 @@
       background: linear-gradient(145deg, var(--rare-frame-a, #fbbf24), var(--rare-frame-b, #a855f7), var(--rare-frame-c, #22d3ee), var(--rare-frame-d, #f472b6)) !important;
       background-size: 160% 160%;
       animation: memberRareBorder var(--rare-frame, 6s) ease-in-out infinite;
+      overflow: visible;
     }
     /* Decorative frame layer (style-specific; can protrude outside) */
     .member-dir-avatar--rare {
