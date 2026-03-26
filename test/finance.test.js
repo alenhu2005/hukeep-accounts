@@ -68,6 +68,26 @@ describe('computeSettlements', () => {
     );
     expect(out).toHaveLength(0);
   });
+
+  it('多筆出款：依 payers 記先付，不把 paidBy「多人」當成成員', () => {
+    const out = computeSettlements(['甲', '乙', '丙'], [
+      {
+        amount: 300,
+        paidBy: '多人',
+        payers: [
+          { name: '甲', amount: 200 },
+          { name: '乙', amount: 100 },
+        ],
+        splitAmong: ['甲', '乙', '丙'],
+        _voided: false,
+      },
+    ]);
+    expect(out.every(s => s.from !== '多人' && s.to !== '多人')).toBe(true);
+    expect(out).toHaveLength(1);
+    expect(out[0].from).toBe('丙');
+    expect(out[0].to).toBe('甲');
+    expect(out[0].amount).toBeCloseTo(100);
+  });
 });
 
 describe('computePayerTotals', () => {

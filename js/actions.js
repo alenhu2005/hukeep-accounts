@@ -70,60 +70,160 @@ export function setDetailPaidBy(name) {
 }
 
 export function toggleMultiPay() {
-  appState.detailMultiPay = !appState.detailMultiPay;
+  const trip = getTripById(appState.currentTripId);
+  const members = trip ? trip.members : [];
+  const mtog = document.getElementById('d-multipay-toggle');
+  if (mtog?.disabled) return;
+  const next = !appState.detailMultiPay;
+  if (next && members.length < 2) return;
+  appState.detailMultiPay = next;
   document.getElementById('d-paidby-group').style.display = appState.detailMultiPay ? 'none' : '';
   document.getElementById('d-amount-group').style.display = appState.detailMultiPay ? 'none' : '';
   document.getElementById('d-multipay-group').style.display = appState.detailMultiPay ? '' : 'none';
-  const tog = document.getElementById('d-multipay-toggle');
-  if (tog) tog.textContent = appState.detailMultiPay ? '單人付款' : '多人出款';
+  if (mtog) mtog.textContent = appState.detailMultiPay ? '單人付款' : '多人出款';
   if (appState.detailMultiPay) {
     document.getElementById('d-payers-list').innerHTML = '';
-    const trip = getTripById(appState.currentTripId);
-    const members = trip ? trip.members : [];
     addPayerRow(members);
     addPayerRow(members);
+    refreshPayerToggleDisabledState();
+  } else {
+    refreshPayerToggleDisabledState();
   }
   updatePerPerson();
+}
+
+function usedPayerNamesExcludingRow(excludeRow) {
+  const used = new Set();
+  document.querySelectorAll('#d-payers-list .payer-row').forEach(r => {
+    if (r === excludeRow) return;
+    const inp = r.querySelector('input.payer-name');
+    const v = (inp && inp.value) || '';
+    if (v.trim()) used.add(v.trim());
+  });
+  return used;
+}
+
+/** 已在其他列選過的成員：按鈕淡灰不可點；「＋ 新增」在成員已各一列時 disabled */
+export function refreshPayerToggleDisabledState() {
+  const addBtn = document.getElementById('d-add-payer-row-btn');
+  const trip = getTripById(appState.currentTripId);
+  const members = trip ? trip.members : [];
+  const rows = document.querySelectorAll('#d-payers-list .payer-row');
+  if (!appState.detailMultiPay) {
+    if (addBtn) {
+      addBtn.disabled = false;
+      addBtn.classList.remove('is-disabled');
+    }
+    return;
+  }
+  const usedAll = usedPayerNamesExcludingRow(null);
+  const full = members.length > 0 && usedAll.size >= members.length;
+  if (addBtn) {
+    addBtn.disabled = full;
+    addBtn.classList.toggle('is-disabled', full);
+  }
+  rows.forEach(row => {
+    const usedElsewhere = usedPayerNamesExcludingRow(row);
+    row.querySelectorAll('.payer-name-toggles .btn-toggle').forEach(b => {
+      const m = (b.dataset.member || '').trim();
+      const blocked = usedElsewhere.has(m);
+      b.disabled = blocked;
+      b.classList.toggle('btn-toggle--blocked', blocked);
+      b.setAttribute('aria-disabled', blocked ? 'true' : 'false');
+    });
+  });
+}
+
+function maybeCollapseMultiPayToSingle() {
+  if (!appState.detailMultiPay) return;
+  const rows = document.querySelectorAll('#d-payers-list .payer-row');
+  if (rows.length > 1) return;
+
+  let name = '';
+  let amt = 0;
+  if (rows.length === 1) {
+    name = (rows[0].querySelector('input.payer-name')?.value || '').trim();
+    amt = parseFloat(rows[0].querySelector('.payer-amount')?.value) || 0;
+  }
+
+  appState.detailMultiPay = false;
+  const list = document.getElementById('d-payers-list');
+  if (list) list.innerHTML = '';
+  document.getElementById('d-paidby-group').style.display = '';
+  document.getElementById('d-amount-group').style.display = '';
+  document.getElementById('d-multipay-group').style.display = 'none';
+  const mtog = document.getElementById('d-multipay-toggle');
+  if (mtog) {
+    mtog.textContent = '多人出款';
+    const tripNow = getTripById(appState.currentTripId);
+    const mems = tripNow ? tripNow.members : [];
+    mtog.disabled = mems.length < 2;
+    mtog.classList.toggle('trip-multipay-toggle--blocked', mems.length < 2);
+  }
+
+  const trip = getTripById(appState.currentTripId);
+  if (trip) {
+    if (name && trip.members.includes(name)) appState.detailPaidBy = name;
+    else if (trip.members[0]) appState.detailPaidBy = trip.members[0];
+  }
+  const da = document.getElementById('d-amount');
+  if (da && amt > 0) da.value = String(Math.round(amt));
+
+  renderTripDetail();
+}
+
+export function removePayerRow(btn) {
+  const row = btn && btn.closest('.payer-row');
+  if (row) row.remove();
+  updateMultiPayTotal();
+  refreshPayerToggleDisabledState();
+  maybeCollapseMultiPayToSingle();
 }
 
 export function setPayerRowMember(btn) {
   const row = btn.closest('.payer-row');
   if (!row) return;
-  const m = btn.dataset.member;
+  const m = (btn.dataset.member || '').trim();
+  if (usedPayerNamesExcludingRow(row).has(m) || btn.disabled) return;
   const hidden = row.querySelector('input.payer-name');
   if (hidden) hidden.value = m;
   row.querySelectorAll('.payer-name-toggles .btn-toggle').forEach(b => {
     b.classList.toggle('active', b === btn);
   });
   updateMultiPayTotal();
+  refreshPayerToggleDisabledState();
 }
 
 export function addPayerRow(membersOverride) {
   const trip = getTripById(appState.currentTripId);
   const members = membersOverride || (trip ? trip.members : []);
   const list = document.getElementById('d-payers-list');
+  const used = usedPayerNamesExcludingRow(null);
+  const defaultMember = members.find(x => !used.has(x));
+  if (defaultMember === undefined && members.length > 0) return;
+  const pick = defaultMember ?? '';
   const row = document.createElement('div');
   row.className = 'payer-row';
-  const defaultMember = members[0] || '';
   const toggles = members
     .map(
       m =>
-        `<button type="button" class="btn-toggle${m === defaultMember ? ' active' : ''}" data-member="${esc(m)}" onclick="setPayerRowMember(this)">${esc(m)}</button>`,
+        `<button type="button" class="btn-toggle${m === pick ? ' active' : ''}" data-member="${esc(m)}" onclick="setPayerRowMember(this)">${esc(m)}</button>`,
     )
     .join('');
   row.innerHTML = `
     <div class="btn-group btn-group-payer payer-name-toggles" role="group" aria-label="付款人">
       ${toggles}
     </div>
-    <input type="hidden" class="payer-name" value="${esc(defaultMember)}">
+    <input type="hidden" class="payer-name" value="${esc(pick)}">
     <div class="payer-row-amount-line">
       <input type="text" class="form-input form-input-amount payer-amount" placeholder="金額"
         lang="en" spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off"
         inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" aria-label="付款金額"
         oninput="updateMultiPayTotal()">
-      <button type="button" class="payer-row-remove" onclick="this.closest('.payer-row').remove();updateMultiPayTotal()" aria-label="刪除此列">×</button>
+      <button type="button" class="payer-row-remove" onclick="removePayerRow(this)" aria-label="刪除此列">×</button>
     </div>`;
   list.appendChild(row);
+  refreshPayerToggleDisabledState();
 }
 
 /** 消費項目欄按 Enter → 聚焦下一個金額欄（略過 IME 組字中的 Enter） */
@@ -223,8 +323,8 @@ export async function recordTripSettlementOneAction(el) {
   renderTripDetail();
 
   try {
-    await postRow(row);
-    toast('已記錄還款');
+    const pr = await postRow(row);
+    toast(pr.status === 'queued' ? '已暫存，連上網路後會自動上傳' : '已記錄還款');
   } catch (e) {
     undoOptimisticPush(row);
     renderTripDetail();
@@ -249,8 +349,8 @@ export async function recordSettlement() {
   appState.allRows.push(row);
   renderHome();
   try {
-    await postRow(row);
-    toast('已記錄還款！');
+    const pr = await postRow(row);
+    toast(pr.status === 'queued' ? '已暫存，連上網路後會自動上傳' : '已記錄還款！');
   } catch (e) {
     undoOptimisticPush(row);
     cancelHomeBalanceAnim();
@@ -311,8 +411,8 @@ export async function submitDailyRecord() {
   renderHome();
 
   try {
-    await postRow(row);
-    toast('已記帳！');
+    const pr = await postRow(row);
+    toast(pr.status === 'queued' ? '已暫存，連上網路後會自動上傳' : '已記帳！');
   } catch (e) {
     undoOptimisticPush(row);
     cancelHomeBalanceAnim();
@@ -344,8 +444,8 @@ export async function voidDailyRecord(id) {
   appState.allRows.push(row);
   renderHome();
   try {
-    await postRow(row);
-    toast('已撤回');
+    const pr = await postRow(row);
+    toast(pr.status === 'queued' ? '已暫存，連上網路後會自動上傳' : '已撤回');
   } catch (e) {
     undoOptimisticPush(row);
     cancelHomeBalanceAnim();
@@ -463,8 +563,8 @@ export async function createTrip() {
   navigate('tripDetail', row.id);
 
   try {
-    await postRow(row);
-    toast(`「${name}」行程已建立`);
+    const pr = await postRow(row);
+    toast(pr.status === 'queued' ? '已暫存，連上網路後會自動上傳' : `「${name}」行程已建立`);
   } catch (e) {
     undoOptimisticPush(row);
     toast(formatPostError(e));
@@ -483,8 +583,8 @@ export async function deleteTripAction(id) {
   appState.allRows.push(row);
   renderTrips();
   try {
-    await postRow(row);
-    toast('行程已刪除');
+    const pr = await postRow(row);
+    toast(pr.status === 'queued' ? '已暫存，連上網路後會自動上傳' : '行程已刪除');
   } catch (e) {
     undoOptimisticPush(row);
     renderTrips();
@@ -501,8 +601,8 @@ export async function closeTripAction(id) {
   appState.allRows.push(row);
   renderTripDetail();
   try {
-    await postRow(row);
-    toast('行程已結束');
+    const pr = await postRow(row);
+    toast(pr.status === 'queued' ? '已暫存，連上網路後會自動上傳' : '行程已結束');
   } catch (e) {
     undoOptimisticPush(row);
     renderTripDetail();
@@ -517,8 +617,8 @@ export async function reopenTripAction(id) {
   appState.allRows.push(row);
   renderTripDetail();
   try {
-    await postRow(row);
-    toast(`「${trip.name}」已重新開啟`);
+    const pr = await postRow(row);
+    toast(pr.status === 'queued' ? '已暫存，連上網路後會自動上傳' : `「${trip.name}」已重新開啟`);
   } catch (e) {
     undoOptimisticPush(row);
     renderTripDetail();
@@ -587,7 +687,14 @@ export async function setTripColor(tripId, colorId) {
   const row = { type: 'trip', action: 'setColor', id: tripId, colorId };
   appState.allRows.push(row);
   renderTrips();
-  try { await postRow(row); } catch (e) { undoOptimisticPush(row); renderTrips(); toast(formatPostError(e)); }
+  try {
+    const pr = await postRow(row);
+    if (pr.status === 'queued') toast('已暫存，連上網路後會自動上傳');
+  } catch (e) {
+    undoOptimisticPush(row);
+    renderTrips();
+    toast(formatPostError(e));
+  }
 }
 
 export async function renameMemberPrompt(oldName) {
@@ -600,7 +707,15 @@ export async function renameMemberPrompt(oldName) {
   appState.allRows.push(row);
   renderMemberDirectory();
   refreshCurrentView();
-  try { await postRow(row); } catch (e) { undoOptimisticPush(row); renderMemberDirectory(); refreshCurrentView(); toast(formatPostError(e)); }
+  try {
+    const pr = await postRow(row);
+    if (pr.status === 'queued') toast('已暫存，連上網路後會自動上傳');
+  } catch (e) {
+    undoOptimisticPush(row);
+    renderMemberDirectory();
+    refreshCurrentView();
+    toast(formatPostError(e));
+  }
 }
 
 export async function deleteKnownMember(name) {
@@ -612,7 +727,16 @@ export async function deleteKnownMember(name) {
   renderMemberDirectory();
   renderKnownMemberPicker();
   refreshCurrentView();
-  try { await postRow(row); } catch (e) { undoOptimisticPush(row); renderMemberDirectory(); renderKnownMemberPicker(); refreshCurrentView(); toast(formatPostError(e)); }
+  try {
+    const pr = await postRow(row);
+    if (pr.status === 'queued') toast('已暫存，連上網路後會自動上傳');
+  } catch (e) {
+    undoOptimisticPush(row);
+    renderMemberDirectory();
+    renderKnownMemberPicker();
+    refreshCurrentView();
+    toast(formatPostError(e));
+  }
 }
 
 function refreshCurrentView() {
@@ -629,7 +753,14 @@ export async function addDetailMemberByName(name) {
   const row = { type: 'tripMember', action: 'add', tripId: appState.currentTripId, memberName: name };
   appState.allRows.push(row);
   renderTripDetail();
-  try { await postRow(row); } catch (e) { undoOptimisticPush(row); renderTripDetail(); toast(formatPostError(e)); }
+  try {
+    const pr = await postRow(row);
+    if (pr.status === 'queued') toast('已暫存，連上網路後會自動上傳');
+  } catch (e) {
+    undoOptimisticPush(row);
+    renderTripDetail();
+    toast(formatPostError(e));
+  }
 }
 
 export async function addDetailMember() {
@@ -647,7 +778,8 @@ export async function addDetailMember() {
   input.value = '';
   renderTripDetail();
   try {
-    await postRow(row);
+    const pr = await postRow(row);
+    if (pr.status === 'queued') toast('已暫存，連上網路後會自動上傳');
   } catch (e) {
     undoOptimisticPush(row);
     renderTripDetail();
@@ -665,7 +797,8 @@ export async function removeMemberAction(name) {
   appState.detailSplitAmong = appState.detailSplitAmong.filter(m => m !== name);
   renderTripDetail();
   try {
-    await postRow(row);
+    const pr = await postRow(row);
+    if (pr.status === 'queued') toast('已暫存，連上網路後會自動上傳');
   } catch (e) {
     undoOptimisticPush(row);
     renderTripDetail();
@@ -692,18 +825,29 @@ export async function submitTripExpense() {
   if (appState.detailMultiPay) {
     const nameEls = document.querySelectorAll('#d-payers-list .payer-name');
     const amountEls = document.querySelectorAll('#d-payers-list .payer-amount');
-    const payers = Array.from(nameEls)
-      .map((sel, i) => ({
-        name: sel.value,
-        amount: parseFloat(amountEls[i].value) || 0,
-      }))
-      .filter(p => p.amount > 0);
+    const collectPayers = () =>
+      Array.from(nameEls)
+        .map((sel, i) => ({
+          name: (sel.value || '').trim(),
+          amount: parseFloat(amountEls[i]?.value) || 0,
+        }))
+        .filter(p => p.amount > 0 && p.name);
+    const payers = collectPayers();
     if (payers.length === 0) {
-      toast('請輸入各自出的金額');
+      toast('請在各列填寫付款人與金額（總計為各列出資相加）');
+      return;
+    }
+    const names = payers.map(p => p.name);
+    if (new Set(names).size !== names.length) {
+      toast('各列出款人不可重複，請改選或刪除多餘的列');
+      return;
+    }
+    if (names.length < 2) {
+      toast('多人出款請至少兩位不同出資人；只有一人出資請改「單人付款」');
       return;
     }
     amount = payers.reduce((s, p) => s + p.amount, 0);
-    paidBy = '多人';
+    paidBy = '';
     extraFields = { payers };
   } else {
     amount = parseFloat(document.getElementById('d-amount').value);
@@ -740,8 +884,8 @@ export async function submitTripExpense() {
   renderTripDetail();
 
   try {
-    await postRow(row);
-    toast('已記帳！');
+    const pr = await postRow(row);
+    toast(pr.status === 'queued' ? '已暫存，連上網路後會自動上傳' : '已記帳！');
   } catch (e) {
     undoOptimisticPush(row);
     renderTripDetail();
@@ -774,8 +918,8 @@ export async function voidTripExpenseAction(id) {
   appState.allRows.push(row);
   renderTripDetail();
   try {
-    await postRow(row);
-    toast('已撤回');
+    const pr = await postRow(row);
+    toast(pr.status === 'queued' ? '已暫存，連上網路後會自動上傳' : '已撤回');
   } catch (e) {
     undoOptimisticPush(row);
     renderTripDetail();
@@ -887,9 +1031,32 @@ export function openEditRecord(r) {
   const summary = document.getElementById('edit-summary');
   if (summary) {
     const amt = parseFloat(r.amount) || 0;
-    const paidBy = r.paidBy ? `${r.paidBy}付` : '';
+    let payLine = '';
+    if (r.type === 'tripExpense' && Array.isArray(r.payers) && r.payers.length) {
+      const parts = r.payers
+        .filter(p => p && String(p.name || '').trim() && (parseFloat(p.amount) || 0) > 0)
+        .map(p => `${esc(String(p.name).trim())} NT$${Math.round(parseFloat(p.amount) || 0)}`);
+      if (parts.length) payLine = parts.join(' ＋ ');
+    }
+    if (!payLine && r.paidBy) payLine = `${esc(String(r.paidBy))}付`;
+
+    let splitHtml = '';
+    if (r.type === 'tripExpense' && Array.isArray(r.splitAmong) && r.splitAmong.length > 0) {
+      const n = r.splitAmong.length;
+      const per = Math.round(amt / n);
+      const names = r.splitAmong.map(m => esc(String(m))).join('、');
+      const trip = r.tripId ? getTripById(r.tripId) : null;
+      const tm = trip?.members?.length ?? 0;
+      const fullTrip = tm > 0 && n === tm;
+      splitHtml = `<div class="edit-summary-split" role="group" aria-label="分攤說明">
+        <div class="edit-summary-split-row"><span class="edit-summary-split-k">分攤對象</span><span class="edit-summary-split-v">${names}${fullTrip ? ` <span class="edit-summary-split-tag">全員均分</span>` : ''}</span></div>
+        <div class="edit-summary-split-row"><span class="edit-summary-split-k">每人負擔</span><span class="edit-summary-split-v">NT$${per.toLocaleString()}</span></div>
+      </div>`;
+    }
+
     summary.innerHTML = `<div class="edit-summary-item">${esc(r.item || '—')}</div>`
-      + `<div class="edit-summary-meta">${esc(r.date || '')}${paidBy ? ' · ' + esc(paidBy) : ''}${amt ? ' · NT$' + Math.round(amt) : ''}</div>`;
+      + `<div class="edit-summary-meta">${esc(r.date || '')}${payLine ? ' · ' + payLine : ''}${amt ? ' · NT$' + Math.round(amt) : ''}</div>`
+      + splitHtml;
   }
 
   document.getElementById('edit-date').value = r.date || todayStr();
@@ -972,8 +1139,8 @@ export async function submitEditRecord() {
   doRender();
   closeEditRecord();
   try {
-    await postRow(postPayload);
-    toast('已更新');
+    const pr = await postRow(postPayload, { syncTarget: optimisticRow });
+    toast(pr.status === 'queued' ? '已暫存，連上網路後會自動上傳' : '已更新');
   } catch (e) {
     undoOptimisticPush(optimisticRow);
     doRender();
@@ -1091,14 +1258,17 @@ export async function handleAvatarSelected(ev) {
   if (document.getElementById('member-dir-panel')?.classList.contains('is-open')) renderMemberDirectory();
 
   try {
-    await postRow({
-      type: 'avatar',
-      action: 'set',
-      id: optimisticRow.id,
-      memberName,
-      avatarDataUrl: dataUrl,
-    });
-    toast('頭像已更新');
+    const pr = await postRow(
+      {
+        type: 'avatar',
+        action: 'set',
+        id: optimisticRow.id,
+        memberName,
+        avatarDataUrl: dataUrl,
+      },
+      { syncTarget: optimisticRow },
+    );
+    toast(pr.status === 'queued' ? '已暫存，連上網路後會自動上傳' : '頭像已更新');
   } catch (e) {
     undoOptimisticPush(optimisticRow);
     if (appState.currentPage === 'home') renderHome();
@@ -1109,7 +1279,7 @@ export async function handleAvatarSelected(ev) {
 }
 
 export { exportBackupCSV, copyBackupText, exportTechnicalCSV } from './backup.js';
-export { updateMultiPayTotal, updatePerPerson };
+export { updateMultiPayTotal, updatePerPerson } from './views-trip-detail.js';
 
 export function openBackupMenu() {
   document.getElementById('backup-overlay')?.classList.add('open');

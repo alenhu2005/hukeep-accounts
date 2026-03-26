@@ -1,5 +1,6 @@
 import { TIMEZONE } from './config.js';
 import { appState } from './state.js';
+import { postOutboxLength } from './offline-queue.js';
 
 function formatTwTime(ms) {
   if (ms == null || Number.isNaN(ms)) return '';
@@ -45,11 +46,13 @@ export function updateSyncUI() {
     return;
   }
   if (syncStatus === 'cache_only') {
+    const n = postOutboxLength();
+    const pendingBit = n > 0 ? ` · 待上傳 ${n} 筆` : '';
     badge.textContent = '僅快取';
     badge.className = 'sync-status-badge sync-status-badge--warn';
     text.textContent = lastStr
-      ? `離線或連線失敗，顯示本機資料 · 上次成功同步 ${lastStr}`
-      : '離線或連線失敗，顯示本機資料（尚未成功同步過）';
+      ? `離線或連線失敗，顯示本機資料 · 上次成功同步 ${lastStr}${pendingBit}`
+      : `離線或連線失敗，顯示本機資料（尚未成功同步過）${pendingBit}`;
     return;
   }
   if (syncStatus === 'error') {

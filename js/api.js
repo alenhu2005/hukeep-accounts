@@ -17,6 +17,16 @@ import { isDailyRow, isTripRow, normalizeRow } from './model.js';
 import { abortSignalAfter } from './utils.js';
 import { updateSyncUI } from './sync-ui.js';
 import { getClientDeviceSummary } from './device-info.js';
+import {
+  mergeFreshWithOutboxBackedPending,
+  readPostOutbox,
+  enqueuePostOutbox,
+  dequeuePostOutboxHead,
+  peekPostOutboxHead,
+  postOutboxLength,
+  clearPendingSyncForPayload,
+  pruneStalePendingSyncFlags,
+} from './offline-queue.js';
 
 function sleep(ms) {
   return new Promise(r => setTimeout(r, ms));
@@ -35,6 +45,18 @@ function isRetryableNetworkError(err) {
   if (name === 'AbortError' || name === 'TimeoutError') return true;
   const msg = String(err?.message || '');
   return /Failed to fetch|NetworkError|Load failed/i.test(msg);
+}
+
+/** 可排入離線佇列、稍後自動重送（不含 4xx／GAS 業務錯誤） */
+function isQueueableForOutbox(err) {
+  if (isRetryableNetworkError(err)) return true;
+  const msg = String(err?.message || '');
+  if (msg.startsWith('HTTP_')) {
+    const code = msg.slice(5);
+    if (code === '429') return true;
+    if (code.startsWith('5')) return true;
+  }
+  return false;
 }
 
 function readSyncTimestampFromStorage() {
@@ -64,6 +86,7 @@ export function loadCache() {
       ...(daily ? JSON.parse(daily) : []),
       ...(trip ? JSON.parse(trip) : []),
     ].map(normalizeRow);
+    pruneStalePendingSyncFlags(appState.allRows);
     const ts = readSyncTimestampFromStorage();
     appState.lastSyncAt = ts;
     appState.syncStatus = appState.allRows.length ? 'cache_only' : 'idle';
@@ -77,7 +100,11 @@ function stripBase64Fields(r) {
   const out = {};
   for (const k in r) {
     const v = r[k];
-    out[k] = typeof v === 'string' && v.startsWith('data:image/') ? '' : v;
+    if (r._pendingSync) {
+      out[k] = v;
+    } else {
+      out[k] = typeof v === 'string' && v.startsWith('data:image/') ? '' : v;
+    }
   }
   return out;
 }
@@ -196,21 +223,8 @@ export async function loadData(opts = {}) {
 
     let fresh = raw.filter(r => r && r.type).map(normalizeRow);
 
-    const localById = {};
-    localSnapshot.forEach(r => {
-      if (r.id) localById[r.id] = r;
-    });
-    fresh = fresh.map(r => {
-      const local = localById[r.id];
-      if (!local) return r;
-      if (r.type === 'trip' && !r.name && local.name) {
-        return { ...r, name: local.name, members: r.members || local.members };
-      }
-      if (r.type === 'tripExpense' && !r.tripId && local.tripId) {
-        return { ...r, tripId: local.tripId };
-      }
-      return r;
-    });
+    // 試算表為準：不再用本機列補 GAS 缺欄；未送出且仍在 POST 佇列者才併回。
+    fresh = mergeFreshWithOutboxBackedPending(localSnapshot, fresh, readPostOutbox());
 
     clearLedgerLocalStorage();
     appState.allRows = fresh;
@@ -221,7 +235,7 @@ export async function loadData(opts = {}) {
       const now = Date.now();
       appState.lastSyncAt = now;
       persistSyncTimestamp(now);
-      appState.syncStatus = 'synced';
+      appState.syncStatus = postOutboxLength() > 0 ? 'cache_only' : 'synced';
       updateSyncUI();
     }
     return unchanged;
@@ -266,52 +280,147 @@ export function formatPostError(err) {
   return '同步失敗，請稍後再試';
 }
 
-export async function postRow(data) {
-  appState.syncStatus = 'syncing';
-  updateSyncUI();
+/**
+ * 試算表「payers」欄為單一儲存格時須為文字；陣列會變成 [object Object] 或寫入失敗。
+ * 本機 appState 仍維持陣列，只在 POST 時轉成 JSON 字串。
+ */
+function payloadForGasPost(data) {
+  const o = { ...data };
+  if (Array.isArray(o.payers)) {
+    o.payers = JSON.stringify(o.payers);
+  }
+  return o;
+}
+
+async function postRowSingleAttempt(data) {
+  const base = payloadForGasPost(data);
+  let payload = base;
+  if (APPEND_DEVICE_INFO_TO_POST) {
+    const clientLabel = await getClientDeviceSummary();
+    payload = { ...base, _clientDevice: clientLabel };
+  }
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload),
+    redirect: 'follow',
+    signal: getPostAbortSignal(),
+  });
+  if (!res.ok) {
+    throw new Error('HTTP_' + res.status);
+  }
+  let gasBody = null;
+  try {
+    gasBody = await res.json();
+  } catch (_) {
+    /* response may not be JSON */
+  }
+  if (gasBody && gasBody.result === 'error') {
+    throw new Error('GAS_ERR:' + (gasBody.message || '未知伺服器錯誤'));
+  }
+}
+
+function shouldRetryPostAttempt(err, attempt) {
+  if (attempt >= POST_MAX_RETRIES - 1) return false;
+  if (isRetryableNetworkError(err)) return true;
+  const msg = String(err?.message || '');
+  if (!msg.startsWith('HTTP_')) return false;
+  const code = parseInt(msg.slice(5), 10);
+  return !Number.isNaN(code) && isRetryableHttp(code);
+}
+
+/**
+ * @param {object} data POST 本體（勿含 _pendingSync）
+ * @param {{
+ *   allowQueue?: boolean,
+ *   updateSyncUi?: boolean,
+ *   syncTarget?: object | null,
+ * }} [opts]
+ * - `syncTarget`: 與畫面綁定的列物件（成功時清除其 `_pendingSync`）；`null` 表示不清除（例如 flush 佇列）
+ * @returns {Promise<{ status: 'sent' | 'queued' }>}
+ */
+export async function postRow(data, opts = {}) {
+  const allowQueue = opts.allowQueue !== false;
+  const updateSyncUi = opts.updateSyncUi !== false;
+  let syncTarget;
+  if ('syncTarget' in opts) syncTarget = opts.syncTarget;
+  else syncTarget = data;
+
+  if (updateSyncUi) {
+    appState.syncStatus = 'syncing';
+    updateSyncUI();
+  }
+
   let lastErr;
   for (let attempt = 0; attempt < POST_MAX_RETRIES; attempt++) {
     try {
-      let payload = data;
-      if (APPEND_DEVICE_INFO_TO_POST) {
-        const clientLabel = await getClientDeviceSummary();
-        payload = { ...data, _clientDevice: clientLabel };
-      }
-      const res = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(payload),
-        redirect: 'follow',
-        signal: getPostAbortSignal(),
-      });
-      if (!res.ok) {
-        if (isRetryableHttp(res.status) && attempt < POST_MAX_RETRIES - 1) {
-          await sleep(jitterBackoff(attempt, POST_RETRY_BASE_MS));
-          continue;
-        }
-        throw new Error('HTTP_' + res.status);
-      }
-      let gasBody = null;
-      try { gasBody = await res.json(); } catch (_) { /* response may not be JSON */ }
-      if (gasBody && gasBody.result === 'error') {
-        throw new Error('GAS_ERR:' + (gasBody.message || '未知伺服器錯誤'));
+      await postRowSingleAttempt(data);
+      if (syncTarget != null && typeof syncTarget === 'object' && syncTarget._pendingSync) {
+        delete syncTarget._pendingSync;
       }
       saveCache();
       const now = Date.now();
       appState.lastSyncAt = now;
       persistSyncTimestamp(now);
-      appState.syncStatus = 'synced';
-      updateSyncUI();
-      return;
+      appState.syncStatus = postOutboxLength() > 0 ? 'cache_only' : 'synced';
+      if (updateSyncUi) updateSyncUI();
+      return { status: 'sent' };
     } catch (e) {
       lastErr = e;
-      if (attempt < POST_MAX_RETRIES - 1 && isRetryableNetworkError(e)) {
+      if (shouldRetryPostAttempt(e, attempt)) {
         await sleep(jitterBackoff(attempt, POST_RETRY_BASE_MS));
         continue;
       }
+      if (allowQueue && isQueueableForOutbox(lastErr)) {
+        if (syncTarget != null && typeof syncTarget === 'object') syncTarget._pendingSync = true;
+        enqueuePostOutbox(data);
+        saveCache();
+        appState.syncStatus = appState.allRows.length ? 'cache_only' : 'error';
+        if (updateSyncUi) updateSyncUI();
+        return { status: 'queued' };
+      }
       appState.syncStatus = appState.allRows.length ? 'cache_only' : 'error';
-      updateSyncUI();
+      if (updateSyncUi) updateSyncUI();
       throw lastErr;
     }
   }
+  throw lastErr;
+}
+
+/**
+ * 依序送出離線佇列；成功後可選擇靜默拉取試算表。
+ * @param {{ silent?: boolean, reloadAfter?: boolean }} [opts]
+ */
+export async function flushPostOutbox(opts = {}) {
+  const silent = !!opts.silent;
+  const reloadAfter = opts.reloadAfter !== false;
+  let sent = 0;
+  while (peekPostOutboxHead()) {
+    const head = peekPostOutboxHead();
+    try {
+      await postRow(head, {
+        allowQueue: false,
+        updateSyncUi: false,
+        syncTarget: null,
+      });
+      dequeuePostOutboxHead();
+      clearPendingSyncForPayload(appState.allRows, head);
+      sent++;
+    } catch (e) {
+      if (isQueueableForOutbox(e)) break;
+      import('./utils.js').then(m => m.toast(formatPostError(e)));
+      break;
+    }
+  }
+  saveCache();
+  if (sent && reloadAfter) {
+    try {
+      await loadData({ silent, backgroundPoll: true });
+    } catch {
+      /* ignore */
+    }
+  }
+  appState.syncStatus =
+    postOutboxLength() > 0 ? 'cache_only' : appState.allRows.length ? 'synced' : appState.syncStatus;
+  updateSyncUI();
 }

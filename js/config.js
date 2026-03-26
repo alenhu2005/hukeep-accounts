@@ -36,6 +36,9 @@ export const POLL_MS = 300_000;
 /** localStorage：上次成功從 GAS 拉取並寫入的時間（ms） */
 export const SYNC_LAST_AT_KEY = 'ledger_sync_last_at_v1';
 
+/** POST 失敗時排隊，連線恢復後依序送出（FIFO） */
+export const POST_OUTBOX_KEY = 'ledger_post_outbox_v1';
+
 /** GET / POST 失敗時重試（指數退避 + 小幅隨機抖動） */
 export const GET_MAX_RETRIES = 4;
 export const GET_RETRY_BASE_MS = 400;

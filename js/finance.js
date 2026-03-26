@@ -45,9 +45,18 @@ export function computeSettlements(members, expenses, adjustments = []) {
   });
   for (const e of expenses.filter(x => !x._voided)) {
     const share = e.amount / (e.splitAmong.length || 1);
-    if (e.payers && Array.isArray(e.payers)) {
-      for (const p of e.payers) bal[p.name] = (bal[p.name] || 0) + (parseFloat(p.amount) || 0);
-    } else {
+    const payerRows =
+      e.payers && Array.isArray(e.payers)
+        ? e.payers.filter(
+            p => p && String(p.name || '').trim() && (parseFloat(p.amount) || 0) > 0.0001,
+          )
+        : [];
+    if (payerRows.length > 0) {
+      for (const p of payerRows) {
+        const n = String(p.name).trim();
+        bal[n] = (bal[n] || 0) + (parseFloat(p.amount) || 0);
+      }
+    } else if (e.paidBy && e.paidBy !== '多人') {
       bal[e.paidBy] = (bal[e.paidBy] || 0) + e.amount;
     }
     for (const m of e.splitAmong) bal[m] = (bal[m] || 0) - share;
@@ -84,8 +93,8 @@ export function computePayerTotals(expenses) {
     if (e._voided) continue;
     if (e.payers && Array.isArray(e.payers)) {
       for (const p of e.payers) {
-        const n = p.name;
-        if (!n) continue;
+        const n = p && String(p.name || '').trim();
+        if (!n || (parseFloat(p.amount) || 0) <= 0) continue;
         totals[n] = (totals[n] || 0) + (parseFloat(p.amount) || 0);
       }
     } else if (e.paidBy && e.paidBy !== '多人') {

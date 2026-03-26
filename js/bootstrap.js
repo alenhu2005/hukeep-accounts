@@ -1,6 +1,6 @@
 import { POLL_MS } from './config.js';
 import { appState } from './state.js';
-import { loadCache, loadData, clearLedgerLocalStorage } from './api.js';
+import { loadCache, loadData, flushPostOutbox } from './api.js';
 import { render } from './render-registry.js';
 import { updateThemeIcon } from './theme.js';
 import { updateSyncUI } from './sync-ui.js';
@@ -63,6 +63,7 @@ async function pollForChanges(opts = {}) {
 
   let unchanged = true;
   try {
+    await flushPostOutbox({ silent: true });
     unchanged = await loadData({ backgroundPoll: true });
   } catch {
     unchanged = true;
@@ -192,9 +193,14 @@ export async function initApp() {
   initAmountInputs();
 
   const unchangedAfterFetch = await loadData();
+  await flushPostOutbox({ silent: true });
   lastSyncFinished = Date.now();
   if (!unchangedAfterFetch) renderCurrentPage();
   schedulePoll();
+
+  window.addEventListener('online', () => {
+    flushPostOutbox({ silent: false }).catch(() => {});
+  });
 
   window.addEventListener('pagehide', () => persistSessionSnapshot());
 

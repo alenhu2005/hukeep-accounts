@@ -106,12 +106,23 @@ export function getTripExpensesFromRows(tripId, allRows) {
       r => r.type === 'tripExpense' && r.action === 'add' && r.tripId === tripId && !hardDelIds.has(r.id),
     )
     .map(r => {
+      let payers = r.payers;
+      if (typeof payers === 'string') {
+        try {
+          payers = JSON.parse(payers);
+        } catch {
+          payers = null;
+        }
+      }
+      if (!Array.isArray(payers)) payers = undefined;
       let rec = {
         ...r,
         amount: parseFloat(r.amount) || 0,
         splitAmong: parseArr(r.splitAmong),
         _voided: voidIds.has(r.id),
+        ...(payers ? { payers } : {}),
       };
+      if (!payers) delete rec.payers;
       if (editMap[r.id]) rec = { ...rec, ...editMap[r.id] };
       return rec;
     })
