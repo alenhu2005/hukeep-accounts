@@ -1573,13 +1573,13 @@
 
     /* mint — dot-matrix / techno */
     .member-rare--mint {
-      --rare-border: rgba(16,185,129,.70);
-      --rare-ring: rgba(16,185,129,.14);
-      --rare-shadow: rgba(34,211,238,.12);
-      --rare-bg-a: rgba(16,185,129,.12);
-      --rare-bg-b: rgba(34,211,238,.06);
-      --rare-glow-a: rgba(52,211,153,.22);
-      --rare-glow-b: rgba(34,211,238,.10);
+      --rare-border: rgba(4,120,87,.78);
+      --rare-ring: rgba(4,120,87,.18);
+      --rare-shadow: rgba(4,120,87,.16);
+      --rare-bg-a: rgba(4,120,87,.14);
+      --rare-bg-b: rgba(6,95,70,.08);
+      --rare-glow-a: rgba(16,185,129,.22);
+      --rare-glow-b: rgba(4,120,87,.12);
       --rare-after-opacity: .40;
       --rare-after-bg:
         radial-gradient(circle, rgba(255,255,255,.36) 0 1px, transparent 2px),
@@ -1591,11 +1591,11 @@
       --rare-frame: 6.6s;
       /* scanner ring */
       --rare-ring-opacity: .60;
-      --rare-ring-bg: repeating-conic-gradient(from 0deg, rgba(52,211,153,0) 0 10deg, rgba(52,211,153,.30) 10deg 12deg, rgba(34,211,238,.20) 12deg 14deg, rgba(52,211,153,0) 14deg 20deg);
+      --rare-ring-bg: repeating-conic-gradient(from 0deg, rgba(16,185,129,0) 0 10deg, rgba(16,185,129,.34) 10deg 12deg, rgba(4,120,87,.26) 12deg 14deg, rgba(16,185,129,0) 14deg 20deg);
       --rare-ring-anim: rareRingRotate 8.8s linear infinite;
-      --rare-ring-filter: drop-shadow(0 0 16px rgba(34,211,238,.14));
-      --rare-bar-a:#34d399; --rare-bar-b:#22d3ee; --rare-bar-c:#a3e635;
-      --rare-frame-a:#34d399; --rare-frame-b:#22d3ee; --rare-frame-c:#a3e635; --rare-frame-d:#fbbf24;
+      --rare-ring-filter: drop-shadow(0 0 16px rgba(16,185,129,.16));
+      --rare-bar-a:#10b981; --rare-bar-b:#047857; --rare-bar-c:#34d399;
+      --rare-frame-a:#10b981; --rare-frame-b:#047857; --rare-frame-c:#34d399; --rare-frame-d:#a3e635;
     }
     .member-rare--mint.member-chip--rare { border-style: dotted; border-width: 1.5px; }
 

@@ -168,7 +168,7 @@ export const HIDDEN_MEMBER_COLORS = [
   { id: 'hidden-gold', label: '流金', styleKey: 'gold', bg: '#fffbeb', fg: '#d97706', darkBg: '#2b1600', darkFg: '#fbbf24' },
   { id: 'hidden-cosmic', label: '星際紫', styleKey: 'cosmic', bg: '#f5f3ff', fg: '#7c3aed', darkBg: '#12002b', darkFg: '#c4b5fd' },
   { id: 'hidden-lava', label: '熔岩橙', styleKey: 'lava', bg: '#fff7ed', fg: '#ea580c', darkBg: '#2a0a00', darkFg: '#fb923c' },
-  { id: 'hidden-mint', label: '薄荷綠', styleKey: 'mint', bg: '#ecfdf5', fg: '#059669', darkBg: '#022c22', darkFg: '#34d399' },
+  { id: 'hidden-mint', label: '薄荷綠', styleKey: 'mint', bg: '#d1fae5', fg: '#047857', darkBg: '#052e24', darkFg: '#10b981' },
   { id: 'hidden-aurora', label: '極光', styleKey: 'aurora', bg: '#eef2ff', fg: '#6366f1', darkBg: '#0b102a', darkFg: '#a5b4fc' },
   { id: 'hidden-sakura', label: '櫻霧', styleKey: 'sakura', bg: '#fff1f2', fg: '#fb7185', darkBg: '#2a0a14', darkFg: '#fda4af' },
   { id: 'hidden-ice', label: '冰晶', styleKey: 'ice', bg: '#f0f9ff', fg: '#38bdf8', darkBg: '#062235', darkFg: '#7dd3fc' },
