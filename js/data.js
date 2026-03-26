@@ -165,7 +165,7 @@ export const MEMBER_COLORS = [
 // Easter eggs: hidden colors (not in the 16-color cycle)
 export const HIDDEN_MEMBER_COLORS = [
   { id: 'hidden-neon', label: '霓虹青', styleKey: 'neon', bg: '#ecfeff', fg: '#22d3ee', darkBg: '#042f2e', darkFg: '#67e8f9' },
-  { id: 'hidden-gold', label: '流金', styleKey: 'gold', bg: '#fffbeb', fg: '#d97706', darkBg: '#2b1600', darkFg: '#fbbf24' },
+  { id: 'hidden-gold', label: '流金', styleKey: 'gold', bg: '#fff4b0', fg: '#b45309', darkBg: '#2b1600', darkFg: '#fcd34d' },
   { id: 'hidden-cosmic', label: '星際紫', styleKey: 'cosmic', bg: '#f5f3ff', fg: '#7c3aed', darkBg: '#12002b', darkFg: '#c4b5fd' },
   { id: 'hidden-lava', label: '熔岩橙', styleKey: 'lava', bg: '#fff7ed', fg: '#ea580c', darkBg: '#2a0a00', darkFg: '#fb923c' },
   { id: 'hidden-mint', label: '薄荷綠', styleKey: 'mint', bg: '#d1fae5', fg: '#047857', darkBg: '#052e24', darkFg: '#10b981' },

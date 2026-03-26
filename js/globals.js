@@ -101,6 +101,15 @@ function closePhotoLightbox() {
   });
 })();
 
+// Pause expensive visual effects when tab is hidden/backgrounded.
+(function initAnimationPauseOnHidden() {
+  function apply() {
+    document.documentElement.classList.toggle('anim-paused', document.hidden);
+  }
+  document.addEventListener('visibilitychange', apply);
+  apply();
+})();
+
 async function clearLocalCache() {
   const { showConfirm } = await import('./dialog.js');
   const ok = await showConfirm('清除本地快取？', '將清除本機暫存的帳務資料，下次開啟會重新從伺服器載入。');

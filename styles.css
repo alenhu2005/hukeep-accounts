@@ -1487,36 +1487,40 @@
 
     /* gold — metallic bevel, minimal shimmer */
     .member-rare--gold {
-      --rare-border: rgba(245,158,11,.78);
-      --rare-ring: rgba(251,191,36,.18);
-      --rare-shadow: rgba(120,53,15,.16);
-      --rare-bg-a: rgba(251,191,36,.18);
-      --rare-bg-b: rgba(245,158,11,.08);
-      --rare-glow-a: rgba(253,230,138,.30);
-      --rare-glow-b: rgba(255,255,255,.08);
+      /* go full "rich gold" */
+      --rare-border: rgba(245, 200, 40, .92);
+      --rare-ring: rgba(255, 215, 0, .26);
+      --rare-shadow: rgba(120,53,15,.22);
+      --rare-bg-a: rgba(255, 215, 0, .26);
+      --rare-bg-b: rgba(245,158,11,.12);
+      --rare-glow-a: rgba(255, 230, 120, .42);
+      --rare-glow-b: rgba(255,255,255,.12);
       --rare-shimmer: 4.2s;
-      --rare-after-opacity: .34;
+      --rare-after-opacity: .52;
       --rare-after-bg:
-        linear-gradient(180deg, rgba(255,255,255,.55), transparent 60%),
-        radial-gradient(72% 62% at 50% 35%, rgba(253,230,138,.28), transparent 70%);
+        conic-gradient(from 0deg, rgba(255,215,0,0), rgba(255,215,0,.38), rgba(255,255,255,.26), rgba(245,158,11,.22), rgba(255,215,0,0)),
+        linear-gradient(180deg, rgba(255,255,255,.62), transparent 58%),
+        radial-gradient(72% 62% at 50% 35%, rgba(255, 230, 120, .34), transparent 70%);
       --rare-after-filter: blur(.2px);
-      --rare-after-anim: rareGlowPulse 3.0s ease-in-out infinite;
+      --rare-after-anim: rareRotate 7.6s linear infinite;
+      --rare-after-blend: screen;
       --rare-avatar-ring-a: rgba(251,191,36,.72);
       --rare-avatar-ring-b: rgba(245,158,11,.35);
       /* gold glints outside */
-      --rare-deco-opacity: .72;
+      --rare-deco-opacity: .92;
       --rare-deco-bg:
-        radial-gradient(7px 7px at 18% 18%, rgba(255,255,255,.65) 0 34%, transparent 36%),
-        radial-gradient(5px 5px at 72% 12%, rgba(255,255,255,.52) 0 34%, transparent 36%),
-        radial-gradient(6px 6px at 86% 42%, rgba(253,230,138,.70) 0 34%, transparent 36%),
-        radial-gradient(5px 5px at 20% 86%, rgba(255,255,255,.42) 0 34%, transparent 36%);
-      --rare-deco-filter: drop-shadow(0 0 14px rgba(245,158,11,.18));
-      --rare-deco-anim: rareGlowPulse 4.2s ease-in-out infinite;
+        radial-gradient(8px 8px at 18% 18%, rgba(255,255,255,.78) 0 34%, transparent 36%),
+        radial-gradient(6px 6px at 72% 12%, rgba(255,255,255,.62) 0 34%, transparent 36%),
+        radial-gradient(7px 7px at 86% 42%, rgba(255, 230, 120, .88) 0 34%, transparent 36%),
+        radial-gradient(6px 6px at 20% 86%, rgba(255,255,255,.52) 0 34%, transparent 36%),
+        radial-gradient(10px 6px at 58% 6%, rgba(255, 215, 0, .55) 0 36%, transparent 38%);
+      --rare-deco-filter: drop-shadow(0 0 18px rgba(245,158,11,.20));
+      --rare-deco-anim: rareGlowPulse 2.8s ease-in-out infinite;
       /* slower "luxury" ring */
-      --rare-ring-opacity: .46;
-      --rare-ring-bg: conic-gradient(from 90deg, rgba(251,191,36,0), rgba(251,191,36,.26), rgba(255,255,255,.18), rgba(245,158,11,.22), rgba(251,191,36,0));
-      --rare-ring-anim: rareRingRotate 10.8s linear infinite;
-      --rare-ring-filter: drop-shadow(0 0 14px rgba(245,158,11,.14));
+      --rare-ring-opacity: .78;
+      --rare-ring-bg: conic-gradient(from 90deg, rgba(255,215,0,0), rgba(255,215,0,.46), rgba(255,255,255,.32), rgba(245,158,11,.32), rgba(255,215,0,0));
+      --rare-ring-anim: rareRingRotate 6.8s linear infinite;
+      --rare-ring-filter: drop-shadow(0 0 20px rgba(245,158,11,.18));
       --rare-frame: 8.2s;
       --rare-bar-a:#fde047; --rare-bar-b:#f59e0b; --rare-bar-c:#fbbf24;
       --rare-frame-a:#fde047; --rare-frame-b:#f59e0b; --rare-frame-c:#fbbf24; --rare-frame-d:#fb7185;
@@ -2763,4 +2767,20 @@
         animation: none !important;
         transition-duration: 0.01ms !important;
       }
+    }
+
+    /* Pause expensive rare effects when not visible (tab in background). */
+    html.anim-paused .member-chip--rare,
+    html.anim-paused .member-dir-avatar--rare,
+    html.anim-paused .record-avatar--rare,
+    html.anim-paused .trip-lottery-avatar--rare,
+    html.anim-paused .known-member-bar-dot--rare,
+    html.anim-paused .member-chip--rare::before,
+    html.anim-paused .member-chip--rare::after,
+    html.anim-paused .member-dir-avatar--rare::before,
+    html.anim-paused .member-dir-avatar--rare::after,
+    html.anim-paused .record-avatar--rare::before,
+    html.anim-paused .record-avatar--rare::after,
+    html.anim-paused .known-member-bar-dot--rare::after {
+      animation: none !important;
     }
