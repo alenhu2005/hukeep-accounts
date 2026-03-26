@@ -3,7 +3,7 @@ import { appState } from './state.js';
 import { todayStr } from './time.js';
 import { uid, toast, esc, jqAttr } from './utils.js';
 import { postRow, formatPostError } from './api.js';
-import { getDailyRecords, getTripById, getTripExpenses, getTripSettlementAdjustmentsFromRows, getKnownMemberNames, getAvatarUrlByMemberName, getMemberColor } from './data.js';
+import { getDailyRecords, getTripById, getTripExpenses, getTripSettlementAdjustmentsFromRows, getKnownMemberNames, getAvatarUrlByMemberName, getMemberColor, getMemberColorId, MEMBER_COLORS } from './data.js';
 import { computeBalance, computeSettlements } from './finance.js';
 import { showConfirm } from './dialog.js';
 import { guessCategoryFromItem } from './category.js';
@@ -649,14 +649,20 @@ function renderMemberDirectory() {
     body.innerHTML = '<div class="member-dir-empty">尚無成員紀錄</div>';
     return;
   }
-  body.innerHTML = members.map(name => {
-    const url = getAvatarUrlByMemberName(name);
+  body.innerHTML = members.map((name, idx) => {
+    const url = getAvatarUrlByMemberName(name, 'trip');
     const color = getMemberColor(name);
     const avatarHtml = url
       ? `<img class="member-dir-avatar-img" src="${url}" alt="${esc(name)}">`
       : `<span class="member-dir-avatar-fallback" style="background:${color.bg};color:${color.fg}">${esc(name.charAt(0))}</span>`;
+    const pickerId = `mcp-${idx}`;
+    const activeId = getMemberColorId(name);
+    const dots = MEMBER_COLORS.map(c => {
+      const active = c.id === activeId ? ' active' : '';
+      return `<button type="button" class="trip-color-dot${active}" style="background:${c.fg}" onclick="setMemberColor(${jq(name)},${jq(c.id)})" aria-label="設定 ${esc(name)} 顏色為 ${esc(c.id)}"></button>`;
+    }).join('');
     return `<div class="member-dir-item" data-member="${esc(name)}">
-      <button type="button" class="member-dir-avatar" onclick="openAvatarPickerForMember(${jqAttr(name)})" title="更換頭像" style="background:${color.bg}">
+      <button type="button" class="member-dir-avatar" onclick="openAvatarPickerForMember(${jqAttr(name)},'trip')" title="更換頭像" style="background:${color.bg}">
         ${avatarHtml}
         <span class="member-dir-avatar-edit">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 7l1-2h4l1 2h3a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h3zm3 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10z"/></svg>
@@ -664,6 +670,9 @@ function renderMemberDirectory() {
       </button>
       <div class="member-dir-name">${esc(name)}</div>
       <div class="member-dir-actions">
+        <button type="button" class="member-dir-action-btn" onclick="toggleMemberColorPicker(${idx})" title="顏色">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a9 9 0 0 0 0 18h4a3 3 0 0 0 0-6h-1.5a1.5 1.5 0 1 1 0-3H16a3 3 0 0 0 0-6h-4zM7.5 12a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3-4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm6 4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></svg>
+        </button>
         <button type="button" class="member-dir-action-btn" onclick="renameMemberPrompt(${jqAttr(name)})" title="改名">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
         </button>
@@ -671,8 +680,33 @@ function renderMemberDirectory() {
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
         </button>
       </div>
+      <div class="trip-color-picker member-color-picker" id="${pickerId}" style="display:none">${dots}</div>
     </div>`;
   }).join('');
+}
+
+export function toggleMemberColorPicker(idx) {
+  const el = document.getElementById('mcp-' + idx);
+  if (!el) return;
+  const wasOpen = el.style.display !== 'none';
+  document.querySelectorAll('.member-color-picker').forEach(p => { p.style.display = 'none'; });
+  if (!wasOpen) el.style.display = '';
+}
+
+export async function setMemberColor(memberName, colorId) {
+  const row = { type: 'memberProfile', action: 'setColor', memberName, colorId };
+  appState.allRows.push(row);
+  renderMemberDirectory();
+  refreshCurrentView();
+  try {
+    const pr = await postRow(row);
+    if (pr.status === 'queued') toast('已暫存，連上網路後會自動上傳');
+  } catch (e) {
+    undoOptimisticPush(row);
+    renderMemberDirectory();
+    refreshCurrentView();
+    toast(formatPostError(e));
+  }
 }
 
 export function toggleTripColorPicker(tripId) {
@@ -1251,9 +1285,11 @@ export function removeEditPhoto() {
 
 // ── Avatar uploader (global, per memberName) ──────────────────────────────
 let avatarUploadMemberName = null;
+let avatarUploadScope = 'auto';
 
-export function openAvatarPickerForMember(memberName) {
+export function openAvatarPickerForMember(memberName, scope = 'auto') {
   avatarUploadMemberName = memberName;
+  avatarUploadScope = scope || 'auto';
   const inp = document.getElementById('avatar-upload-input');
   if (!inp) return;
   inp.value = '';
@@ -1279,6 +1315,8 @@ export function setApiUrl(url) {
 export async function handleAvatarSelected(ev) {
   const memberName = avatarUploadMemberName;
   avatarUploadMemberName = null;
+  const scope = avatarUploadScope || 'auto';
+  avatarUploadScope = 'auto';
 
   const inp = ev && ev.target;
   const file = inp && inp.files && inp.files[0];
@@ -1312,6 +1350,7 @@ export async function handleAvatarSelected(ev) {
     action: 'set',
     id: uid(),
     memberName,
+    avatarScope: scope,
     avatarUrl: dataUrl,
   };
   appState.allRows.push(optimisticRow);
@@ -1326,6 +1365,7 @@ export async function handleAvatarSelected(ev) {
         action: 'set',
         id: optimisticRow.id,
         memberName,
+        avatarScope: scope,
         avatarDataUrl: dataUrl,
       },
       // 圖片不上離線佇列：避免 localStorage 容量問題 & 離線顯示不一致

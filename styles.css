@@ -503,6 +503,32 @@
       font-weight: 600;
       color: var(--text);
     }
+    .trip-lottery-avatar {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      background: var(--bg-tertiary);
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .trip-lottery-avatar-img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+    }
+    .trip-lottery-result-avatar-only .trip-lottery-avatar {
+      width: 72px;
+      height: 72px;
+      font-size: 28px;
+      border-width: 1px;
+    }
     .trip-lottery-pool-remove {
       display: flex;
       align-items: center;

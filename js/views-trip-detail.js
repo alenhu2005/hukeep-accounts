@@ -86,7 +86,7 @@ function playTripSettlementAnimations() {
 }
 
 function tripRecordAvatar(name, cssClass) {
-  const url = getAvatarUrlByMemberName(name);
+  const url = getAvatarUrlByMemberName(name, 'trip');
   const color = getMemberColor(name);
   if (url) {
     return `<div class="record-avatar ${cssClass}"><img class="record-avatar-img" src="${url}" alt="${esc(name)}"></div>`;
@@ -98,7 +98,7 @@ function tripRecordAvatar(name, cssClass) {
 }
 
 function memberAvatarPill(name, cssClass) {
-  const url = getAvatarUrlByMemberName(name);
+  const url = getAvatarUrlByMemberName(name, 'trip');
   const color = getMemberColor(name);
   if (url) {
     return `<span class="${cssClass}" title="${esc(name)}"><img src="${url}" alt="${esc(name)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block"></span>`;
@@ -189,7 +189,7 @@ export function renderDetailMemberChips(members) {
   const el = document.getElementById('detail-member-chips');
   el.innerHTML = members
     .map(m => {
-      const avatarUrl = getAvatarUrlByMemberName(m);
+      const avatarUrl = getAvatarUrlByMemberName(m, 'trip');
       const color = getMemberColor(m);
       const avatarHtml = avatarUrl
         ? `<img class="member-chip-avatar" src="${avatarUrl}" alt="${esc(m)} 頭像">`

@@ -1,5 +1,5 @@
 import { appState } from './state.js';
-import { getTripById } from './data.js';
+import { getTripById, getAvatarUrlByMemberName, getMemberColor } from './data.js';
 import { esc, jq, prefersReducedMotion, randomUniformIndex, toast } from './utils.js';
 
 const STORAGE_KEY = 'ledger_trip_lottery_v1';
@@ -80,6 +80,20 @@ let lotteryOutsideCloser = null;
 /** @type {number} */
 let drawAnimGen = 0;
 
+function lotteryAvatarHtml(name) {
+  const url = getAvatarUrlByMemberName(name, 'trip');
+  const color = getMemberColor(name);
+  if (url) {
+    return `<span class="trip-lottery-avatar" aria-hidden="true"><img class="trip-lottery-avatar-img" src="${url}" alt=""></span>`;
+  }
+  const ch = esc(String(name || '').trim().charAt(0) || '？');
+  return `<span class="trip-lottery-avatar trip-lottery-avatar--fallback" style="background:${color.bg};color:${color.fg}" aria-hidden="true">${ch}</span>`;
+}
+
+function lotteryResultHtml(name) {
+  return `<span class="trip-lottery-result-avatar-only">${lotteryAvatarHtml(name)}</span>`;
+}
+
 /**
  * @param {TripLotteryEntry} entry
  * @param {{ id: string, members: string[] }} trip
@@ -92,6 +106,7 @@ function poolManageHtml(entry, trip) {
           .map(
             n => `
         <span class="trip-lottery-pool-tag">
+          ${lotteryAvatarHtml(n)}
           ${esc(n)}
           <button type="button" class="trip-lottery-pool-remove" aria-label="從籤筒移除 ${esc(n)}" onclick="removeFromTripLotteryPool(${jq(n)})">×</button>
         </span>`,
@@ -284,7 +299,7 @@ function runSimpleDrawReveal(finalPick, onDone) {
   window.setTimeout(() => {
     if (gen !== drawAnimGen) return;
     displayEl.classList.remove('trip-lottery-display--spinning');
-    lineEl.textContent = finalPick;
+    lineEl.innerHTML = lotteryResultHtml(finalPick);
     displayEl.classList.add('trip-lottery-display--reveal');
     displayEl.setAttribute('aria-label', `抽中 ${finalPick}`);
     onDone();

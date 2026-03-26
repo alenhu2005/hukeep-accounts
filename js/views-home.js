@@ -204,12 +204,12 @@ function runningHTML(val) {
 }
 
 function recordAvatarHTML(name, cssClass, clickable = false) {
-  const url = getAvatarUrlByMemberName(name);
+  const url = getAvatarUrlByMemberName(name, 'daily');
   const inner = url
     ? `<img class="record-avatar-img" src="${url}" alt="${esc(name)}">`
     : esc(name);
   if (clickable) {
-    return `<button type="button" class="record-avatar ${cssClass} record-avatar-clickable" onclick="openAvatarPickerForMember(${jqAttr(name)})" title="${esc(name)} — 點擊更換頭像">${inner}</button>`;
+    return `<button type="button" class="record-avatar ${cssClass} record-avatar-clickable" onclick="openAvatarPickerForMember(${jqAttr(name)},'daily')" title="${esc(name)} — 點擊更換頭像">${inner}</button>`;
   }
   return `<div class="record-avatar ${cssClass}">${inner}</div>`;
 }

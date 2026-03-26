@@ -136,6 +136,8 @@ Object.assign(window, {
   removeEditPhoto: actions.removeEditPhoto,
   openAvatarPickerForMember: actions.openAvatarPickerForMember,
   handleAvatarSelected: actions.handleAvatarSelected,
+  toggleMemberColorPicker: actions.toggleMemberColorPicker,
+  setMemberColor: actions.setMemberColor,
   pickKnownMemberForTrip: actions.pickKnownMemberForTrip,
   addDetailMemberByName: actions.addDetailMemberByName,
   toggleMemberDirectory: actions.toggleMemberDirectory,
