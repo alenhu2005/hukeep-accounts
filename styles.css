@@ -834,7 +834,9 @@
 
     /* ice — make protrusions unmistakable (icy crown) */
     .member-rare--ice .member-dir-avatar--rare::before,
-    .member-rare--ice.record-avatar--rare::before {
+    .member-dir-avatar--rare.member-rare--ice::before,
+    .member-rare--ice.record-avatar--rare::before,
+    .record-avatar--rare.member-rare--ice::before {
       inset: -18px;
       opacity: 1;
       background:
@@ -1645,7 +1647,8 @@
     }
     /* sharpen crystals into "spikes" using clip-path, only when supported */
     @supports (clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%)) {
-      .member-rare--ice .member-dir-avatar--rare::before {
+      .member-rare--ice .member-dir-avatar--rare::before,
+      .member-dir-avatar--rare.member-rare--ice::before {
         clip-path: polygon(
           50% 0%,
           58% 6%,
