@@ -348,13 +348,17 @@
   <div class="member-dir-overlay" id="member-dir-overlay" onclick="closeMemberDirectory()"></div>
   <div class="member-dir-panel" id="member-dir-panel">
     <div class="member-dir-header">
-      <h2>成員管理</h2>
-      <div style="display:flex;align-items:center;gap:8px">
-        <button type="button" class="member-dir-preview" onclick="openHiddenStylePreview()" aria-label="預覽隱藏款" title="預覽隱藏款">隱藏款</button>
-        <button type="button" class="member-dir-close" onclick="closeMemberDirectory()" aria-label="關閉">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-        </button>
-      </div>
+      <h2
+        onclick="hiddenPreviewSecretTap()"
+        onmousedown="hiddenPreviewSecretPressStart()"
+        onmouseup="hiddenPreviewSecretPressEnd()"
+        ontouchstart="hiddenPreviewSecretPressStart()"
+        ontouchend="hiddenPreviewSecretPressEnd()"
+        title="成員管理"
+      >成員管理</h2>
+      <button type="button" class="member-dir-close" onclick="closeMemberDirectory()" aria-label="關閉">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+      </button>
     </div>
     <div class="member-dir-body" id="member-dir-body"></div>
   </div>

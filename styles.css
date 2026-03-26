@@ -2215,24 +2215,6 @@
     .member-dir-header h2 {
       font-size: 16px; font-weight: 700; margin: 0; color: var(--text);
     }
-    .member-dir-preview {
-      height: 32px;
-      padding: 0 10px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      background: var(--bg-secondary);
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-muted);
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: .02em;
-      transition: background .15s, color .15s, border-color .15s, transform .12s;
-    }
-    .member-dir-preview:hover { background: var(--surface); color: var(--primary); border-color: var(--primary); }
-    .member-dir-preview:active { transform: scale(0.96); }
     .member-dir-close {
       width: 32px; height: 32px; border-radius: 50%;
       border: none; background: var(--bg-secondary); cursor: pointer;

@@ -762,6 +762,37 @@ export function closeHiddenStylePreview() {
   document.getElementById('member-preview-overlay').classList.remove('open');
 }
 
+// Hidden entry for preview: 7 taps within 1.6s, or long-press 1.1s on the "成員管理" title.
+let _hiddenPreviewTapCount = 0;
+let _hiddenPreviewTapAt = 0;
+let _hiddenPreviewPressTimer = null;
+
+export function hiddenPreviewSecretTap() {
+  const now = Date.now();
+  if (now - _hiddenPreviewTapAt > 1600) _hiddenPreviewTapCount = 0;
+  _hiddenPreviewTapAt = now;
+  _hiddenPreviewTapCount++;
+  if (_hiddenPreviewTapCount >= 7) {
+    _hiddenPreviewTapCount = 0;
+    openHiddenStylePreview();
+  }
+}
+
+export function hiddenPreviewSecretPressStart() {
+  if (_hiddenPreviewPressTimer) clearTimeout(_hiddenPreviewPressTimer);
+  _hiddenPreviewPressTimer = setTimeout(() => {
+    _hiddenPreviewPressTimer = null;
+    openHiddenStylePreview();
+  }, 1100);
+}
+
+export function hiddenPreviewSecretPressEnd() {
+  if (_hiddenPreviewPressTimer) {
+    clearTimeout(_hiddenPreviewPressTimer);
+    _hiddenPreviewPressTimer = null;
+  }
+}
+
 function renderMemberDirectory() {
   const body = document.getElementById('member-dir-body');
   const members = getKnownMemberNames();
