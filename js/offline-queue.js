@@ -68,7 +68,18 @@ export function clonePayloadForOutbox(data) {
 }
 
 export function enqueuePostOutbox(payload) {
+  const key = pendingEventIdentity(payload);
   const q = readPostOutbox();
+  // Coalesce: if same event identity already queued, overwrite it.
+  // This prevents frequent UI actions (e.g. cycling colors) from bloating the outbox/spreadsheet.
+  if (key) {
+    const idx = q.findIndex(p => pendingEventIdentity(p) === key);
+    if (idx !== -1) {
+      q[idx] = clonePayloadForOutbox(payload);
+      writePostOutbox(q);
+      return;
+    }
+  }
   q.push(clonePayloadForOutbox(payload));
   writePostOutbox(q);
 }

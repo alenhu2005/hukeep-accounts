@@ -19,6 +19,7 @@ import { updateSyncUI } from './sync-ui.js';
 import { getClientDeviceSummary } from './device-info.js';
 import {
   mergeFreshWithOutboxBackedPending,
+  pendingEventIdentity,
   readPostOutbox,
   enqueuePostOutbox,
   dequeuePostOutboxHead,
@@ -374,6 +375,18 @@ export async function postRow(data, opts = {}) {
       if (allowQueue && isQueueableForOutbox(lastErr)) {
         if (syncTarget != null && typeof syncTarget === 'object') syncTarget._pendingSync = true;
         enqueuePostOutbox(data);
+        // If we overwrote an existing queued payload for the same identity, make sure we don't keep
+        // multiple local pending rows for the same event (they would clutter cache/UI and confuse merge logic).
+        const key = pendingEventIdentity(data);
+        if (key) {
+          for (const r of appState.allRows) {
+            if (r === syncTarget) continue;
+            if (r && r._pendingSync && pendingEventIdentity(r) === key) {
+              // Drop stale pending flags; the outbox now represents the latest payload.
+              delete r._pendingSync;
+            }
+          }
+        }
         saveCache();
         appState.syncStatus = appState.allRows.length ? 'cache_only' : 'error';
         if (updateSyncUi) updateSyncUI();

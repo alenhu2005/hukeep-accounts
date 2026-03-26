@@ -3,6 +3,8 @@ import {
   mergeFreshWithOutboxBackedPending,
   pendingEventIdentity,
   pruneStalePendingSyncFlags,
+  enqueuePostOutbox,
+  readPostOutbox,
   writePostOutbox,
 } from '../js/offline-queue.js';
 
@@ -86,5 +88,35 @@ describe('pruneStalePendingSyncFlags', () => {
     const rows = [{ type: 'daily', action: 'add', id: 'x', _pendingSync: true }];
     pruneStalePendingSyncFlags(rows);
     expect(rows[0]._pendingSync).toBe(true);
+  });
+});
+
+describe('enqueuePostOutbox (coalesce)', () => {
+  const orig = globalThis.localStorage;
+
+  beforeEach(() => {
+    const store = new Map();
+    globalThis.localStorage = {
+      getItem: k => (store.has(k) ? store.get(k) : null),
+      setItem: (k, v) => {
+        store.set(k, v);
+      },
+      removeItem: k => {
+        store.delete(k);
+      },
+    };
+    writePostOutbox([]);
+  });
+
+  afterEach(() => {
+    globalThis.localStorage = orig;
+  });
+
+  it('overwrites queued payloads with same identity', () => {
+    enqueuePostOutbox({ type: 'memberProfile', action: 'setColor', memberName: '皓', colorId: 'blue' });
+    enqueuePostOutbox({ type: 'memberProfile', action: 'setColor', memberName: '皓', colorId: 'rose' });
+    const q = readPostOutbox();
+    expect(q).toHaveLength(1);
+    expect(q[0].colorId).toBe('rose');
   });
 });
