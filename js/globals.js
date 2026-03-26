@@ -141,6 +141,8 @@ Object.assign(window, {
   addDetailMemberByName: actions.addDetailMemberByName,
   toggleMemberDirectory: actions.toggleMemberDirectory,
   closeMemberDirectory: actions.closeMemberDirectory,
+  openHiddenStylePreview: actions.openHiddenStylePreview,
+  closeHiddenStylePreview: actions.closeHiddenStylePreview,
   renameMemberPrompt: actions.renameMemberPrompt,
   deleteKnownMember: actions.deleteKnownMember,
   toggleTripColorPicker: actions.toggleTripColorPicker,

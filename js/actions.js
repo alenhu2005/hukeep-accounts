@@ -733,6 +733,35 @@ window.addEventListener('pagehide', () => {
   try { flushPendingMemberColors(); } catch { /* ignore */ }
 });
 
+export function openHiddenStylePreview() {
+  const body = document.getElementById('member-preview-body');
+  if (!body) return;
+  body.innerHTML = HIDDEN_MEMBER_COLORS.map(h => {
+    const sk = h.styleKey || '';
+    const styleCls = sk ? ` member-rare--${sk}` : '';
+    const label = h.label || h.id;
+    const chip = `<span class="member-chip member-chip--rare${styleCls}">
+      <span class="member-chip-avatar member-chip-avatar--fallback member-chip-avatar-fallback--rare${styleCls}" style="background:${h.bg};color:${h.fg}" aria-hidden="true">隱</span>
+      <span class="member-chip-name">${esc(label)}</span>
+    </span>`;
+    const dot = `<span class="known-member-bar-dot known-member-bar-dot--rare${styleCls}" style="background:${h.fg}" aria-hidden="true">隱</span>`;
+    const avatar = `<span class="trip-lottery-avatar trip-lottery-avatar--fallback trip-lottery-avatar--rare${styleCls} trip-lottery-avatar-fallback--rare${styleCls}" style="background:${h.bg};color:${h.fg}" aria-hidden="true">隱</span>`;
+    return `<div class="member-preview-row">
+      <div class="member-preview-name">${esc(label)}</div>
+      <div class="member-preview-samples">
+        ${chip}
+        <span class="member-preview-sample">${dot}</span>
+        <span class="member-preview-sample">${avatar}</span>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('member-preview-overlay').classList.add('open');
+}
+
+export function closeHiddenStylePreview() {
+  document.getElementById('member-preview-overlay').classList.remove('open');
+}
+
 function renderMemberDirectory() {
   const body = document.getElementById('member-dir-body');
   const members = getKnownMemberNames();

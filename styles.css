@@ -623,6 +623,7 @@
     /* 金額欄：無 number 微調箭頭；實際用 type=text + inputmode=numeric */
     input.form-input-amount {
       -moz-appearance: textfield;
+      appearance: textfield;
       font-variant-numeric: tabular-nums;
     }
     input[type="number"].form-input-amount::-webkit-outer-spin-button,
@@ -2045,6 +2046,77 @@
     }
     .member-dir-panel.is-open { transform: translateY(0); }
 
+    /* ── Hidden style preview overlay ── */
+    .member-preview-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1200;
+      background: rgba(0,0,0,.45);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .member-preview-overlay.open {
+      display: flex;
+      animation: overlayIn 0.22s ease both;
+    }
+    .member-preview-panel {
+      width: 100%;
+      max-width: 480px;
+      max-height: min(78vh, 680px);
+      background: var(--surface);
+      border-radius: 16px 16px 0 0;
+      box-shadow: 0 -4px 24px rgba(0,0,0,.18);
+      display: flex;
+      flex-direction: column;
+      animation: sheetUp 0.32s var(--ease-out) both;
+    }
+    .member-preview-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid var(--border);
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .member-preview-header h3 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 900;
+      color: var(--text);
+      letter-spacing: .01em;
+    }
+    .member-preview-body {
+      padding: 10px 16px 16px;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .member-preview-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 2px;
+      border-bottom: 1px solid var(--border);
+    }
+    .member-preview-row:last-child { border-bottom: none; }
+    .member-preview-name {
+      width: 66px;
+      flex-shrink: 0;
+      font-size: 12px;
+      font-weight: 900;
+      color: var(--text);
+      letter-spacing: .01em;
+      padding-top: 2px;
+    }
+    .member-preview-samples {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .member-preview-sample { display: inline-flex; align-items: center; }
+
     .member-dir-header {
       display: flex; align-items: center; justify-content: space-between;
       padding: 16px 20px 12px; border-bottom: 1px solid var(--border);
@@ -2053,6 +2125,24 @@
     .member-dir-header h2 {
       font-size: 16px; font-weight: 700; margin: 0; color: var(--text);
     }
+    .member-dir-preview {
+      height: 32px;
+      padding: 0 10px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--bg-secondary);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .02em;
+      transition: background .15s, color .15s, border-color .15s, transform .12s;
+    }
+    .member-dir-preview:hover { background: var(--surface); color: var(--primary); border-color: var(--primary); }
+    .member-dir-preview:active { transform: scale(0.96); }
     .member-dir-close {
       width: 32px; height: 32px; border-radius: 50%;
       border: none; background: var(--bg-secondary); cursor: pointer;
@@ -2336,10 +2426,12 @@
       .page.active,
       #dialog-overlay.open,
       #alert-overlay.open,
+      .member-preview-overlay.open,
       .member-dir-avatar--rare,
       #edit-overlay.open,
       #backup-overlay.open,
       .dialog,
+      .member-preview-panel,
       .edit-dialog,
       .backup-dialog,
       .toast-item {

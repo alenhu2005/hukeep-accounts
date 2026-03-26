@@ -349,11 +349,27 @@
   <div class="member-dir-panel" id="member-dir-panel">
     <div class="member-dir-header">
       <h2>成員管理</h2>
-      <button type="button" class="member-dir-close" onclick="closeMemberDirectory()" aria-label="關閉">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-      </button>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button type="button" class="member-dir-preview" onclick="openHiddenStylePreview()" aria-label="預覽隱藏款" title="預覽隱藏款">隱藏款</button>
+        <button type="button" class="member-dir-close" onclick="closeMemberDirectory()" aria-label="關閉">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </div>
     </div>
     <div class="member-dir-body" id="member-dir-body"></div>
+  </div>
+
+  <!-- Hidden style preview -->
+  <div class="member-preview-overlay" id="member-preview-overlay" onclick="if(event.target===this)closeHiddenStylePreview()">
+    <div class="member-preview-panel" role="dialog" aria-modal="true" aria-labelledby="member-preview-title" onclick="event.stopPropagation()">
+      <div class="member-preview-header">
+        <h3 id="member-preview-title">隱藏款預覽</h3>
+        <button type="button" class="member-dir-close" onclick="closeHiddenStylePreview()" aria-label="關閉">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </div>
+      <div class="member-preview-body" id="member-preview-body"></div>
+    </div>
   </div>
 
   <!-- ═══════════════ PAGE: 分析 ═══════════════ -->
