@@ -39,18 +39,33 @@
       font-size: 14px;
       line-height: 1.5;
       -webkit-font-smoothing: antialiased;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
     }
 
-    /* 表單與明確標記區塊維持可選取／系統拷貝選單（其餘繼承 html 的 app 質感） */
+    /* WebKit／iOS Safari：子元素常不繼承 user-select，需明確套在後代上 */
+    body * {
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    /* 表單與明確標記區塊維持可選取（優先於 body *，需 !important） */
     input,
     textarea,
     select,
     [contenteditable="true"],
-    .allow-select {
-      -webkit-user-select: text;
-      -moz-user-select: text;
-      -ms-user-select: text;
-      user-select: text;
+    .allow-select,
+    .allow-select * {
+      -webkit-user-select: text !important;
+      -moz-user-select: text !important;
+      -ms-user-select: text !important;
+      user-select: text !important;
       -webkit-touch-callout: default;
     }
 
