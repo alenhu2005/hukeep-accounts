@@ -848,6 +848,7 @@ export function openMemberAvatarPreview(memberName, scope = 'trip') {
   if (!name) return;
   avatarPreviewMemberName = name;
   avatarPreviewScope = scope === 'daily' ? 'daily' : 'trip';
+  const isDailyPreview = avatarPreviewScope === 'daily';
   const url = getAvatarUrlByMemberName(name, avatarPreviewScope);
   const color = getMemberColor(name);
   const rare = isHiddenMemberColorId(color.id);
@@ -855,24 +856,35 @@ export function openMemberAvatarPreview(memberName, scope = 'trip') {
   const styleCls = sk ? ` member-rare--${sk}` : '';
   const dTone = memberToneClass(rare);
   const dTv = memberToneVars(color, rare);
-  const ringCls = `member-avatar-preview-ring${rare ? ` member-avatar-preview-ring--rare${styleCls}` : ''}${dTone}`;
+  const ringCls = isDailyPreview
+    ? 'member-avatar-preview-ring member-avatar-preview-ring--plain'
+    : `member-avatar-preview-ring${rare ? ` member-avatar-preview-ring--rare${styleCls}` : ''}${dTone}`;
   const innerEl = document.getElementById('member-avatar-preview-inner');
   const titleEl = document.getElementById('member-avatar-preview-title');
   if (!innerEl || !titleEl) return;
   titleEl.textContent = name;
   if (url) {
-    const st = dTv ? ` style="${dTv}"` : '';
+    const st = !isDailyPreview && dTv ? ` style="${dTv}"` : '';
     innerEl.innerHTML = `<div class="${ringCls}"${st}><img class="member-avatar-preview-img" src="${url}" alt="${esc(name)} 頭像"></div>`;
   } else {
-    const fb = `member-avatar-preview-fallback${rare ? ` member-avatar-preview-fallback--rare${styleCls}` : ''}${dTone}`;
-    const st = `background:${color.bg};color:${color.fg}${dTv ? `;${dTv}` : ''}`;
+    const fb = isDailyPreview
+      ? 'member-avatar-preview-fallback'
+      : `member-avatar-preview-fallback${rare ? ` member-avatar-preview-fallback--rare${styleCls}` : ''}${dTone}`;
+    const st = isDailyPreview
+      ? `background:${color.bg};color:${color.fg}`
+      : `background:${color.bg};color:${color.fg}${dTv ? `;${dTv}` : ''}`;
     innerEl.innerHTML = `<div class="${ringCls}"><div class="${fb}" style="${st}">${esc(name.charAt(0))}</div></div>`;
   }
+  document.getElementById('member-avatar-preview-overlay')?.classList.toggle('member-avatar-preview-overlay--daily', isDailyPreview);
   document.getElementById('member-avatar-preview-overlay')?.classList.add('open');
 }
 
 export function closeMemberAvatarPreview() {
-  document.getElementById('member-avatar-preview-overlay')?.classList.remove('open');
+  const ov = document.getElementById('member-avatar-preview-overlay');
+  if (ov) {
+    ov.classList.remove('open');
+    ov.classList.remove('member-avatar-preview-overlay--daily');
+  }
   avatarPreviewMemberName = null;
   avatarPreviewScope = 'trip';
 }

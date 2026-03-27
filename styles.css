@@ -383,6 +383,9 @@
     .trip-lottery-popover:not([hidden]) {
       pointer-events: auto;
     }
+    .trip-lottery-popover:not([hidden]) .trip-lottery-popover-inner {
+      animation: popoverCardIn 0.28s var(--ease-out) both;
+    }
     .trip-lottery-popover-inner {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -2191,10 +2194,11 @@
       background: rgba(0,0,0,.88);
       display: none; align-items: center; justify-content: center;
       padding: 24px;
-      animation: lbFadeIn .2s ease both;
     }
-    .photo-lightbox.open { display: flex; }
-    @keyframes lbFadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .photo-lightbox.open {
+      display: flex;
+      animation: overlayIn 0.22s ease both;
+    }
     .photo-lightbox-wrap {
       display: flex; align-items: center; justify-content: center;
       touch-action: none; will-change: transform;
@@ -2224,9 +2228,14 @@
       background: rgba(0, 0, 0, 0.48);
       display: none; align-items: center; justify-content: center;
       padding: 24px;
-      animation: lbFadeIn 0.2s ease both;
     }
-    .member-avatar-preview-overlay.open { display: flex; }
+    .member-avatar-preview-overlay.open {
+      display: flex;
+      animation: overlayIn 0.22s ease both;
+    }
+    .member-avatar-preview-overlay.open .member-avatar-preview-panel {
+      animation: modalPopIn 0.34s var(--ease-spring) both;
+    }
     .member-avatar-preview-panel {
       position: relative;
       background: var(--surface);
@@ -2255,6 +2264,11 @@
       overflow: hidden;
       flex-shrink: 0;
       background: var(--bg-secondary);
+    }
+    /* 日常預覽：不要成員色／隱藏色外框 */
+    .member-avatar-preview-ring--plain {
+      box-shadow: none !important;
+      filter: none !important;
     }
     .member-avatar-preview-ring.member-tone {
       box-shadow: 0 0 0 3px color-mix(in srgb, var(--member-fg) 48%, transparent);
@@ -2373,6 +2387,9 @@
       display: flex; flex-direction: column; align-items: center;
       justify-content: center; z-index: 400; gap: 12px;
     }
+    #loading-overlay:not(.hidden) {
+      animation: overlayIn 0.2s ease both;
+    }
     #loading-overlay.hidden { display: none; }
     .spinner {
       width: 36px; height: 36px; border: 3px solid var(--border);
@@ -2417,6 +2434,14 @@
     @keyframes sheetUp {
       from { transform: translateY(20px); opacity: 0; }
       to { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes modalPopIn {
+      from { transform: scale(0.92); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    @keyframes popoverCardIn {
+      from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
     .dialog h3 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
     .dialog p { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
@@ -2545,6 +2570,14 @@
     }
     .record-avatar-clickable:active { transform: scale(0.9); }
     .record-avatar-clickable:hover { box-shadow: 0 0 0 2px var(--primary); }
+    #page-home .record-avatar-clickable:hover,
+    #page-home .record-avatar-clickable:focus-visible {
+      box-shadow: none;
+    }
+    #page-home .record-avatar-clickable:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
 
     /* ── Known member bar ── */
     .known-member-bar {
@@ -2983,6 +3016,12 @@
       #dialog-overlay.open,
       #alert-overlay.open,
       .member-preview-overlay.open,
+      .member-avatar-preview-overlay.open,
+      .member-avatar-preview-overlay.open .member-avatar-preview-panel,
+      .photo-lightbox.open,
+      .photo-lightbox-img,
+      #loading-overlay:not(.hidden),
+      .trip-lottery-popover:not([hidden]) .trip-lottery-popover-inner,
       .member-dir-avatar--rare,
       #edit-overlay.open,
       #backup-overlay.open,
@@ -2992,6 +3031,10 @@
       .backup-dialog,
       .toast-item {
         animation: none !important;
+      }
+      .member-dir-overlay,
+      .member-dir-panel {
+        transition: none !important;
       }
       .member-dir-avatar--rare::after,
       .member-dir-avatar--rare::before,
