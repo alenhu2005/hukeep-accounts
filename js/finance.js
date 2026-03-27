@@ -1,5 +1,23 @@
 import { USER_A } from './config.js';
 
+function computeExpenseShares(expense) {
+  const details = Array.isArray(expense.splitDetails)
+    ? expense.splitDetails
+      .map(d => ({
+        name: String(d?.name || '').trim(),
+        amount: parseFloat(d?.amount) || 0,
+      }))
+      .filter(d => d.name && d.amount > 0.0001)
+    : [];
+  if (details.length > 0) {
+    return details;
+  }
+  const splitAmong = Array.isArray(expense.splitAmong) ? expense.splitAmong : [];
+  const n = splitAmong.length || 1;
+  const share = (parseFloat(expense.amount) || 0) / n;
+  return splitAmong.map(name => ({ name, amount: share }));
+}
+
 /** Daily ledger balance: positive = USER_B owes USER_A, negative = USER_A owes USER_B. */
 export function computeBalance(records) {
   let net = 0;
@@ -44,7 +62,7 @@ export function computeSettlements(members, expenses, adjustments = []) {
     bal[m] = 0;
   });
   for (const e of expenses.filter(x => !x._voided)) {
-    const share = e.amount / (e.splitAmong.length || 1);
+    const shares = computeExpenseShares(e);
     const payerRows =
       e.payers && Array.isArray(e.payers)
         ? e.payers.filter(
@@ -59,7 +77,9 @@ export function computeSettlements(members, expenses, adjustments = []) {
     } else if (e.paidBy && e.paidBy !== '多人') {
       bal[e.paidBy] = (bal[e.paidBy] || 0) + e.amount;
     }
-    for (const m of e.splitAmong) bal[m] = (bal[m] || 0) - share;
+    for (const s of shares) {
+      bal[s.name] = (bal[s.name] || 0) - s.amount;
+    }
   }
   for (const adj of adjustments) {
     const x = parseFloat(adj.amount) || 0;
@@ -112,9 +132,9 @@ export function computeMemberShareTotals(members, expenses) {
   });
   for (const e of expenses) {
     if (e._voided) continue;
-    const part = e.amount / (e.splitAmong.length || 1);
-    for (const m of e.splitAmong) {
-      if (Object.prototype.hasOwnProperty.call(out, m)) out[m] += part;
+    const shares = computeExpenseShares(e);
+    for (const s of shares) {
+      if (Object.prototype.hasOwnProperty.call(out, s.name)) out[s.name] += s.amount;
     }
   }
   return out;

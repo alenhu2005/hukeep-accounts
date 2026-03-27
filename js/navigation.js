@@ -3,7 +3,7 @@ import { render } from './render-registry.js';
 import { persistSessionSnapshot } from './session-ui.js';
 import { cancelHomeBalanceAnim } from './views-home.js';
 import { cancelAnalysisCountAnim } from './views-analysis.js';
-import { cancelTripSettlementAnim } from './views-trip-detail.js';
+import { cancelTripSettlementAnim, resetTripDetailAmountDraft } from './views-trip-detail.js';
 
 /**
  * @param {string} page
@@ -21,6 +21,8 @@ export function navigate(page, tripId = null, opts = {}) {
   }
   if (prevPage === 'tripDetail' && page !== 'tripDetail') {
     cancelTripSettlementAnim();
+    // UX: do not keep amount draft when leaving trip detail.
+    try { resetTripDetailAmountDraft(); } catch { /* ignore */ }
   }
   appState.currentPage = page;
   appState.currentTripId = tripId;

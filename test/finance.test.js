@@ -88,6 +88,28 @@ describe('computeSettlements', () => {
     expect(out[0].to).toBe('甲');
     expect(out[0].amount).toBeCloseTo(100);
   });
+
+  it('詳細分攤：依 splitDetails 計算而非平均分', () => {
+    const out = computeSettlements(['甲', '乙', '丙'], [
+      {
+        amount: 360,
+        paidBy: '甲',
+        splitAmong: ['甲', '乙', '丙'],
+        splitDetails: [
+          { name: '甲', amount: 110 },
+          { name: '乙', amount: 120 },
+          { name: '丙', amount: 130 },
+        ],
+        _voided: false,
+      },
+    ]);
+    expect(out).toHaveLength(2);
+    const byFrom = Object.fromEntries(out.map(x => [x.from, x]));
+    expect(byFrom['乙'].to).toBe('甲');
+    expect(byFrom['乙'].amount).toBeCloseTo(120);
+    expect(byFrom['丙'].to).toBe('甲');
+    expect(byFrom['丙'].amount).toBeCloseTo(130);
+  });
 });
 
 describe('computePayerTotals', () => {
@@ -106,6 +128,24 @@ describe('computeMemberShareTotals', () => {
     ]);
     expect(s['胡']).toBeCloseTo(50);
     expect(s['詹']).toBeCloseTo(50);
+  });
+
+  it('詳細分攤 totals 使用 splitDetails', () => {
+    const s = computeMemberShareTotals(['甲', '乙', '丙'], [
+      {
+        _voided: false,
+        amount: 360,
+        splitAmong: ['甲', '乙', '丙'],
+        splitDetails: [
+          { name: '甲', amount: 110 },
+          { name: '乙', amount: 120 },
+          { name: '丙', amount: 130 },
+        ],
+      },
+    ]);
+    expect(s['甲']).toBeCloseTo(110);
+    expect(s['乙']).toBeCloseTo(120);
+    expect(s['丙']).toBeCloseTo(130);
   });
 });
 

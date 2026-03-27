@@ -29,8 +29,10 @@ import { renderTrips } from './views-trips.js';
 import {
   renderTripDetail,
   renderSplitChips,
+  renderSplitCustomList,
   updatePerPerson,
   updateMultiPayTotal,
+  resetTripDetailAmountDraft,
 } from './views-trip-detail.js';
 import { buildTripSettlementSummaryText } from './trip-stats.js';
 
@@ -38,6 +40,13 @@ import { buildTripSettlementSummaryText } from './trip-stats.js';
 function undoOptimisticPush(row) {
   const idx = appState.allRows.lastIndexOf(row);
   if (idx !== -1) appState.allRows.splice(idx, 1);
+}
+
+function parseMoneyLike(v) {
+  if (v == null) return 0;
+  const compact = String(v).replace(/[^\d.]/g, '');
+  const n = parseFloat(compact);
+  return Number.isFinite(n) ? n : 0;
 }
 
 function snapshotPendingHomeBalanceFromAbs() {
@@ -91,19 +100,32 @@ export function toggleMultiPay() {
   if (mtog?.disabled) return;
   const next = !appState.detailMultiPay;
   if (next && members.length < 2) return;
+
+  // UX: switching payment mode should not keep amount draft.
+  resetTripDetailAmountDraft({ keepTotal: true });
+
   appState.detailMultiPay = next;
   document.getElementById('d-paidby-group').style.display = appState.detailMultiPay ? 'none' : '';
-  document.getElementById('d-amount-group').style.display = appState.detailMultiPay ? 'none' : '';
+  // Keep total amount visible so we can lock/auto-calc the last unfilled field.
+  document.getElementById('d-amount-group').style.display = '';
   document.getElementById('d-multipay-group').style.display = appState.detailMultiPay ? '' : 'none';
   if (mtog) mtog.textContent = appState.detailMultiPay ? '單人付款' : '多人出款';
   if (appState.detailMultiPay) {
     document.getElementById('d-payers-list').innerHTML = '';
+    appState.detailMultiPayTouchedRows = {};
+    appState.detailMultiPayNextRowId = 1;
+    // If total already has value, treat it as user-provided so residual locking can work immediately.
+    appState.detailMultiPayTotalTouched = parseMoneyLike(document.getElementById('d-amount')?.value) > 0;
     addPayerRow(members);
     addPayerRow(members);
     refreshPayerToggleDisabledState();
   } else {
     refreshPayerToggleDisabledState();
   }
+  // Reset multi-pay lock target on mode switch.
+  appState.detailMultiPayLockedTarget = '';
+  appState.detailMultiPayEditingTarget = '';
+  if (!appState.detailMultiPay) appState.detailMultiPayTotalTouched = false;
   updatePerPerson();
 }
 
@@ -181,15 +203,25 @@ function maybeCollapseMultiPayToSingle() {
     if (name && trip.members.includes(name)) appState.detailPaidBy = name;
     else if (trip.members[0]) appState.detailPaidBy = trip.members[0];
   }
-  const da = document.getElementById('d-amount');
-  if (da && amt > 0) da.value = String(Math.round(amt));
+  // UX: collapsing back to single-pay should not clear total amount.
+  const totalEl = document.getElementById('d-amount');
+  const hadTotal = parseMoneyLike(totalEl?.value) > 0;
+  resetTripDetailAmountDraft({ keepTotal: true });
+  // If total was empty, keep it convenient by filling from the last remaining payer amount.
+  if (!hadTotal && totalEl && amt > 0) {
+    totalEl.value = String(Math.round(amt));
+  }
 
   renderTripDetail();
 }
 
 export function removePayerRow(btn) {
   const row = btn && btn.closest('.payer-row');
-  if (row) row.remove();
+  if (row) {
+    const rowId = String(row.dataset.rowId || '').trim();
+    if (rowId) delete appState.detailMultiPayTouchedRows[rowId];
+    row.remove();
+  }
   updateMultiPayTotal();
   refreshPayerToggleDisabledState();
   maybeCollapseMultiPayToSingle();
@@ -219,6 +251,9 @@ export function addPayerRow(membersOverride) {
   const pick = defaultMember ?? '';
   const row = document.createElement('div');
   row.className = 'payer-row';
+  const rowId = String(appState.detailMultiPayNextRowId++);
+  row.dataset.rowId = rowId;
+  appState.detailMultiPayTouchedRows[rowId] = false;
   const toggles = members
     .map(
       m =>
@@ -231,14 +266,58 @@ export function addPayerRow(membersOverride) {
     </div>
     <input type="hidden" class="payer-name" value="${esc(pick)}">
     <div class="payer-row-amount-line">
-      <input type="text" class="form-input form-input-amount payer-amount" placeholder="金額"
+      <input type="text" class="form-input form-input-amount payer-amount" data-row-id="${esc(rowId)}" placeholder="金額"
         lang="en" spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off"
         inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" aria-label="付款金額"
-        oninput="updateMultiPayTotal()">
+        onfocus="beginMultiPayEdit(this)"
+        onblur="endMultiPayEdit(this)"
+        oninput="handleMultiPayAmountInput(this)">
       <button type="button" class="payer-row-remove" onclick="removePayerRow(this)" aria-label="刪除此列">×</button>
     </div>`;
   list.appendChild(row);
   refreshPayerToggleDisabledState();
+}
+
+export function beginMultiPayEdit(payerAmountInput) {
+  const inp = payerAmountInput;
+  if (!inp) return;
+  const row = inp.closest('.payer-row');
+  const rowId = String(row?.dataset?.rowId || '').trim();
+  appState.detailMultiPayEditingTarget = rowId ? `row:${rowId}` : 'total';
+}
+
+export function endMultiPayEdit(payerAmountInput) {
+  const inp = payerAmountInput;
+  if (!inp) return;
+  if (document.activeElement === inp) return;
+  appState.detailMultiPayEditingTarget = '';
+  updateMultiPayTotal();
+}
+
+export function handleMultiPayAmountInput(payerAmountInput) {
+  const inp = payerAmountInput;
+  if (!inp) return;
+  // If total is fixed by user input, prevent any single payer row from pushing sum > total.
+  // Important: exclude disabled (auto-residual) row from cap calc to avoid "1 digit then stuck".
+  if (appState.detailMultiPay) {
+    const totalEl = document.getElementById('d-amount');
+    const totalVal = parseMoneyLike(totalEl?.value);
+    if (appState.detailMultiPayTotalTouched && totalVal > 0) {
+      const otherSum = Array.from(document.querySelectorAll('#d-payers-list .payer-amount'))
+        .filter(el => el !== inp && !el.disabled)
+        .reduce((s, el) => s + parseMoneyLike(el.value), 0);
+      const maxAllowed = Math.max(0, totalVal - otherSum);
+      const cur = parseMoneyLike(inp.value);
+      if (cur > maxAllowed) {
+        inp.value = maxAllowed > 0 ? String(Math.round(maxAllowed)) : '';
+      }
+    }
+  }
+  const rowId = String(inp.getAttribute('data-row-id') || '').trim();
+  if (rowId) {
+    appState.detailMultiPayTouchedRows[rowId] = parseMoneyLike(inp.value) > 0;
+  }
+  updateMultiPayTotal();
 }
 
 /** 消費項目欄按 Enter → 聚焦下一個金額欄（略過 IME 組字中的 Enter） */
@@ -290,6 +369,113 @@ export function toggleSplit(name) {
   }
   const trip = getTripById(appState.currentTripId);
   if (trip) renderSplitChips(trip.members);
+}
+
+export function toggleDetailSplitMode() {
+  appState.detailSplitMode = appState.detailSplitMode === 'custom' ? 'equal' : 'custom';
+  const btn = document.getElementById('d-split-mode-toggle');
+  if (btn) btn.textContent = appState.detailSplitMode === 'custom' ? '改回均分' : '詳細分攤';
+  if (appState.detailSplitMode === 'custom') {
+    appState.detailSplitTotalTouched = parseMoneyLike(document.getElementById('d-amount')?.value) > 0;
+  } else {
+    // Back to equal split: clear all custom split values/state.
+    appState.detailSplitCustom = {};
+    appState.detailSplitTouched = {};
+    appState.detailSplitTotalTouched = false;
+    appState.detailSplitLockedTarget = '';
+    appState.detailSplitEditingMember = '';
+  }
+  renderSplitCustomList();
+  updatePerPerson();
+}
+
+export function setDetailSplitAmount(name, rawValue) {
+  const key = String(name || '').trim();
+  if (!key) return;
+  const rawStr = String(rawValue ?? '');
+  const hasAnyDigit = /\d/.test(rawStr);
+  const val = parseMoneyLike(rawStr);
+  let next = Number.isFinite(val) && val > 0 ? val : 0;
+
+  // Custom split guard: never let split total exceed total amount.
+  if (appState.detailSplitMode === 'custom') {
+    const total = parseMoneyLike(document.getElementById('d-amount')?.value);
+    // Enforce hard cap whenever total has a value (or multi-pay mode),
+    // regardless of whether the total input was the last touched field.
+    if (total > 0 || appState.detailMultiPay) {
+      // UX: when there is a computed residual (locked target), do not count it in cap calculation;
+      // otherwise typing the 2nd-to-last field gets "stuck" at 1 digit (residual consumes remaining).
+      const locked = String(appState.detailSplitLockedTarget || appState.detailSplitAutoFilledTarget || '').trim();
+      const excludeLocked = locked && locked !== 'total' && locked !== key;
+      const otherSum = appState.detailSplitAmong
+        .filter(m => m !== key && (!excludeLocked || m !== locked))
+        .reduce((s, m) => s + parseMoneyLike(appState.detailSplitCustom?.[m]), 0);
+      // If total is not provided (0), don't cap.
+      const maxAllowed = total > 0 ? Math.max(0, total - otherSum) : Infinity;
+      if (next > maxAllowed) next = maxAllowed;
+    }
+  }
+
+  appState.detailSplitCustom[key] = next;
+  // UX: empty input means "unfilled" (not explicit zero). Typing 0 is explicit zero.
+  appState.detailSplitTouched[key] = hasAnyDigit;
+  // If user edits the previously auto-filled residual target, it's no longer "unfilled".
+  if (appState.detailSplitAutoFilledTarget === key) {
+    appState.detailSplitAutoFilledTarget = '';
+  }
+  const input = Array.from(document.querySelectorAll('#d-split-custom-list input[data-member]'))
+    .find(el => el.getAttribute('data-member') === key);
+  if (input && document.activeElement === input) {
+    // UX: keep explicit zero visible while typing; empty means "unfilled".
+    if (next > 0) input.value = String(Math.round(next));
+    else input.value = hasAnyDigit ? '0' : '';
+  }
+  updatePerPerson();
+}
+
+export function beginDetailSplitEdit(name) {
+  appState.detailSplitEditingMember = String(name || '').trim();
+}
+
+export function endDetailSplitEdit(name) {
+  const key = String(name || '').trim();
+  if (appState.detailSplitEditingMember === key) appState.detailSplitEditingMember = '';
+  // Apply residual autofill only after user finishes editing this row.
+  updatePerPerson();
+}
+
+export function beginDetailTotalEdit() {
+  appState.detailSplitEditingMember = '';
+  // If total was derived (auto), allow user to override by unlocking it.
+  if (appState.detailSplitTotalDerived) {
+    appState.detailSplitTotalDerived = false;
+    const totalEl = document.getElementById('d-amount');
+    if (totalEl) {
+      totalEl.disabled = false;
+      totalEl.classList.remove('split-custom-input--locked');
+      totalEl.setAttribute('aria-disabled', 'false');
+    }
+  }
+  if (appState.detailMultiPay) appState.detailMultiPayEditingTarget = 'total';
+}
+
+export function handleDetailTotalInput() {
+  // Any manual edit means total is no longer derived.
+  if (appState.detailSplitTotalDerived) appState.detailSplitTotalDerived = false;
+  if (appState.detailMultiPay) {
+    appState.detailMultiPayTotalTouched = parseMoneyLike(document.getElementById('d-amount')?.value) > 0;
+    // If user clears total, stop forcing a locked multi-pay row.
+    if (!appState.detailMultiPayTotalTouched) appState.detailMultiPayLockedTarget = '';
+  }
+  if (appState.detailSplitMode === 'custom') appState.detailSplitTotalTouched = true;
+  updatePerPerson();
+}
+
+export function endDetailTotalEdit() {
+  updatePerPerson();
+  if (appState.detailMultiPay && appState.detailMultiPayEditingTarget === 'total') {
+    appState.detailMultiPayEditingTarget = '';
+  }
 }
 
 // ── Daily actions ────────────────────────────────────────────────────────────
@@ -1146,6 +1332,47 @@ export async function submitTripExpense() {
     toast('請選擇分攤成員');
     return;
   }
+  let splitDetails = appState.detailSplitMode === 'custom'
+    ? appState.detailSplitAmong
+      .map(name => ({
+        name,
+        amount: parseMoneyLike(appState.detailSplitCustom?.[name]),
+      }))
+      
+    : [];
+  const reconcileCustomSplit = (targetAmount) => {
+    if (appState.detailSplitMode !== 'custom') return { ok: true, total: 0 };
+
+    const missing = splitDetails.filter(s => s.amount <= 0);
+    if (missing.length > 1) {
+      return { ok: false, reason: 'MISSING_TOO_MANY' };
+    }
+
+    if (missing.length === 1) {
+      const missName = missing[0].name;
+      const used = splitDetails
+        .filter(s => s.name !== missName)
+        .reduce((s, x) => s + x.amount, 0);
+      const residual = Math.max(0, targetAmount - used);
+      splitDetails = splitDetails.map(s => (s.name === missName ? { ...s, amount: residual } : s));
+      appState.detailSplitCustom[missName] = residual;
+    }
+
+    let splitTotal = splitDetails.reduce((s, x) => s + x.amount, 0);
+    if (Math.abs(splitTotal - targetAmount) > 0.01) {
+      const splitLock = String(appState.detailSplitLockedTarget || '');
+      if (splitLock && splitLock !== 'total') {
+        const used = splitDetails
+          .filter(s => s.name !== splitLock)
+          .reduce((s, x) => s + x.amount, 0);
+        const residual = Math.max(0, targetAmount - used);
+        splitDetails = splitDetails.map(s => (s.name === splitLock ? { ...s, amount: residual } : s));
+        appState.detailSplitCustom[splitLock] = residual;
+        splitTotal = splitDetails.reduce((s, x) => s + x.amount, 0);
+      }
+    }
+    return { ok: Math.abs(splitTotal - targetAmount) <= 0.01, total: splitTotal };
+  };
 
   let amount;
   let paidBy;
@@ -1157,7 +1384,7 @@ export async function submitTripExpense() {
       Array.from(nameEls)
         .map((sel, i) => ({
           name: (sel.value || '').trim(),
-          amount: parseFloat(amountEls[i]?.value) || 0,
+          amount: parseMoneyLike(amountEls[i]?.value),
         }))
         .filter(p => p.amount > 0 && p.name);
     const payers = collectPayers();
@@ -1175,10 +1402,46 @@ export async function submitTripExpense() {
       return;
     }
     amount = payers.reduce((s, p) => s + p.amount, 0);
+    const totalEl = document.getElementById('d-amount');
+    const totalVal = totalEl ? parseMoneyLike(totalEl.value) : 0;
+    if (totalVal > 0 && Math.abs(totalVal - amount) > 0.01) {
+      const lock = String(appState.detailMultiPayLockedTarget || '');
+      if (lock.startsWith('row:')) {
+        const rowId = lock.slice(4);
+        const rows = Array.from(document.querySelectorAll('#d-payers-list .payer-row'));
+        const lockRow = rows.find(r => String(r.dataset.rowId || '') === rowId);
+        const lockName = (lockRow?.querySelector('input.payer-name')?.value || '').trim();
+        if (lockName) {
+          const others = payers.filter(p => p.name !== lockName);
+          const residual = Math.max(0, totalVal - others.reduce((s, p) => s + p.amount, 0));
+          payers = [...others, { name: lockName, amount: residual }];
+          amount = payers.reduce((s, p) => s + p.amount, 0);
+          const lockInput = lockRow?.querySelector('.payer-amount');
+          if (lockInput) lockInput.value = residual > 0 ? String(Math.round(residual)) : '';
+        } else {
+          toast(`總金額 NT$${Math.round(totalVal)} 與出款合計 NT$${Math.round(amount)} 不一致，請對齊後再送出`);
+          return;
+        }
+      } else {
+        toast(`總金額 NT$${Math.round(totalVal)} 與出款合計 NT$${Math.round(amount)} 不一致，請對齊後再送出`);
+        return;
+      }
+    }
+    if (appState.detailSplitMode === 'custom') {
+      const split = reconcileCustomSplit(amount);
+      if (!split.ok) {
+        if (split.reason === 'MISSING_TOO_MANY') {
+          toast('詳細分攤模式下，至少要先填完除最後一位外的分攤金額');
+        } else {
+          toast(`詳細分攤合計 NT$${Math.round(split.total || 0)} 與出款合計 NT$${Math.round(amount)} 不一致`);
+        }
+        return;
+      }
+    }
     paidBy = '';
-    extraFields = { payers };
+    extraFields = appState.detailSplitMode === 'custom' ? { payers, splitDetails } : { payers };
   } else {
-    amount = parseFloat(document.getElementById('d-amount').value);
+    amount = parseMoneyLike(document.getElementById('d-amount').value);
     paidBy = appState.detailPaidBy;
     if (!amount || amount <= 0) {
       toast('請輸入有效金額');
@@ -1188,6 +1451,21 @@ export async function submitTripExpense() {
       toast('請選擇付款人');
       return;
     }
+    if (appState.detailSplitMode === 'custom') {
+      const split = reconcileCustomSplit(amount);
+      if (!split.ok) {
+        if (split.reason === 'MISSING_TOO_MANY') {
+          toast('詳細分攤模式下，至少要先填完除最後一位外的分攤金額');
+        } else {
+          toast(`詳細分攤合計 NT$${Math.round(split.total || 0)} 與總金額 NT$${Math.round(amount)} 不一致`);
+        }
+        return;
+      }
+      extraFields = { splitDetails };
+    }
+  }
+  if (appState.detailSplitMode === 'custom' && splitDetails.length > 0 && !extraFields.splitDetails) {
+    extraFields = { ...extraFields, splitDetails };
   }
 
   const btn = document.getElementById('d-submit');
@@ -1223,6 +1501,14 @@ export async function submitTripExpense() {
   document.getElementById('d-item').value = '';
   document.getElementById('d-amount').value = '';
   document.getElementById('d-note').value = '';
+  if (appState.detailSplitMode === 'custom') {
+    appState.detailSplitCustom = {};
+    appState.detailSplitTouched = {};
+    appState.detailSplitTotalTouched = false;
+    appState.detailSplitEditingMember = '';
+    appState.detailSplitLockedTarget = '';
+    renderSplitCustomList();
+  }
   if (appState.detailMultiPay) {
     document.querySelectorAll('#d-payers-list .payer-amount').forEach(el => {
       el.value = '';
@@ -1377,16 +1663,27 @@ export function openEditRecord(r) {
 
     let splitHtml = '';
     if (r.type === 'tripExpense' && Array.isArray(r.splitAmong) && r.splitAmong.length > 0) {
-      const n = r.splitAmong.length;
-      const per = Math.round(amt / n);
+      const hasCustomSplit = Array.isArray(r.splitDetails) && r.splitDetails.length > 0;
       const names = r.splitAmong.map(m => esc(String(m))).join('、');
       const trip = r.tripId ? getTripById(r.tripId) : null;
-      const tm = trip?.members?.length ?? 0;
-      const fullTrip = tm > 0 && n === tm;
-      splitHtml = `<div class="edit-summary-split" role="group" aria-label="分攤說明">
-        <div class="edit-summary-split-row"><span class="edit-summary-split-k">分攤對象</span><span class="edit-summary-split-v">${names}${fullTrip ? ` <span class="edit-summary-split-tag">全員均分</span>` : ''}</span></div>
-        <div class="edit-summary-split-row"><span class="edit-summary-split-k">每人負擔</span><span class="edit-summary-split-v">NT$${per.toLocaleString()}</span></div>
-      </div>`;
+      if (hasCustomSplit) {
+        const lines = r.splitDetails
+          .map(s => `${esc(String(s.name || ''))} NT$${Math.round(parseFloat(s.amount) || 0)}`)
+          .join('、');
+        splitHtml = `<div class="edit-summary-split" role="group" aria-label="分攤說明">
+          <div class="edit-summary-split-row"><span class="edit-summary-split-k">分攤對象</span><span class="edit-summary-split-v">${names}</span></div>
+          <div class="edit-summary-split-row"><span class="edit-summary-split-k">詳細分攤</span><span class="edit-summary-split-v">${lines}</span></div>
+        </div>`;
+      } else {
+        const n = r.splitAmong.length;
+        const per = Math.round(amt / n);
+        const tm = trip?.members?.length ?? 0;
+        const fullTrip = tm > 0 && n === tm;
+        splitHtml = `<div class="edit-summary-split" role="group" aria-label="分攤說明">
+          <div class="edit-summary-split-row"><span class="edit-summary-split-k">分攤對象</span><span class="edit-summary-split-v">${names}${fullTrip ? ` <span class="edit-summary-split-tag">全員均分</span>` : ''}</span></div>
+          <div class="edit-summary-split-row"><span class="edit-summary-split-k">每人負擔</span><span class="edit-summary-split-v">NT$${per.toLocaleString()}</span></div>
+        </div>`;
+      }
     }
 
     summary.innerHTML = `<div class="edit-summary-item">${esc(r.item || '—')}</div>`

@@ -51,8 +51,33 @@ export const appState = {
 
   newTripMembers: [],
   detailSplitAmong: [],
+  detailSplitMode: 'equal',
+  /** memberName -> amount (for custom split mode) */
+  detailSplitCustom: {},
+  /** memberName -> boolean (manually edited in custom split mode) */
+  detailSplitTouched: {},
+  /** whether total amount has been manually edited in custom split mode */
+  detailSplitTotalTouched: false,
+  /** custom split: total amount is derived from split sum (auto) */
+  detailSplitTotalDerived: false,
+  /** currently focused custom-split member name */
+  detailSplitEditingMember: '',
+  /** lock target in custom split: 'total' or member name */
+  detailSplitLockedTarget: '',
+  /** custom split: memberName that is currently auto-filled as residual (treated as "still unfilled") */
+  detailSplitAutoFilledTarget: '',
   detailPaidBy: '',
   detailMultiPay: false,
+  /** multi-pay UI: currently focused payer input ('total' or member name). */
+  detailMultiPayEditingTarget: '',
+  /** multi-pay UI: lock target in current custom distribution: 'total' or member name */
+  detailMultiPayLockedTarget: '',
+  /** multi-pay UI: whether total amount is manually entered by user */
+  detailMultiPayTotalTouched: false,
+  /** multi-pay UI: rowId -> whether user has manually entered this row */
+  detailMultiPayTouchedRows: {},
+  /** multi-pay UI: next unique row id */
+  detailMultiPayNextRowId: 1,
 
   /** memberName -> pending colorId (coalesced; used to avoid spamming spreadsheet) */
   pendingMemberColors: {},

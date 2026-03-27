@@ -128,6 +128,13 @@ export function normalizeRow(r) {
         r.payers = null;
       }
     }
+    if (typeof r.splitDetails === 'string') {
+      try {
+        r.splitDetails = JSON.parse(r.splitDetails);
+      } catch {
+        r.splitDetails = null;
+      }
+    }
   } else if (r.type === 'tripSettlement') {
     r.tripId = r.tripId ?? '';
     r.from = r.from ?? '';

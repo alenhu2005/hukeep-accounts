@@ -120,18 +120,37 @@ export function getTripExpensesFromRows(tripId, allRows) {
         }
       }
       if (!Array.isArray(payers)) payers = undefined;
+      let splitDetails = r.splitDetails;
+      if (typeof splitDetails === 'string') {
+        try {
+          splitDetails = JSON.parse(splitDetails);
+        } catch {
+          splitDetails = null;
+        }
+      }
+      if (!Array.isArray(splitDetails)) splitDetails = undefined;
       let rec = {
         ...r,
         amount: parseFloat(r.amount) || 0,
         splitAmong: parseArr(r.splitAmong).map(n => resolveMemberName(n, renames)),
         _voided: voidIds.has(r.id),
         ...(payers ? { payers } : {}),
+        ...(splitDetails ? { splitDetails } : {}),
       };
       if (rec.paidBy) rec.paidBy = resolveMemberName(rec.paidBy, renames);
       if (Array.isArray(rec.payers)) {
         rec.payers = rec.payers.map(p => (p && p.name ? { ...p, name: resolveMemberName(p.name, renames) } : p));
       }
+      if (Array.isArray(rec.splitDetails)) {
+        rec.splitDetails = rec.splitDetails
+          .map(s => ({
+            name: resolveMemberName(String(s?.name || ''), renames),
+            amount: parseFloat(s?.amount) || 0,
+          }))
+          .filter(s => s.name && s.amount > 0);
+      }
       if (!payers) delete rec.payers;
+      if (!splitDetails) delete rec.splitDetails;
       if (editMap[r.id]) rec = { ...rec, ...editMap[r.id] };
       return rec;
     })

@@ -2096,6 +2096,33 @@
     }
     .split-chip:active { transform: scale(0.96); }
     .split-chip.active { background: var(--primary); color: white; }
+    .split-custom-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .split-custom-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 120px;
+      gap: 8px;
+      align-items: center;
+    }
+    .split-custom-name {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .split-custom-input--locked {
+      background: var(--bg-secondary) !important;
+      color: var(--text-muted) !important;
+      border-color: var(--border) !important;
+      cursor: not-allowed !important;
+      opacity: 0.9;
+    }
 
     /* ── Per person note ── */
     .per-person-note { font-size: 11px; color: var(--text-muted); margin-top: 4px; min-height: 16px; }

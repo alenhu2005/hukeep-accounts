@@ -290,6 +290,9 @@ function payloadForGasPost(data) {
   if (Array.isArray(o.payers)) {
     o.payers = JSON.stringify(o.payers);
   }
+  if (Array.isArray(o.splitDetails)) {
+    o.splitDetails = JSON.stringify(o.splitDetails);
+  }
   return o;
 }
 
