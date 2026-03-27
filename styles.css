@@ -1482,10 +1482,10 @@
       --rare-avatar-ring-b: rgba(236,72,153,.32);
       --rare-dot-glow: rgba(34,211,238,.55);
       /* unmistakable neon ring */
-      --rare-ring-opacity: .60;
-      --rare-ring-bg: conic-gradient(from 0deg, rgba(34,211,238,0), rgba(34,211,238,.42), rgba(168,85,247,.28), rgba(236,72,153,.32), rgba(34,211,238,0));
+      --rare-ring-opacity: .72;
+      --rare-ring-bg: conic-gradient(from 0deg, rgba(34,211,238,0), rgba(6,182,212,.58), rgba(168,85,247,.46), rgba(236,72,153,.48), rgba(34,211,238,0));
       --rare-ring-anim: rareRingRotate 5.4s linear infinite;
-      --rare-ring-filter: drop-shadow(0 0 12px rgba(34,211,238,.18));
+      --rare-ring-filter: drop-shadow(0 0 14px rgba(6,182,212,.28)) drop-shadow(0 0 8px rgba(236,72,153,.18));
       --rare-frame: 4.8s;
       --rare-bar-a:#22d3ee; --rare-bar-b:#a855f7; --rare-bar-c:#f472b6;
       --rare-frame-a:#22d3ee; --rare-frame-b:#a855f7; --rare-frame-c:#f472b6; --rare-frame-d:#fbbf24;
@@ -1523,10 +1523,10 @@
       --rare-deco-filter: drop-shadow(0 0 18px rgba(245,158,11,.20));
       --rare-deco-anim: rareGlowPulse 2.8s ease-in-out infinite;
       /* slower "luxury" ring */
-      --rare-ring-opacity: .78;
-      --rare-ring-bg: conic-gradient(from 90deg, rgba(255,215,0,0), rgba(255,215,0,.46), rgba(255,255,255,.32), rgba(245,158,11,.32), rgba(255,215,0,0));
+      --rare-ring-opacity: .85;
+      --rare-ring-bg: conic-gradient(from 90deg, rgba(255,215,0,0), rgba(245,158,11,.62), rgba(251,191,36,.55), rgba(217,119,6,.52), rgba(255,215,0,0));
       --rare-ring-anim: rareRingRotate 6.8s linear infinite;
-      --rare-ring-filter: drop-shadow(0 0 20px rgba(245,158,11,.18));
+      --rare-ring-filter: drop-shadow(0 0 22px rgba(245,158,11,.28)) drop-shadow(0 0 10px rgba(217,119,6,.2));
       --rare-frame: 8.2s;
       --rare-bar-a:#fde047; --rare-bar-b:#f59e0b; --rare-bar-c:#fbbf24;
       --rare-frame-a:#fde047; --rare-frame-b:#f59e0b; --rare-frame-c:#fbbf24; --rare-frame-d:#fb7185;
@@ -1552,10 +1552,10 @@
         radial-gradient(60% 80% at 55% 40%, rgba(168,85,247,.18), transparent 62%);
       --rare-after-anim: rareDrift 7.2s ease-in-out infinite;
       /* orbit ring */
-      --rare-ring-opacity: .50;
-      --rare-ring-bg: conic-gradient(from 0deg, rgba(168,85,247,0), rgba(168,85,247,.26), rgba(96,165,250,.20), rgba(232,121,249,.20), rgba(168,85,247,0));
+      --rare-ring-opacity: .68;
+      --rare-ring-bg: conic-gradient(from 0deg, rgba(124,58,237,0), rgba(124,58,237,.52), rgba(59,130,246,.42), rgba(192,38,211,.44), rgba(124,58,237,0));
       --rare-ring-anim: rareRingRotate 11.5s linear infinite;
-      --rare-ring-filter: drop-shadow(0 0 16px rgba(168,85,247,.16));
+      --rare-ring-filter: drop-shadow(0 0 18px rgba(124,58,237,.26)) drop-shadow(0 0 10px rgba(59,130,246,.18));
       --rare-frame: 7.4s;
       --rare-bar-a:#a855f7; --rare-bar-b:#60a5fa; --rare-bar-c:#e879f9;
       --rare-frame-a:#a855f7; --rare-frame-b:#60a5fa; --rare-frame-c:#e879f9; --rare-frame-d:#22d3ee;
@@ -1579,6 +1579,11 @@
       --rare-frame: 5.4s;
       --rare-bar-a:#fb923c; --rare-bar-b:#ef4444; --rare-bar-c:#fbbf24;
       --rare-frame-a:#fb923c; --rare-frame-b:#ef4444; --rare-frame-c:#fbbf24; --rare-frame-d:#a855f7;
+      /* ember-flow ring */
+      --rare-ring-opacity: .62;
+      --rare-ring-bg: conic-gradient(from 0deg, rgba(234,88,12,0), rgba(251,146,60,.48), rgba(239,68,68,.42), rgba(251,191,36,.46), rgba(234,88,12,0));
+      --rare-ring-anim: rareRingRotate 7.0s linear infinite;
+      --rare-ring-filter: drop-shadow(0 0 16px rgba(234,88,12,.26)) drop-shadow(0 0 8px rgba(239,68,68,.18));
     }
 
     /* mint — dot-matrix / techno */
@@ -1600,10 +1605,10 @@
       --rare-shimmer: 3.6s;
       --rare-frame: 6.6s;
       /* scanner ring */
-      --rare-ring-opacity: .60;
-      --rare-ring-bg: repeating-conic-gradient(from 0deg, rgba(16,185,129,0) 0 10deg, rgba(16,185,129,.34) 10deg 12deg, rgba(4,120,87,.26) 12deg 14deg, rgba(16,185,129,0) 14deg 20deg);
+      --rare-ring-opacity: .75;
+      --rare-ring-bg: repeating-conic-gradient(from 0deg, rgba(4,120,87,0) 0 10deg, rgba(5,150,105,.52) 10deg 12deg, rgba(4,120,87,.44) 12deg 14deg, rgba(16,185,129,.38) 14deg 16deg, rgba(4,120,87,0) 16deg 20deg);
       --rare-ring-anim: rareRingRotate 8.8s linear infinite;
-      --rare-ring-filter: drop-shadow(0 0 16px rgba(16,185,129,.16));
+      --rare-ring-filter: drop-shadow(0 0 18px rgba(5,150,105,.22)) drop-shadow(0 0 8px rgba(4,120,87,.16));
       --rare-bar-a:#10b981; --rare-bar-b:#047857; --rare-bar-c:#34d399;
       --rare-frame-a:#10b981; --rare-frame-b:#047857; --rare-frame-c:#34d399; --rare-frame-d:#a3e635;
     }
@@ -1624,10 +1629,10 @@
         radial-gradient(70% 50% at 55% 30%, rgba(99,102,241,.18), transparent 72%);
       --rare-after-anim: rareDrift 9.5s ease-in-out infinite;
       /* softer flowing ring */
-      --rare-ring-opacity: .58;
-      --rare-ring-bg: conic-gradient(from 30deg, rgba(34,211,238,0), rgba(34,211,238,.32), rgba(34,197,94,.28), rgba(99,102,241,.34), rgba(34,211,238,0));
+      --rare-ring-opacity: .72;
+      --rare-ring-bg: conic-gradient(from 30deg, rgba(6,182,212,0), rgba(6,182,212,.46), rgba(22,163,74,.38), rgba(79,70,229,.46), rgba(6,182,212,0));
       --rare-ring-anim: rareRingRotate 8.8s linear infinite;
-      --rare-ring-filter: drop-shadow(0 0 18px rgba(34,211,238,.14));
+      --rare-ring-filter: drop-shadow(0 0 20px rgba(6,182,212,.2)) drop-shadow(0 0 10px rgba(79,70,229,.16));
       --rare-shimmer: 2.9s;
       --rare-frame: 7.9s;
       --rare-bar-a:#a5b4fc; --rare-bar-b:#22d3ee; --rare-bar-c:#34d399;
@@ -1663,6 +1668,11 @@
       --rare-deco-anim: rareDrift 9.2s ease-in-out infinite;
       --rare-bar-a:#fb7185; --rare-bar-b:#f472b6; --rare-bar-c:#f5d0fe;
       --rare-frame-a:#fb7185; --rare-frame-b:#f472b6; --rare-frame-c:#f5d0fe; --rare-frame-d:#fde047;
+      /* petal-flow ring */
+      --rare-ring-opacity: .62;
+      --rare-ring-bg: conic-gradient(from 0deg, rgba(244,63,94,0), rgba(244,63,94,.44), rgba(236,72,153,.4), rgba(244,114,182,.42), rgba(244,63,94,0));
+      --rare-ring-anim: rareRingRotate 10s linear infinite;
+      --rare-ring-filter: drop-shadow(0 0 16px rgba(244,63,94,.22)) drop-shadow(0 0 8px rgba(236,72,153,.16));
     }
 
     /* ice — crystalline facets (no repeating stripes) */
@@ -1697,6 +1707,11 @@
         radial-gradient(14px 12px at 86% 92%, rgba(186,230,253,.78) 0 28%, transparent 29%),
         radial-gradient(16px 16px at 52% 96%, rgba(255,255,255,.65) 0 28%, transparent 29%);
       --rare-deco-filter: drop-shadow(0 2px 4px rgba(56,189,248,.25)) drop-shadow(0 1px 0 rgba(255,255,255,.35));
+      /* frost-flow ring */
+      --rare-ring-opacity: .58;
+      --rare-ring-bg: conic-gradient(from 0deg, rgba(14,165,233,0), rgba(14,165,233,.46), rgba(96,165,250,.38), rgba(167,139,250,.36), rgba(14,165,233,0));
+      --rare-ring-anim: rareRingRotate 9.2s linear infinite;
+      --rare-ring-filter: drop-shadow(0 0 18px rgba(14,165,233,.22)) drop-shadow(0 0 8px rgba(96,165,250,.14));
     }
     /* sharpen crystals into "spikes" using clip-path, only when supported */
     @supports (clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%)) {
@@ -1786,10 +1801,10 @@
       --rare-lottery-glow: rgba(100,116,139,.22);
       --rare-lottery-glow-strong: rgba(100,116,139,.30);
       /* smoky ring */
-      --rare-ring-opacity: .38;
-      --rare-ring-bg: conic-gradient(from 0deg, rgba(226,232,240,0), rgba(226,232,240,.14), rgba(100,116,139,.16), rgba(226,232,240,.10), rgba(226,232,240,0));
+      --rare-ring-opacity: .52;
+      --rare-ring-bg: conic-gradient(from 0deg, rgba(15,23,42,0), rgba(148,163,184,.32), rgba(226,232,240,.22), rgba(71,85,105,.28), rgba(15,23,42,0));
       --rare-ring-anim: rareRingRotate 14.0s linear infinite;
-      --rare-ring-filter: drop-shadow(0 0 14px rgba(2,6,23,.24));
+      --rare-ring-filter: drop-shadow(0 0 16px rgba(15,23,42,.28)) drop-shadow(0 0 8px rgba(148,163,184,.18));
     }
     .member-rare--ink.member-chip--rare { box-shadow: inset 0 1px 0 rgba(255,255,255,.10), inset 0 -1px 0 rgba(2,6,23,.22), 0 2px 14px var(--rare-shadow, rgba(2,6,23,.22)); }
 
@@ -1808,10 +1823,10 @@
       --rare-after-anim: rareRotate 10s linear infinite;
       --rare-after-blend: overlay;
       /* flowing ring around frame */
-      --rare-ring-opacity: .70;
-      --rare-ring-bg: conic-gradient(from 0deg, rgba(255,255,255,0), rgba(255,255,255,.52), rgba(255,255,255,0), rgba(255,255,255,.30), rgba(255,255,255,0));
+      --rare-ring-opacity: .82;
+      --rare-ring-bg: conic-gradient(from 0deg, rgba(232,121,249,0), rgba(232,121,249,.5), rgba(34,211,238,.42), rgba(251,191,36,.44), rgba(244,114,182,.38), rgba(232,121,249,0));
       --rare-ring-anim: rareRingRotate 6.5s linear infinite;
-      --rare-ring-filter: drop-shadow(0 0 16px rgba(232,121,249,.20));
+      --rare-ring-filter: drop-shadow(0 0 18px rgba(232,121,249,.26)) drop-shadow(0 0 10px rgba(34,211,238,.16));
       --rare-shimmer: 2.6s;
       --rare-frame: 5.2s;
       --rare-bar-a:#e879f9; --rare-bar-b:#22d3ee; --rare-bar-c:#fbbf24;
