@@ -874,18 +874,18 @@ export async function cycleMemberColor(memberName) {
   const curId = getMemberColorId(name);
   const curIsHidden = HIDDEN_MEMBER_COLORS.some(h => h.id === curId);
 
-  // 10 hidden styles/colors, each 0.1% chance (total 1%).
-  // Roll [0..999]: 0-9 => hidden[roll] (each 0.1%), otherwise normal cycle.
+  // 10 hidden styles/colors, each 0.5% (5/1000); total ~5% for any hidden.
+  // Roll [0..999]: 0-49 => hidden[floor(roll/5)] (each 5/1000), otherwise normal cycle.
   const roll = randomUniformIndex(1000);
-  if (roll < 10) {
-    const hidden = HIDDEN_MEMBER_COLORS[roll];
+  if (roll < 50) {
+    const hidden = HIDDEN_MEMBER_COLORS[Math.floor(roll / 5)];
     if (hidden) {
       appState.pendingMemberColors[name] = hidden.id;
       renderMemberDirectory();
       const hueName = hidden.label || hidden.id;
       await showAlert(
         '稀有配色！',
-        `「${name}」刷到了隱藏色「${hueName}」。每次點換色約 1% 機率出現（10 款各 0.1%），恭喜。`,
+        `「${name}」刷到了隱藏色「${hueName}」。每次點換色約 5% 機率出現隱藏色（10 款各 0.5%），恭喜。`,
       );
       scheduleFlushPendingMemberColors();
       return;
