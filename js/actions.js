@@ -838,6 +838,52 @@ export async function forceRefreshAssets() {
   window.location.reload();
 }
 
+/** @type {string | null} */
+let avatarPreviewMemberName = null;
+/** @type {'trip' | 'daily'} */
+let avatarPreviewScope = 'trip';
+
+export function openMemberAvatarPreview(memberName, scope = 'trip') {
+  const name = String(memberName || '').trim();
+  if (!name) return;
+  avatarPreviewMemberName = name;
+  avatarPreviewScope = scope === 'daily' ? 'daily' : 'trip';
+  const url = getAvatarUrlByMemberName(name, avatarPreviewScope);
+  const color = getMemberColor(name);
+  const rare = isHiddenMemberColorId(color.id);
+  const sk = rare ? getHiddenMemberStyleKey(color.id) : '';
+  const styleCls = sk ? ` member-rare--${sk}` : '';
+  const dTone = memberToneClass(rare);
+  const dTv = memberToneVars(color, rare);
+  const ringCls = `member-avatar-preview-ring${rare ? ` member-avatar-preview-ring--rare${styleCls}` : ''}${dTone}`;
+  const innerEl = document.getElementById('member-avatar-preview-inner');
+  const titleEl = document.getElementById('member-avatar-preview-title');
+  if (!innerEl || !titleEl) return;
+  titleEl.textContent = name;
+  if (url) {
+    const st = dTv ? ` style="${dTv}"` : '';
+    innerEl.innerHTML = `<div class="${ringCls}"${st}><img class="member-avatar-preview-img" src="${url}" alt="${esc(name)} 頭像"></div>`;
+  } else {
+    const fb = `member-avatar-preview-fallback${rare ? ` member-avatar-preview-fallback--rare${styleCls}` : ''}${dTone}`;
+    const st = `background:${color.bg};color:${color.fg}${dTv ? `;${dTv}` : ''}`;
+    innerEl.innerHTML = `<div class="${ringCls}"><div class="${fb}" style="${st}">${esc(name.charAt(0))}</div></div>`;
+  }
+  document.getElementById('member-avatar-preview-overlay')?.classList.add('open');
+}
+
+export function closeMemberAvatarPreview() {
+  document.getElementById('member-avatar-preview-overlay')?.classList.remove('open');
+  avatarPreviewMemberName = null;
+  avatarPreviewScope = 'trip';
+}
+
+export function memberAvatarPreviewChangePhoto() {
+  const name = avatarPreviewMemberName;
+  const scope = avatarPreviewScope;
+  closeMemberAvatarPreview();
+  if (name) openAvatarPickerForMember(name, scope);
+}
+
 function renderMemberDirectory() {
   const body = document.getElementById('member-dir-body');
   const members = getKnownMemberNames();
@@ -859,11 +905,8 @@ function renderMemberDirectory() {
     const dTone = memberToneClass(rare);
     const dTv = memberToneVars(color, rare);
     return `<div class="member-dir-item${rare ? ` member-dir-item--rare${styleCls}` : ''}${dTone}"${dTv ? ` style="${dTv}"` : ''} data-member="${esc(name)}">
-      <button type="button" class="member-dir-avatar${rare ? ` member-dir-avatar--rare${styleCls}` : ''}${dTone}" onclick="openAvatarPickerForMember(${jqAttr(name)},'trip')" title="更換頭像" style="background:${color.bg}${dTv ? `;${dTv}` : ''}">
+      <button type="button" class="member-dir-avatar${rare ? ` member-dir-avatar--rare${styleCls}` : ''}${dTone}" onclick="openMemberAvatarPreview(${jqAttr(name)})" title="預覽頭像" style="background:${color.bg}${dTv ? `;${dTv}` : ''}">
         ${avatarHtml}
-        <span class="member-dir-avatar-edit">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 7l1-2h4l1 2h3a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h3zm3 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10z"/></svg>
-        </span>
       </button>
       <div class="member-dir-name">${esc(name)}</div>
       <div class="member-dir-actions">

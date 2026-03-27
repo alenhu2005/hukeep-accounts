@@ -49,6 +49,16 @@
     </div>
   </div>
 
+  <!-- 成員頭像放大預覽（成員管理列表） -->
+  <div id="member-avatar-preview-overlay" class="member-avatar-preview-overlay" onclick="if(event.target===this)closeMemberAvatarPreview()">
+    <div class="member-avatar-preview-panel" role="dialog" aria-modal="true" aria-labelledby="member-avatar-preview-title" onclick="event.stopPropagation()">
+      <button type="button" class="member-avatar-preview-close" onclick="closeMemberAvatarPreview()" aria-label="關閉">&times;</button>
+      <div id="member-avatar-preview-inner" class="member-avatar-preview-inner"></div>
+      <p id="member-avatar-preview-title" class="member-avatar-preview-title"></p>
+      <button type="button" class="btn btn-outline member-avatar-preview-change" onclick="memberAvatarPreviewChangePhoto()">更換頭像</button>
+    </div>
+  </div>
+
   <!-- Toast -->
   <div id="toast-container"></div>
   <div id="update-badge" class="update-badge" role="status" aria-live="polite">

@@ -219,7 +219,7 @@ function recordAvatarHTML(name, cssClass, clickable = false) {
   }
   const styleAttr = styleParts.length ? ` style="${styleParts.join(';')}"` : '';
   if (clickable) {
-    return `<button type="button" class="record-avatar ${cssClass}${rareCls} record-avatar-clickable"${styleAttr} onclick="openAvatarPickerForMember(${jqAttr(name)},'daily')" title="${esc(name)} — 點擊更換頭像">${inner}</button>`;
+    return `<button type="button" class="record-avatar ${cssClass}${rareCls} record-avatar-clickable"${styleAttr} onclick="event.stopPropagation();openMemberAvatarPreview(${jqAttr(name)},'daily')" title="預覽頭像">${inner}</button>`;
   }
   return `<div class="record-avatar ${cssClass}${rareCls}"${styleAttr}>${inner}</div>`;
 }

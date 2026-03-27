@@ -103,7 +103,14 @@ function tripRecordAvatar(name, cssClass) {
   const rareCls = rare ? ` record-avatar--rare${styleCls}` : '';
   const toneCls = memberToneClass(rare);
   const tv = memberToneVars(color, rare);
+  const previewable = cssClass === 'me';
+  const previewClick = previewable
+    ? ` onclick="event.stopPropagation();openMemberAvatarPreview(${jqAttr(name)})" title="預覽頭像"`
+    : '';
   if (url) {
+    if (previewable) {
+      return `<button type="button" class="record-avatar ${cssClass}${rareCls}${toneCls} record-avatar-clickable"${tv ? ` style="${tv}"` : ''}${previewClick}><img class="record-avatar-img" src="${url}" alt="${esc(name)}"></button>`;
+    }
     return `<div class="record-avatar ${cssClass}${rareCls}${toneCls}"${tv ? ` style="${tv}"` : ''}><img class="record-avatar-img" src="${url}" alt="${esc(name)}"></div>`;
   }
   if (cssClass === 'multi' || cssClass === 'split' || cssClass === 'settle') {
@@ -112,6 +119,9 @@ function tripRecordAvatar(name, cssClass) {
   const letterStyle = tv
     ? `background:${color.bg};color:${color.fg};${tv}`
     : `background:${color.bg};color:${color.fg}`;
+  if (previewable) {
+    return `<button type="button" class="record-avatar ${cssClass}${rareCls}${toneCls} record-avatar-clickable" style="${letterStyle}"${previewClick}>${esc(name.charAt(0))}</button>`;
+  }
   return `<div class="record-avatar ${cssClass}${rareCls}${toneCls}" style="${letterStyle}">${esc(name.charAt(0))}</div>`;
 }
 
@@ -121,12 +131,13 @@ function memberAvatarPill(name, cssClass) {
   const rare = isHiddenMemberColorId(color.id);
   const toneCls = memberToneClass(rare);
   const tv = memberToneVars(color, rare);
+  const pv = `onclick="event.stopPropagation();openMemberAvatarPreview(${jqAttr(name)})" title="${esc(name)}" aria-label="預覽 ${esc(name)} 頭像"`;
   if (url) {
-    return `<span class="${cssClass}${toneCls}" title="${esc(name)}"${tv ? ` style="${tv}"` : ''}><img src="${url}" alt="${esc(name)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block"></span>`;
+    return `<button type="button" class="${cssClass} settlement-pill-avatar-btn${toneCls}"${tv ? ` style="${tv}"` : ''} ${pv}><img src="${url}" alt="${esc(name)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block"></button>`;
   }
   const parts = [`background:${color.bg}`, `color:${color.fg}`, `border-color:${color.fg}30`];
   if (tv) parts.push(tv);
-  return `<span class="${cssClass}${toneCls}" style="${parts.join(';')}" title="${esc(name)}">${esc(name.charAt(0))}</span>`;
+  return `<button type="button" class="${cssClass} settlement-pill-avatar-btn${toneCls}" style="${parts.join(';')}" ${pv}>${esc(name.charAt(0))}</button>`;
 }
 
 function tripPhotoThumb(e) {
@@ -227,6 +238,7 @@ export function renderDetailMemberChips(members) {
       const avatarHtml = avatarUrl
         ? `<img class="member-chip-avatar${avCls}${toneCls}" src="${avatarUrl}" alt="${esc(m)} 頭像"${tv ? ` style="${tv}"` : ''}>`
         : `<span class="member-chip-avatar member-chip-avatar--fallback${rare ? ` member-chip-avatar-fallback--rare${styleCls}` : ''}${toneCls}" style="${fbStyle}" aria-hidden="true">${esc(m.charAt(0))}</span>`;
+      const avatarBtn = `<button type="button" class="member-chip-avatar-btn" onclick="openMemberAvatarPreview(${jqAttr(m)})" title="預覽頭像" aria-label="預覽 ${esc(m)} 頭像">${avatarHtml}</button>`;
 
       const removeBtn =
         members.length > 2
@@ -235,7 +247,7 @@ export function renderDetailMemberChips(members) {
          </button>`
           : '';
       return `<span class="member-chip${rare ? ` member-chip--rare${styleCls}` : ''}${toneCls}"${chipStyle}>
-          ${avatarHtml}
+          ${avatarBtn}
           <span class="member-chip-name">${esc(m)}</span>
           ${removeBtn}
         </span>`;
