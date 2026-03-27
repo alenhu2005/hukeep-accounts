@@ -33,6 +33,18 @@ export function randomUniformIndex(n) {
   return Math.floor(Math.random() * k);
 }
 
+/** 一般色用 class；隱藏色用 --member-fg/bg（由 getMemberColor 依主題解析） */
+export function memberToneClass(rare) {
+  return rare ? '' : ' member-tone';
+}
+
+/** @param {{ fg: string, bg: string }} color — 一般／隱藏皆輸出，供字色與外框 */
+export function memberToneVars(color, rare) {
+  void rare;
+  if (!color || color.fg == null || color.bg == null) return '';
+  return `--member-fg:${color.fg};--member-bg:${color.bg}`;
+}
+
 export function esc(s) {
   if (s == null) return '';
   return String(s)

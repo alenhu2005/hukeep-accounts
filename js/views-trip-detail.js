@@ -11,7 +11,7 @@ import {
 } from './data.js';
 import { computeSettlements } from './finance.js';
 import { categoryBadgeHTML } from './category.js';
-import { esc, jq, jqAttr } from './utils.js';
+import { esc, jq, jqAttr, memberToneClass, memberToneVars } from './utils.js';
 import { emptyHTML } from './views-shared.js';
 import { navigate } from './navigation.js';
 import { renderTripStatsCard } from './trip-stats.js';
@@ -101,22 +101,32 @@ function tripRecordAvatar(name, cssClass) {
   const sk = rare ? getHiddenMemberStyleKey(color.id) : '';
   const styleCls = sk ? ` member-rare--${sk}` : '';
   const rareCls = rare ? ` record-avatar--rare${styleCls}` : '';
+  const toneCls = memberToneClass(rare);
+  const tv = memberToneVars(color, rare);
   if (url) {
-    return `<div class="record-avatar ${cssClass}${rareCls}"><img class="record-avatar-img" src="${url}" alt="${esc(name)}"></div>`;
+    return `<div class="record-avatar ${cssClass}${rareCls}${toneCls}"${tv ? ` style="${tv}"` : ''}><img class="record-avatar-img" src="${url}" alt="${esc(name)}"></div>`;
   }
   if (cssClass === 'multi' || cssClass === 'split' || cssClass === 'settle') {
     return `<div class="record-avatar ${cssClass}">${esc(name)}</div>`;
   }
-  return `<div class="record-avatar ${cssClass}${rareCls}" style="background:${color.bg};color:${color.fg}">${esc(name.charAt(0))}</div>`;
+  const letterStyle = tv
+    ? `background:${color.bg};color:${color.fg};${tv}`
+    : `background:${color.bg};color:${color.fg}`;
+  return `<div class="record-avatar ${cssClass}${rareCls}${toneCls}" style="${letterStyle}">${esc(name.charAt(0))}</div>`;
 }
 
 function memberAvatarPill(name, cssClass) {
   const url = getAvatarUrlByMemberName(name, 'trip');
   const color = getMemberColor(name);
+  const rare = isHiddenMemberColorId(color.id);
+  const toneCls = memberToneClass(rare);
+  const tv = memberToneVars(color, rare);
   if (url) {
-    return `<span class="${cssClass}" title="${esc(name)}"><img src="${url}" alt="${esc(name)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block"></span>`;
+    return `<span class="${cssClass}${toneCls}" title="${esc(name)}"${tv ? ` style="${tv}"` : ''}><img src="${url}" alt="${esc(name)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block"></span>`;
   }
-  return `<span class="${cssClass}" style="background:${color.bg};color:${color.fg};border-color:${color.fg}30" title="${esc(name)}">${esc(name.charAt(0))}</span>`;
+  const parts = [`background:${color.bg}`, `color:${color.fg}`, `border-color:${color.fg}30`];
+  if (tv) parts.push(tv);
+  return `<span class="${cssClass}${toneCls}" style="${parts.join(';')}" title="${esc(name)}">${esc(name.charAt(0))}</span>`;
 }
 
 function tripPhotoThumb(e) {
@@ -208,9 +218,15 @@ export function renderDetailMemberChips(members) {
       const sk = rare ? getHiddenMemberStyleKey(color.id) : '';
       const styleCls = sk ? ` member-rare--${sk}` : '';
       const avCls = rare ? ` member-chip-avatar--rare${styleCls}` : '';
+      const toneCls = memberToneClass(rare);
+      const tv = memberToneVars(color, rare);
+      const chipStyle = tv ? ` style="${tv}"` : '';
+      const fbStyle = tv
+        ? `background:${color.bg};color:${color.fg};${tv}`
+        : `background:${color.bg};color:${color.fg}`;
       const avatarHtml = avatarUrl
-        ? `<img class="member-chip-avatar${avCls}" src="${avatarUrl}" alt="${esc(m)} 頭像">`
-        : `<span class="member-chip-avatar member-chip-avatar--fallback${rare ? ` member-chip-avatar-fallback--rare${styleCls}` : ''}" style="background:${color.bg};color:${color.fg}" aria-hidden="true">${esc(m.charAt(0))}</span>`;
+        ? `<img class="member-chip-avatar${avCls}${toneCls}" src="${avatarUrl}" alt="${esc(m)} 頭像"${tv ? ` style="${tv}"` : ''}>`
+        : `<span class="member-chip-avatar member-chip-avatar--fallback${rare ? ` member-chip-avatar-fallback--rare${styleCls}` : ''}${toneCls}" style="${fbStyle}" aria-hidden="true">${esc(m.charAt(0))}</span>`;
 
       const removeBtn =
         members.length > 2
@@ -218,7 +234,7 @@ export function renderDetailMemberChips(members) {
            <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
          </button>`
           : '';
-      return `<span class="member-chip${rare ? ` member-chip--rare${styleCls}` : ''}">
+      return `<span class="member-chip${rare ? ` member-chip--rare${styleCls}` : ''}${toneCls}"${chipStyle}>
           ${avatarHtml}
           <span class="member-chip-name">${esc(m)}</span>
           ${removeBtn}
@@ -240,7 +256,9 @@ function renderDetailKnownMembers(trip) {
       const rare = isHiddenMemberColorId(c.id);
       const sk = rare ? getHiddenMemberStyleKey(c.id) : '';
       const styleCls = sk ? ` member-rare--${sk}` : '';
-      return `<button type="button" class="known-member-bar-btn${rare ? ` known-member-bar-btn--rare${styleCls}` : ''}" onclick="addDetailMemberByName(${jqAttr(n)})">
+      const kTone = memberToneClass(rare);
+      const kTv = memberToneVars(c, rare);
+      return `<button type="button" class="known-member-bar-btn${rare ? ` known-member-bar-btn--rare${styleCls}` : ''}${kTone}"${kTv ? ` style="${kTv}"` : ''} onclick="addDetailMemberByName(${jqAttr(n)})">
         <span class="known-member-bar-dot${rare ? ` known-member-bar-dot--rare${styleCls}` : ''}" style="background:${c.fg}">${esc(n.charAt(0))}</span>${esc(n)}
       </button>`;
     }).join('')}

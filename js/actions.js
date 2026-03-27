@@ -1,7 +1,7 @@
 import { USER_A, USER_B } from './config.js';
 import { appState } from './state.js';
 import { todayStr } from './time.js';
-import { uid, toast, esc, jqAttr, jq, randomUniformIndex } from './utils.js';
+import { uid, toast, esc, jqAttr, jq, randomUniformIndex, memberToneClass, memberToneVars } from './utils.js';
 import { postRow, formatPostError } from './api.js';
 import {
   getDailyRecords,
@@ -515,10 +515,16 @@ function renderNewTripMemberChips() {
       const sk = rare ? getHiddenMemberStyleKey(color.id) : '';
       const styleCls = sk ? ` member-rare--${sk}` : '';
       const avCls = rare ? ` member-chip-avatar--rare${styleCls}` : '';
+      const toneCls = memberToneClass(rare);
+      const tv = memberToneVars(color, rare);
+      const chipStyle = tv ? ` style="${tv}"` : '';
+      const fbStyle = tv
+        ? `background:${color.bg};color:${color.fg};${tv}`
+        : `background:${color.bg};color:${color.fg}`;
       const avatarHtml = avatarUrl
-        ? `<img class="member-chip-avatar${avCls}" src="${avatarUrl}" alt="${esc(m)} 頭像">`
-        : `<span class="member-chip-avatar member-chip-avatar--fallback${rare ? ` member-chip-avatar-fallback--rare${styleCls}` : ''}" style="background:${color.bg};color:${color.fg}" aria-hidden="true">${esc(m.charAt(0))}</span>`;
-      return `<span class="member-chip${rare ? ` member-chip--rare${styleCls}` : ''}">
+        ? `<img class="member-chip-avatar${avCls}${toneCls}" src="${avatarUrl}" alt="${esc(m)} 頭像"${tv ? ` style="${tv}"` : ''}>`
+        : `<span class="member-chip-avatar member-chip-avatar--fallback${rare ? ` member-chip-avatar-fallback--rare${styleCls}` : ''}${toneCls}" style="${fbStyle}" aria-hidden="true">${esc(m.charAt(0))}</span>`;
+      return `<span class="member-chip${rare ? ` member-chip--rare${styleCls}` : ''}${toneCls}"${chipStyle}>
         ${avatarHtml}
         <span class="member-chip-name">${esc(m)}</span>
         <button class="member-chip-remove" onclick="removeNewTripMember(${jqAttr(m)})">
@@ -542,7 +548,9 @@ function renderKnownMemberPicker() {
       const rare = isHiddenMemberColorId(c.id);
       const sk = rare ? getHiddenMemberStyleKey(c.id) : '';
       const styleCls = sk ? ` member-rare--${sk}` : '';
-      return `<button type="button" class="known-member-bar-btn${rare ? ` known-member-bar-btn--rare${styleCls}` : ''}" onclick="pickKnownMemberForTrip(${jqAttr(n)})">
+      const kTone = memberToneClass(rare);
+      const kTv = memberToneVars(c, rare);
+      return `<button type="button" class="known-member-bar-btn${rare ? ` known-member-bar-btn--rare${styleCls}` : ''}${kTone}"${kTv ? ` style="${kTv}"` : ''} onclick="pickKnownMemberForTrip(${jqAttr(n)})">
         <span class="known-member-bar-dot${rare ? ` known-member-bar-dot--rare${styleCls}` : ''}" style="background:${c.fg}">${esc(n.charAt(0))}</span>${esc(n)}
       </button>`;
     }).join('')}
@@ -736,19 +744,23 @@ window.addEventListener('pagehide', () => {
 export function openHiddenStylePreview() {
   const body = document.getElementById('member-preview-body');
   if (!body) return;
+  const dark = document.documentElement.classList.contains('dark');
   body.innerHTML = HIDDEN_MEMBER_COLORS.map(h => {
     const sk = h.styleKey || '';
     const styleCls = sk ? ` member-rare--${sk}` : '';
     const label = h.label || h.id;
     const colorId = h.id || '';
-    const chip = `<span class="member-chip member-chip--rare${styleCls}">
-      <span class="member-chip-avatar member-chip-avatar--fallback member-chip-avatar-fallback--rare${styleCls}" style="background:${h.bg};color:${h.fg}" aria-hidden="true">隱</span>
+    const fg = dark ? h.darkFg : h.fg;
+    const bg = dark ? h.darkBg : h.bg;
+    const pv = `--member-fg:${fg};--member-bg:${bg}`;
+    const chip = `<span class="member-chip member-chip--rare${styleCls}" style="${pv}">
+      <span class="member-chip-avatar member-chip-avatar--fallback member-chip-avatar-fallback--rare${styleCls}" style="background:${bg};color:${fg}" aria-hidden="true">隱</span>
       <span class="member-chip-name">${esc(label)}</span>
     </span>`;
-    const dot = `<span class="known-member-bar-dot known-member-bar-dot--rare${styleCls}" style="background:${h.fg}" aria-hidden="true">隱</span>`;
-    const avatar = `<span class="trip-lottery-avatar trip-lottery-avatar--fallback trip-lottery-avatar--rare${styleCls} trip-lottery-avatar-fallback--rare${styleCls}" style="background:${h.bg};color:${h.fg}" aria-hidden="true">隱</span>`;
-    const frame = `<button type="button" class="member-dir-avatar member-dir-avatar--rare${styleCls}" style="background:${h.bg}" aria-label="${esc(label)} 框">
-      <span class="member-dir-avatar-fallback member-dir-avatar-fallback--rare" style="background:${h.bg};color:${h.fg}">隱</span>
+    const dot = `<span class="known-member-bar-dot known-member-bar-dot--rare${styleCls}" style="background:${fg}" aria-hidden="true">隱</span>`;
+    const avatar = `<span class="trip-lottery-avatar trip-lottery-avatar--fallback trip-lottery-avatar--rare${styleCls} trip-lottery-avatar-fallback--rare${styleCls}" style="background:${bg};color:${fg}" aria-hidden="true">隱</span>`;
+    const frame = `<button type="button" class="member-dir-avatar member-dir-avatar--rare${styleCls}" style="background:${bg}" aria-label="${esc(label)} 框">
+      <span class="member-dir-avatar-fallback member-dir-avatar-fallback--rare" style="background:${bg};color:${fg}">隱</span>
     </button>`;
     return `<div class="member-preview-row">
       <div class="member-preview-name">
@@ -844,8 +856,10 @@ function renderMemberDirectory() {
     const avatarHtml = url
       ? `<img class="${avImgCls}" src="${url}" alt="${esc(name)}">`
       : `<span class="${fbCls}" style="background:${color.bg};color:${color.fg}">${esc(name.charAt(0))}</span>`;
-    return `<div class="member-dir-item${rare ? ` member-dir-item--rare${styleCls}` : ''}" data-member="${esc(name)}">
-      <button type="button" class="member-dir-avatar${rare ? ` member-dir-avatar--rare${styleCls}` : ''}" onclick="openAvatarPickerForMember(${jqAttr(name)},'trip')" title="更換頭像" style="background:${color.bg}">
+    const dTone = memberToneClass(rare);
+    const dTv = memberToneVars(color, rare);
+    return `<div class="member-dir-item${rare ? ` member-dir-item--rare${styleCls}` : ''}${dTone}"${dTv ? ` style="${dTv}"` : ''} data-member="${esc(name)}">
+      <button type="button" class="member-dir-avatar${rare ? ` member-dir-avatar--rare${styleCls}` : ''}${dTone}" onclick="openAvatarPickerForMember(${jqAttr(name)},'trip')" title="更換頭像" style="background:${color.bg}${dTv ? `;${dTv}` : ''}">
         ${avatarHtml}
         <span class="member-dir-avatar-edit">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 7l1-2h4l1 2h3a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h3zm3 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10z"/></svg>

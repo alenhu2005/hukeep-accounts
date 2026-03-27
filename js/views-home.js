@@ -213,10 +213,15 @@ function recordAvatarHTML(name, cssClass, clickable = false) {
   const inner = url
     ? `<img class="record-avatar-img" src="${url}" alt="${esc(name)}">`
     : esc(name);
-  if (clickable) {
-    return `<button type="button" class="record-avatar ${cssClass}${rareCls} record-avatar-clickable" onclick="openAvatarPickerForMember(${jqAttr(name)},'daily')" title="${esc(name)} — 點擊更換頭像">${inner}</button>`;
+  const styleParts = [];
+  if (!url) {
+    styleParts.push(`background:${color.bg}`, `color:${color.fg}`);
   }
-  return `<div class="record-avatar ${cssClass}${rareCls}">${inner}</div>`;
+  const styleAttr = styleParts.length ? ` style="${styleParts.join(';')}"` : '';
+  if (clickable) {
+    return `<button type="button" class="record-avatar ${cssClass}${rareCls} record-avatar-clickable"${styleAttr} onclick="openAvatarPickerForMember(${jqAttr(name)},'daily')" title="${esc(name)} — 點擊更換頭像">${inner}</button>`;
+  }
+  return `<div class="record-avatar ${cssClass}${rareCls}"${styleAttr}>${inner}</div>`;
 }
 
 function photoThumbHTML(r) {
