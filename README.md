@@ -1,170 +1,182 @@
-# 記帳本
+# 記帳本（Ledger App）
 
-兩人日常帳與多人出遊分帳的前端，資料經 **Google Apps Script (GAS)** 寫入試算表；本機以 `localStorage` 快取，啟動時先顯示快取，再與伺服端同步。
+兩人日常帳與多人出遊分帳的純前端應用。  
+資料由前端呼叫 **Google Apps Script (GAS)** 寫入試算表，前端透過 `localStorage` 快取並具備離線佇列，確保弱網路下仍可使用。
 
-## 功能總覽（使用者）
+---
 
-- **日常**
-  - 新增消費（各付一半 / 只算胡的 / 只算詹的 / 兩人都付）
-  - 歷史紀錄：點一筆可編輯（分類 / 備注 / 照片 / 日期）
-  - 還款：一鍵新增「還款」紀錄
-- **出遊**
-  - 新增行程、加入成員、刪除成員（行程至少 2 位）
-  - 行程卡片：點「路標」可切換 7 種顏色
-  - 行程明細：新增消費（單人付款 / 多人出款）、結算、依日期分組歷史紀錄
-  - 行程可結束/重新開啟；已結束行程也可刪除
-  - 成員管理：右下角 FAB 開啟「成員管理」面板，可改名/刪除/更換頭像
-- **分析**
-  - 本週 / 本月 / 本年；依分類圓餅圖，可切換圖上顯示（分類/比例/金額）
-- **照片**
-  - 在編輯對話框可上傳照片；列表顯示放大鏡按鈕，點擊開啟燈箱
-  - 燈箱支援 **雙指縮放**、放大後拖曳平移、**雙擊**切換放大/還原
-- **同步**
-  - 底部同步狀態列顯示「同步中 / 已同步 / 僅快取」
-  - 背景輪詢有更新時會顯示「資料已更新」
+## 你會在這份 README 看到什麼
 
-## 本機開發與測試
+- 功能總覽（給使用者）
+- 快速啟動（給開發者）
+- 重要設定（API、使用者名稱）
+- 同步/離線機制說明
+- 部署與維運重點
+- 文件導覽（已做分類）
+
+---
+
+## 功能總覽
+
+### 1) 日常記帳
+
+- 新增消費：各付一半 / 只算胡 / 只算詹 / 兩人都付。
+- 歷史紀錄：可編輯分類、備註、照片、日期。
+- 還款：可一鍵記錄還款，快速歸零帳目。
+
+### 2) 出遊分帳
+
+- 建立行程、管理成員（至少 2 位）。
+- 行程明細支援單人付款與多人出款。
+- 結算建議、歷史依日期分組、行程結束與重新開啟。
+- 成員管理（改名、刪除、換頭像、換配色）。
+
+### 3) 分析視圖
+
+- 本週 / 本月 / 本年。
+- 分類圓餅圖可切換顯示分類、比例、金額。
+
+### 4) 同步與快取
+
+- 狀態列顯示：同步中 / 已同步 / 僅快取。
+- 背景輪詢發現新資料會提示「資料已更新」。
+- POST 失敗可進離線佇列，恢復網路後自動重送。
+
+---
+
+## 快速開始（本機開發）
+
+### 需求
+
+- Node.js（建議 LTS）
+- 可提供靜態檔案的本機伺服器
+
+### 安裝與測試
 
 | 指令 | 說明 |
 |------|------|
-| `npm install` | 安裝開發依賴（Vitest） |
+| `npm install` | 安裝 Vitest 等開發依賴 |
 | `npm test` | 執行單元測試（`test/*.test.js`） |
 
-專案為**純靜態前端**（無打包步驟）。請以**靜態伺服器**開啟專案根目錄（`index.html` 與 `js/` 同層）。ES modules 在部分瀏覽器以 `file://` 開啟會無法載入，建議使用本機伺服器（例如 `python3 -m http.server` 或 `npx serve`）。
+### 啟動方式（重點）
 
-## 設定（API / 使用者名稱）
+本專案是 **純靜態前端**（無 bundler build 步驟）。  
+請以靜態伺服器開啟根目錄，避免 `file://` 造成 ES Modules 載入失敗。
 
-- **GAS Web App URL**
-  - 預設值在 `js/config.js` 的 `DEFAULT_API`
-  - 可在載入 `js/main.js` 前設定 `window.__LEDGER_API_URL__ = '...'` 覆寫
-  - 或用 UI 的 `setApiUrl()`（會寫入 `localStorage`：`ledger_api_url_v1`）
-- **日常兩位使用者名稱**
-  - `js/config.js`：`USER_A` / `USER_B`
+可用範例：
 
-## 專案檔案
+- `python3 -m http.server`
+- `npx serve`
 
-### 入口與設定
+---
 
-| 路徑 | 說明 |
-|------|------|
-| `index.html` | 頁面結構、動態 `<base>`（修正 GitHub Pages 無結尾 `/` 時資源路徑）、主題預先套用 |
-| `.nojekyll` | 關閉 Jekyll，避免 Pages 處理時略過部分靜態檔 |
-| `styles.css` | 樣式 |
-| `package.json` | 專案中繼資料；`npm test` 執行 Vitest |
-| `vitest.config.js` | 測試設定（`test/**/*.test.js`） |
-| `js/main.js` | 入口（載入 router、globals、`bootstrap` 初始化） |
-| `js/config.js` | `API_URL`、逾時與快取鍵（可選：`window.__LEDGER_API_URL__` 覆寫網址） |
-| `js/state.js` | 執行時狀態（目前分頁、分析區間、圓餅標籤選項等） |
-| `js/model.js` | 資料結構／型別註解（JSDoc） |
+## 重要設定
 
-### 資料、同步與計算
+### 1) GAS API URL
 
-| 路徑 | 說明 |
-|------|------|
-| `js/api.js` | GAS `fetch`、快取讀寫、背景輪詢 |
-| `js/data.js` | 事件列衍生日常紀錄、行程與支出 |
-| `js/finance.js` | 結餘與分攤計算 |
-| `js/time.js` | 台北時區日期、`todayStr`、分析頁日期區間 |
-| `js/backup.js` | 備份匯出（CSV／文字） |
+- 預設值：`js/config.js` 內 `DEFAULT_API`
+- 覆寫方式 A：在載入 `js/main.js` 前設 `window.__LEDGER_API_URL__`
+- 覆寫方式 B：透過 UI `setApiUrl()`（寫入 `localStorage` 的 `ledger_api_url_v1`）
 
-### 畫面與互動
+### 2) 日常兩位使用者名稱
 
-| 路徑 | 說明 |
-|------|------|
-| `js/router.js` | 記憶體內路由分派與 `render` 觸發 |
-| `js/navigation.js` | 分頁切換 |
-| `js/render-registry.js` | `render` 委派（避免 navigation ↔ views 循環依賴） |
-| `js/views-home.js` | 日常首頁 |
-| `js/views-trips.js` | 出遊列表 |
-| `js/views-trip-detail.js` | 出遊明細、抽籤入口 |
-| `js/views-analysis.js` | 分析（週期、圓餅圖、圖例） |
-| `js/views-shared.js` | 共用片段 |
-| `js/trip-stats.js` | 出遊統計區塊 |
-| `js/trip-lottery.js` | 行程內抽籤（籤筒編輯、`localStorage` 持久化） |
-| `js/pie-chart.js` | 分析頁圓餅圖 SVG |
-| `js/category.js` | 分類標籤樣式 |
-| `js/theme.js` | 明暗主題 |
-| `js/dialog.js` / `js/dialog-a11y.js` | 確認／編輯對話框與焦點陷阱、Esc |
-| `js/amount-input.js` | 金額輸入行為 |
-| `js/actions.js` | 表單與按鈕動作 |
-| `js/globals.js` | 將 `onclick` 等所需函式掛到 `window` |
+- 在 `js/config.js` 設定 `USER_A`、`USER_B`
 
-### 同步 UI、工作階段與工具
+---
 
-| 路徑 | 說明 |
-|------|------|
-| `js/bootstrap.js` | 啟動載入、輪詢、對話框註冊、金額欄位初始化 |
-| `js/sync-ui.js` | 底部同步狀態列、「資料已更新」提示 |
-| `js/sync-pause.js` | 使用者輸入時暫停背景同步，避免打斷 |
-| `js/session-ui.js` | 還原上次路由／分析區間等工作階段 |
-| `js/device-info.js` | 裝置／瀏覽器資訊（依需求使用） |
-| `js/utils.js` | 跳脫字元、`toast`、均勻隨機整數、`prefersReducedMotion` 等 |
+## 檔案分類（已整理）
 
-## 同步機制（不打擾使用者）
+我已補齊文件分類，建議先從以下入口看：
 
-同步目標：**資料沒變就不重繪**、輸入中不打斷、避免重複請求。
+- `docs/project-structure.md`：完整檔案地圖（依職責分類）
+- `docs/workflow.md`：開發流程與改動順序建議
+- `docs/operations-checklist.md`：部署與排錯清單
 
-- **資料相等判定**：`js/api.js` 的 `rowsDataEqual()`（排序後逐筆比對），避免試算表回傳順序不同造成誤判更新。
-- **背景輪詢**：`js/bootstrap.js` 每 `POLL_MS` 進行一次 `loadData({ backgroundPoll:true })`。
-- **冷卻期**：切換底部頁籤同步有 `30s` 冷卻（`COOLDOWN_MS`），冷卻內不重複打擾。
-- **頁籤同步去抖**：點底部導航後 `350ms` 去抖，只同步最後一次。
-- **回到前台**：只有離開超過 `30s` 才同步（避免切換通知就同步）。
-- **輸入保護**：`js/sync-pause.js` 的 `syncPausedForUserInput()` + `pauseSyncBriefly()`，避免表單送出/輸入時背景同步重繪打斷。
+---
 
-## 本地快取（localStorage）與清除
+## 同步與離線設計（摘要）
 
-快取鍵（`js/config.js`）：
+目標：資料不變不重繪、輸入中不打擾、弱網路可持續操作。
 
-- `gasRows_daily_v2`：日常資料
-- `gasRows_trip_v2`：出遊資料
+- GET 有 timeout、重試與 backoff（含 jitter）。
+- 背景輪詢僅在必要時更新畫面，避免閃爍。
+- POST 失敗（可重試類型）可加入 outbox。
+- 恢復網路後自動 flush outbox。
+- 本地快取與伺服端資料合併時會避開重複 pending 事件。
+
+---
+
+## localStorage 快取鍵
+
+- `gasRows_daily_v2`：日常資料快取
+- `gasRows_trip_v2`：出遊資料快取
 - `ledger_sync_last_at_v1`：上次成功同步時間
-- `ledger_api_url_v1`：UI 覆寫的 GAS URL
+- `ledger_api_url_v1`：覆寫 API URL
 
-**清除本地快取（隱藏入口）**：
+> 「清除本地快取」在備份對話框底部。  
+> 此動作只清前端快取，不會刪除試算表資料。
 
-- 打開「備份與匯出」對話框，最底部有一個低調的「清除本地快取」。
-- 清除後會重新載入頁面；**不會刪除試算表資料**，只清本機暫存。
+---
 
-## GitHub Pages
+## GitHub Pages 部署
 
-若已開啟 Pages 且來源為 `main` 根目錄，網址通常為：
+若 Pages 來源為 `main` 根目錄，網址通常像：
 
-**https://alenhu2005.github.io/code/**
+`https://<你的帳號>.github.io/<repo>/`
 
-（實際網址以 GitHub 專案 **Settings → Pages** 顯示為準。）
+### 常見坑
 
-**若線上版空白／樣式全掛：** 常見原因是開成 `…/code` 而沒有結尾斜線，瀏覽器會把 `js/main.js` 解析到錯誤路徑。`index.html` 已內建修正；部署後請**強制重新整理**或清快取再試。
+- 如果你用 `.../repo`（少尾端 `/`），相對資源可能解析錯誤。
+- `index.html` 已有 `<base>` 修正，但部署後仍建議強制重整。
 
-部署後請在 `js/config.js` 確認 `API_URL` 指向你已部署的 GAS Web App，或在載入 `js/main.js` **之前**於頁面設定 `window.__LEDGER_API_URL__ = '你的 GAS URL'`。
+---
 
-## Google Apps Script 部署注意
+## GAS 部署注意事項
 
-1. **新增部署** → 類型選 **網路應用程式**。  
-2. **執行身分**：一般選「我」即可讓試算表寫入用你的權限。  
-3. **具有存取權的使用者**：  
-   - 僅自己用：可選「只有我自己」。  
-   - 公開給他人開同一個前端 URL：需選 **「所有人」**（或組織內），否則匿名 `fetch` / POST 會失敗。  
-4. 重新發布程式後 **部署 ID / URL 會變**，請同步更新前端 `js/config.js` 的 `API_URL`（或 `__LEDGER_API_URL__`）。
+1. 新增部署 → 類型選「網路應用程式」。
+2. 執行身分通常選「我」。
+3. 存取權若要多人使用，需選「所有人」或組織可存取。
+4. 每次重新部署 URL 可能變動，前端 `API_URL` 要同步更新。
 
-試算表需配合你的 GAS 讀寫邏輯（欄位與事件列格式依你的後端實作）。
+---
 
 ## 疑難排解
 
-- **GitHub Pages 看到舊版**
-  - 強制重新整理：桌面 `Cmd+Shift+R` / `Ctrl+Shift+R`
-  - iOS 可試：關閉分頁後重開，或清除 Safari 網站資料
-- **同步失敗 / 僅快取**
-  - 檢查 `API_URL` 是否為最新部署的 GAS URL
-  - 確認 GAS 部署權限允許存取（「所有人」/ 組織內）
-  - 網路不穩時 GET/POST 會自動重試（指數退避 + 抖動），仍失敗會顯示 toast
-- **localStorage 滿了**
-  - 會提示「儲存空間已滿」
-  - 建議使用「清除本地快取」後重新載入
+### 1) 線上版看起來是舊版
 
-## 維護者筆記（快速定位）
+- 桌面：`Cmd+Shift+R` / `Ctrl+Shift+R`
+- 手機：關閉分頁重開，必要時清網站資料
 
-- **日常**：記帳、分類、結餘；標題列可開備份選單（可讀版 CSV、文字備份、原始技術 CSV）。  
-- **出遊**：行程、多人分攤、歷史依日期分組、「誰先付最多」統計；行程結束後可複製結算摘要；行程頁可開 **抽籤**（籤筒可增刪名稱，含非行程成員）。  
-- **分析**：本週／本月／本年、依分類圓餅圖與圖例（可切換環上顯示：分類／比例／金額）。  
-- **同步**：寫入 GAS 含逾時與 HTTP 狀態提示（toast）；背景輪詢更新時可顯示「資料已更新」。  
-- **其他**：明暗主題、編輯／確認對話框無障礙（焦點與 Esc）、偏好減少動畫時略過部分動效。
+### 2) 顯示「僅快取」或同步失敗
+
+- 檢查 `API_URL` 是否最新部署 URL
+- 檢查 GAS 權限是否允許目前使用者
+- 檢查網路狀況與 GAS 回應內容
+
+### 3) 儲存空間不足
+
+- 快取可能因照片或大量資料達上限
+- 使用「清除本地快取」後重新載入
+
+---
+
+## 測試現況
+
+- 測試框架：Vitest
+- 主要涵蓋：`finance`、`data`、`offline-queue`、`trip-stats`、`utils`
+- 指令：`npm test`
+
+---
+
+## 維護建議（短版）
+
+- 修改同步流程時，務必同時檢查 `js/api.js` 與 `js/bootstrap.js`
+- 修改事件資料結構時，務必同步檢查 `js/model.js`、`js/data.js`、測試檔
+- 修改離線快取策略時，記得檢查 `sw.js` 與文件
+
+---
+
+## 授權與備註
+
+此專案目前為私用記帳工具範本，可依需求自行延伸。  
+若要多人正式共用，建議補上：錯誤追蹤、權限控管、資料備份策略與更完整 e2e 測試。
