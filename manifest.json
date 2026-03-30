@@ -11,7 +11,19 @@
   "categories": ["finance", "utilities"],
   "icons": [
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%233b82f6'/><text x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='bold'>$</text></svg>",
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='21' fill='%2314532d'/><rect x='20' y='29' width='7' height='42' rx='2' fill='%23ffffff'/><rect x='27' y='27' width='33' height='46' rx='4' fill='%23ffffff'/><rect x='32' y='37' width='23' height='3' rx='1.5' fill='%2314532d'/><rect x='32' y='46' width='18' height='3' rx='1.5' fill='%2314532d'/><rect x='32' y='55' width='23' height='3' rx='1.5' fill='%2314532d'/><g transform='translate(59,47) rotate(-42)'><rect x='-4.5' y='-26' width='9' height='30' rx='3' fill='%23ffffff'/><path d='M-4,4L0,12L4,4Z' fill='%23ffffff'/></g></svg>",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
