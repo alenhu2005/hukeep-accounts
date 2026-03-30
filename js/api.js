@@ -11,6 +11,8 @@ import {
   POST_RETRY_BASE_MS,
   SYNC_LAST_AT_KEY,
   APPEND_DEVICE_INFO_TO_POST,
+  APPEND_POSTED_AT_TO_POST,
+  TIMEZONE,
 } from './config.js';
 import { appState } from './state.js';
 import { isDailyRow, isTripRow, normalizeRow } from './model.js';
@@ -296,12 +298,30 @@ function payloadForGasPost(data) {
   return o;
 }
 
+/** 送 GAS 時附帶的客戶端送出「時刻」（不含日期，與既有日期欄分開），時區見 {@link TIMEZONE}。 */
+export function formatClientPostedAtForGas() {
+  try {
+    return new Date().toLocaleTimeString('en-GB', {
+      timeZone: TIMEZONE,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    });
+  } catch {
+    return new Date().toLocaleTimeString('en-GB', { hour12: false });
+  }
+}
+
 async function postRowSingleAttempt(data) {
   const base = payloadForGasPost(data);
   let payload = base;
+  if (APPEND_POSTED_AT_TO_POST) {
+    payload = { ...payload, _clientPostedAt: formatClientPostedAtForGas() };
+  }
   if (APPEND_DEVICE_INFO_TO_POST) {
     const clientLabel = await getClientDeviceSummary();
-    payload = { ...base, _clientDevice: clientLabel };
+    payload = { ...payload, _clientDevice: clientLabel };
   }
   const res = await fetch(API_URL, {
     method: 'POST',

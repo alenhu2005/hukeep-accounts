@@ -64,6 +64,7 @@ export function clonePayloadForOutbox(data) {
   delete o._pendingSync;
   delete o._voided;
   delete o._clientDevice;
+  delete o._clientPostedAt;
   return o;
 }
 

@@ -51,3 +51,10 @@ export const POST_RETRY_BASE_MS = 500;
  */
 export const APPEND_DEVICE_INFO_TO_POST =
   typeof window !== 'undefined' && window.__LEDGER_APPEND_DEVICE__ === false ? false : true;
+
+/**
+ * 每次 POST 會多帶 `_clientPostedAt`（僅「時:分:秒」，不含日期；時區見 {@link TIMEZONE}）。
+ * GAS 可寫入試算表新欄；GET 回傳時可忽略。若要關閉：`window.__LEDGER_APPEND_POSTED_AT__ = false`。
+ */
+export const APPEND_POSTED_AT_TO_POST =
+  typeof window !== 'undefined' && window.__LEDGER_APPEND_POSTED_AT__ === false ? false : true;

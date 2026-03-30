@@ -137,6 +137,7 @@
 2. 執行身分通常選「我」。
 3. 存取權若要多人使用，需選「所有人」或組織可存取。
 4. 每次重新部署 URL 可能變動，前端 `API_URL` 要同步更新。
+5. POST 內容會多帶 **`_clientPostedAt`**（僅時刻 `HH:mm:ss`，`Asia/Taipei`、24 小時制，不含日期），可在試算表加一欄寫入；另可選 **`_clientDevice`**（裝置摘要）。若不要此欄，可在載入前設 `window.__LEDGER_APPEND_POSTED_AT__ = false`。
 
 ---
 
