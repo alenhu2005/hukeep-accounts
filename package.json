@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "test": "vitest run",
-    "icons:flatten": "node scripts/flatten-app-icons.mjs"
+    "icons:flatten": "node scripts/flatten-app-icons.mjs",
+    "icons:prepare": "node scripts/prepare-app-icons.mjs"
   },
   "devDependencies": {
     "sharp": "^0.33.5",
