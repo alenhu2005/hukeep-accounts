@@ -24,7 +24,7 @@ import {
   nbombStart,
   nbombGuess,
   nbombAgain,
-  nbombSecretLotteryTitleTap,
+  nbombSecretLotteryTitleTapFromClick,
   nbombSecretLotteryTitlePressStart,
   nbombSecretLotteryTitlePressEnd,
 } from './trip-play-number-bomb.js';
@@ -232,7 +232,7 @@ Object.assign(window, {
   nbombStart,
   nbombGuess,
   nbombAgain,
-  nbombSecretLotteryTitleTap,
+  nbombSecretLotteryTitleTapFromClick,
   nbombSecretLotteryTitlePressStart,
   nbombSecretLotteryTitlePressEnd,
 });

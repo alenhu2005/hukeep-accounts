@@ -115,7 +115,7 @@ function poolManageHtml(entry, trip) {
         <span class="trip-lottery-pool-tag">
           ${lotteryAvatarHtml(n)}
           ${esc(n)}
-          <button type="button" class="trip-lottery-pool-remove" aria-label="從籤筒移除 ${esc(n)}" onclick="removeFromTripLotteryPool(${jq(n)})">×</button>
+          <button type="button" class="trip-lottery-pool-remove" aria-label="從籤筒移除 ${esc(n)}" onclick='removeFromTripLotteryPool(${jq(n)})'>×</button>
         </span>`,
           )
           .join('')
@@ -264,11 +264,10 @@ export function renderTripLotteryCard(trip) {
   pop.innerHTML = `
     <div class="trip-lottery-popover-inner">
       <div class="trip-lottery-popover-title trip-lottery-popover-title--nbomb-secret"
-        onclick="nbombSecretLotteryTitleTap()"
+        onclick="nbombSecretLotteryTitleTapFromClick()"
         onmousedown="nbombSecretLotteryTitlePressStart()"
         onmouseup="nbombSecretLotteryTitlePressEnd()"
         onmouseleave="nbombSecretLotteryTitlePressEnd()"
-        ontouchstart="nbombSecretLotteryTitlePressStart()"
         ontouchend="nbombSecretLotteryTitlePressEnd()"
         ontouchcancel="nbombSecretLotteryTitlePressEnd()"
       >抽籤</div>
@@ -289,6 +288,8 @@ export function renderTripLotteryCard(trip) {
         <button type="button" class="btn btn-outline btn-sm" onclick="resetTripLotteryPool()">重置籤筒</button>
       </div>
     </div>`;
+
+  void import('./trip-play-number-bomb.js').then(m => m.attachNbombSecretLotteryTitleListeners(pop));
 }
 
 /**

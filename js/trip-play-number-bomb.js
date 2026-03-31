@@ -9,9 +9,12 @@ let _nbombLotteryTapAt = 0;
 /** @type {ReturnType<typeof setTimeout> | null} */
 let _nbombLotteryPressTimer = null;
 
-const NBOMB_SECRET_TAP_WINDOW_MS = 2000;
-const NBOMB_SECRET_TAP_NEED = 9;
-const NBOMB_SECRET_PRESS_MS = 2800;
+const NBOMB_SECRET_TAP_WINDOW_MS = 3800;
+const NBOMB_SECRET_TAP_NEED = 8;
+const NBOMB_SECRET_PRESS_MS = 2600;
+
+/** 觸控後短暫忽略 click，避免 iOS 重複計次。 */
+let _nbombSuppressClickUntil = 0;
 
 function openNbombFromLotterySecret() {
   _nbombLotteryTapCount = 0;
@@ -402,7 +405,7 @@ export function openTripNumberBomb() {
   if (trip) openNumberBombGame(trip);
 }
 
-export function nbombSecretLotteryTitleTap() {
+function nbombSecretLotteryTitleTapCore() {
   const pop = document.getElementById('trip-lottery-popover');
   if (!pop || pop.hidden) return;
   const now = Date.now();
@@ -412,6 +415,39 @@ export function nbombSecretLotteryTitleTap() {
   if (_nbombLotteryTapCount >= NBOMB_SECRET_TAP_NEED) {
     openNbombFromLotterySecret();
   }
+}
+
+/** 桌面／觸控後已處理時由 click 呼叫。 */
+export function nbombSecretLotteryTitleTapFromClick() {
+  if (Date.now() < _nbombSuppressClickUntil) return;
+  nbombSecretLotteryTitleTapCore();
+}
+
+/**
+ * 手機：以 passive:false 綁定，才能 preventDefault，避免 iOS 延遲 click 導致連點失效。
+ * @param {HTMLElement | null | undefined} popEl `#trip-lottery-popover`
+ */
+export function attachNbombSecretLotteryTitleListeners(popEl) {
+  const el = popEl?.querySelector?.('.trip-lottery-popover-title--nbomb-secret');
+  if (!el) return;
+  el.addEventListener(
+    'touchstart',
+    /** @param {TouchEvent} ev */
+    ev => {
+      const pop = document.getElementById('trip-lottery-popover');
+      if (!pop || pop.hidden) return;
+      if (ev.targetTouches && ev.targetTouches.length !== 1) return;
+      try {
+        ev.preventDefault();
+      } catch {
+        /* ignore */
+      }
+      _nbombSuppressClickUntil = Date.now() + 500;
+      nbombSecretLotteryTitlePressStart();
+      nbombSecretLotteryTitleTapCore();
+    },
+    { passive: false },
+  );
 }
 
 export function nbombSecretLotteryTitlePressStart() {
