@@ -1426,6 +1426,9 @@
       border: 1px solid var(--border);
       font-size: 13px;
       font-variant-numeric: tabular-nums;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-x: contain;
     }
     .trip-gamble-pl {
       margin-bottom: 12px;
@@ -1444,20 +1447,36 @@
     }
     .analysis-gamble-pl-grid {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(5.25em, auto) minmax(5.25em, auto) minmax(5.25em, auto);
+      /* 列用 subgrid 對齊父欄寬；min-width 極窄時由卡片橫向捲動，避免欄位被擠壞 */
+      grid-template-columns: minmax(0, 1fr) minmax(5.25em, max-content) minmax(5.25em, max-content) minmax(5.25em, max-content);
       column-gap: 12px;
       row-gap: 8px;
-      align-items: center;
+      align-items: stretch;
+      min-width: 260px;
       font-size: 13px;
       font-weight: 600;
       font-variant-numeric: tabular-nums;
     }
     .analysis-gamble-pl-row {
-      display: contents;
+      display: grid;
+      grid-column: 1 / -1;
+      grid-template-columns: subgrid;
+    }
+    @supports not (grid-template-columns: subgrid) {
+      .analysis-gamble-pl-row {
+        display: contents;
+      }
     }
     .analysis-gamble-pl-row--head .analysis-gamble-pl-cell {
-      padding-bottom: 6px;
+      display: flex;
+      align-items: flex-end;
+      padding-bottom: 4px;
       border-bottom: 1px solid var(--border);
+    }
+    .analysis-gamble-pl-row:not(.analysis-gamble-pl-row--head) .analysis-gamble-pl-cell {
+      display: flex;
+      align-items: center;
+      min-height: 1.35em;
     }
     .analysis-gamble-pl-row--head .analysis-gamble-pl-cell--num {
       font-size: 11px;
@@ -1473,6 +1492,7 @@
       padding-right: 4px;
     }
     .analysis-gamble-pl-cell--num {
+      justify-content: flex-end;
       text-align: right;
       white-space: nowrap;
       color: var(--text);
