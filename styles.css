@@ -4448,15 +4448,67 @@
       word-break: break-word;
     }
     .trip-stats-pie-section {
-      margin-bottom: 22px;
-      padding-bottom: 6px;
+      margin-bottom: 16px;
+      padding-bottom: 4px;
       border-bottom: 1px solid var(--border);
     }
+    .trip-pie-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .trip-stats-label--pie-toolbar {
+      margin-bottom: 0;
+    }
+    .trip-pie-fold-btn {
+      flex-shrink: 0;
+      border: none;
+      background: transparent;
+      padding: 4px 6px;
+      cursor: pointer;
+      color: var(--text-muted);
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .trip-pie-fold-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: var(--text-muted);
+    }
+    .trip-pie-fold-btn:hover {
+      background: rgba(0, 0, 0, 0.05);
+    }
+    html.dark .trip-pie-fold-btn:hover {
+      background: rgba(255, 255, 255, 0.06);
+    }
+    .trip-pie-fold-btn svg {
+      display: block;
+      fill: currentColor;
+    }
+    .trip-stats-pie-panel-inner {
+      padding: 0;
+      min-height: 0;
+    }
+    .trip-stats-pie-panel-inner .trip-pie-wrap.analysis-pie-wrap {
+      margin-bottom: 0;
+      padding: 0;
+    }
+    .collapsible-panel:not(.is-open) .trip-stats-pie-panel-inner {
+      padding-top: 0;
+      padding-bottom: 0;
+    }
     .trip-stats-pie-section .trip-pie-wrap {
-      margin-bottom: 14px;
+      margin-bottom: 0;
     }
     .trip-pie-legend {
-      margin-top: 0;
+      margin-top: 6px;
     }
 
     .payer-stats-list { display: flex; flex-direction: column; gap: 8px; }

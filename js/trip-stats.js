@@ -154,13 +154,28 @@ export function renderTripStatsCard(members, expenses) {
         ${makePieChartSVG(pieSlices, pieDenom > 0 ? pieDenom : 1, pieLabelOpts)}
       </div>`;
 
+  const pieExpanded = appState.tripStatsPieExpanded === true;
+  const tripPieToggleIconPath = pieExpanded
+    ? 'M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z'
+    : 'M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z';
+
   const tripPieBlock =
     pieGrandTotal > 0
       ? `
     <div class="trip-stats-section trip-stats-pie-section" style="--stat-i:${statI++}">
-      <div class="trip-stats-label">分類支出</div>
       ${tripGamblePlHTML}
-      ${pieInner}
+      <div class="trip-pie-toolbar">
+        <span class="trip-stats-label trip-stats-label--pie-toolbar">分類支出</span>
+        <button type="button" id="trip-stats-pie-fold-btn" class="trip-pie-fold-btn" onclick="toggleTripStatsPieCollapse()" aria-expanded="${pieExpanded ? 'true' : 'false'}" aria-controls="trip-stats-pie-panel" title="收合／展開圓餅圖" aria-label="收合或展開圓餅圖">
+          <span class="trip-pie-fold-label">圓餅圖</span>
+          <svg id="trip-stats-pie-toggle-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="${tripPieToggleIconPath}"/></svg>
+        </button>
+      </div>
+      <div id="trip-stats-pie-panel" class="collapsible-panel${pieExpanded ? ' is-open' : ''}">
+        <div class="collapsible-panel__inner trip-stats-pie-panel-inner">
+          ${pieInner}
+        </div>
+      </div>
       <div class="analysis-legend-card trip-pie-legend">
         ${pieLegendRows.join('')}
         <div class="analysis-legend-row analysis-legend-row--total" style="--legend-n:${legendIdx}">

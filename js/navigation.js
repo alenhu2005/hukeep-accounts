@@ -38,6 +38,7 @@ export function navigate(page, tripId = null, opts = {}) {
   appState.currentTripId = tripId;
   if (page === 'tripDetail' && tripId !== prevTripId) {
     appState.detailGamblingMode = false;
+    appState.tripStatsPieExpanded = false;
   }
   /** 每次進入「日常」（含已在日常再點一次底欄）都刷金額；還原捲動的 session 載入除外 */
   if (page === 'home' && typeof opts.restoreScrollY !== 'number') {

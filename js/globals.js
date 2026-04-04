@@ -211,6 +211,7 @@ Object.assign(window, {
   recordSettlement: actions.recordSettlement,
   recordTripSettlementOneAction: actions.recordTripSettlementOneAction,
   toggleCollapsible: actions.toggleCollapsible,
+  toggleTripStatsPieCollapse: actions.toggleTripStatsPieCollapse,
   tripDetailFormHeaderClick: actions.tripDetailFormHeaderClick,
   tripDetailFormHeaderKeydown: actions.tripDetailFormHeaderKeydown,
   setHomePaidBy: actions.setHomePaidBy,

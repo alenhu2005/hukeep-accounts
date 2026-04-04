@@ -99,6 +99,13 @@ export function toggleCollapsible(id, iconId, triggerId) {
   }
 }
 
+/** 出遊統計圓餅圖收合；寫入 appState 供重繪時沿用使用者選擇。 */
+export function toggleTripStatsPieCollapse() {
+  toggleCollapsible('trip-stats-pie-panel', 'trip-stats-pie-toggle-icon', 'trip-stats-pie-fold-btn');
+  const el = document.getElementById('trip-stats-pie-panel');
+  if (el) appState.tripStatsPieExpanded = el.classList.contains('is-open');
+}
+
 /** 新增消費標題列：整列收合；點「賭博模式」等內嵌按鈕時不收合 */
 export function tripDetailFormHeaderClick(e) {
   if (e?.target?.closest?.('button, a, input, textarea, select')) return;
