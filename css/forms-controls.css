@@ -1,0 +1,164 @@
+/* Forms, toggle & primary buttons */
+/* ── Forms ── */
+.form-group { margin-bottom: 14px; }
+.form-group:last-child { margin-bottom: 0; }
+.form-label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+/* 金額欄：無 number 微調箭頭；實際用 type=text + inputmode=numeric */
+input.form-input-amount {
+  -moz-appearance: textfield;
+  appearance: textfield;
+  font-variant-numeric: tabular-nums;
+}
+input[type="number"].form-input-amount::-webkit-outer-spin-button,
+input[type="number"].form-input-amount::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.form-input {
+  width: 100%; height: 36px; padding: 0 10px;
+  border: 1px solid var(--border); border-radius: 8px;
+  font-size: 14px; color: var(--text); background: white;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.form-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+.form-input::placeholder { color: var(--text-muted); }
+
+/* Safari / iOS：date 會多出隱形 margin、內建 padding，並強制文字置中 */
+input[type="date"].form-input,
+input[type="date"] {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+  text-align: start;
+  min-height: 36px;
+  line-height: 1.25;
+}
+input[type="date"].form-input::-webkit-date-and-time-value {
+  text-align: start;
+}
+input[type="date"].form-input::-webkit-datetime-edit {
+  padding: 0;
+  margin: 0;
+}
+input[type="date"].form-input::-webkit-datetime-edit-fields-wrapper {
+  padding: 0;
+}
+input[type="date"].form-input::-webkit-datetime-edit-text {
+  padding: 0 1px;
+}
+
+.form-select {
+  width: 100%; height: 36px; padding: 0 28px 0 10px;
+  border: 1px solid var(--border); border-radius: 8px;
+  font-size: 14px; color: var(--text); background: white;
+  outline: none; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%236b7280'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center; cursor: pointer;
+}
+.form-select:focus { border-color: var(--primary); }
+
+/* 窄螢幕：輸入／選單字級 ≥16px，避免 iOS Safari 等 focus 時自動放大整頁 */
+@media (max-width: 640px) {
+  .form-input,
+  .form-select,
+  .trip-lottery-add-input,
+  .trip-lottery-add-select {
+    font-size: 16px;
+  }
+}
+
+/* 多人出款：各自出了多少（按鈕選人 + 金額） */
+.payer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.payer-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.payer-row-amount-line {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.payer-row-amount-line .payer-amount {
+  flex: 1;
+  min-width: 0;
+}
+.payer-row-remove {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 18px;
+  padding: 0 6px;
+  line-height: 1;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+.payer-row-remove:hover {
+  background: var(--bg-secondary);
+  color: var(--text);
+}
+
+/* ── Toggle buttons ── */
+.btn-group { display: grid; gap: 8px; }
+.btn-group-payer {
+  grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
+}
+.btn-group-2 { grid-template-columns: 1fr 1fr; }
+.btn-group-3 { grid-template-columns: 1fr 1fr 1fr; }
+.btn-group-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+.btn-toggle {
+  height: 38px; border: 1px solid transparent; border-radius: 8px;
+  font-size: 13px; font-weight: 500; cursor: pointer;
+  transition: background 0.2s var(--ease-soft), color 0.2s ease, transform 0.12s ease, box-shadow 0.2s ease;
+  background: #f3f4f6; color: var(--text-muted);
+}
+.btn-toggle:active { transform: scale(0.97); }
+.btn-toggle.active { background: var(--primary); color: white; }
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 0 14px; height: 36px; border-radius: 8px; border: none;
+  font-size: 13px; font-weight: 500; cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.12s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+  white-space: nowrap;
+}
+.btn:active:not(:disabled) { transform: scale(0.98); }
+.btn svg { width: 13px; height: 13px; fill: currentColor; flex-shrink: 0; }
+.btn-primary {
+  background: var(--primary);
+  color: white;
+  box-shadow: 0 1px 2px rgba(59, 130, 246, 0.25);
+}
+.btn-primary:hover {
+  background: var(--primary-dark);
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
+  transform: translateY(-1px);
+}
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(59, 130, 246, 0.2);
+}
+.btn-primary:disabled { opacity: .6; cursor: not-allowed; }
+.btn-full { width: 100%; height: 40px; font-size: 14px; }
+.btn-ghost { background: transparent; color: var(--text-muted); }
+.btn-ghost:hover { background: #f3f4f6; color: var(--text); }
+.btn-outline {
+  background: transparent; color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+.btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+.btn-icon { width: 30px; height: 30px; padding: 0; border-radius: 6px; flex-shrink: 0; }
+.btn-sm { height: 30px; padding: 0 10px; font-size: 12px; }
+.btn-danger-ghost { background: transparent; color: var(--text-muted); }
+.btn-danger-ghost:hover { background: #fee2e2; color: var(--danger); }

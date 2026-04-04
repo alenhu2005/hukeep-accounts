@@ -16,7 +16,6 @@ import { esc, jq, jqAttr, memberToneClass, memberToneVars, prefersReducedMotion,
 import { emptyHTML } from './views-shared.js';
 import { navigate } from './navigation.js';
 import { addDaysTaipei, compareDateStr, normalizeDate, todayStr, weekdayTaipeiSundayZero } from './time.js';
-import { renderTripStatsCard } from './trip-stats.js';
 import { renderTripLotteryCard } from './trip-lottery.js';
 
 let tripSettleAnimGen = 0;
@@ -1126,12 +1125,6 @@ export function renderTripDetail() {
 
   renderSettlement(trip.members, expenses, trip);
 
-  const payerEl = document.getElementById('trip-payer-stats');
-  if (payerEl) {
-    if (payerEl._scrollRevealCleanup) payerEl._scrollRevealCleanup();
-    payerEl.innerHTML = renderTripStatsCard(trip.members, expenses);
-  }
-
   const headerActions = document.getElementById('trip-header-actions');
   const archiveBar = document.getElementById('trip-archive-bar');
   const addCard = document.getElementById('add-expense-card');
@@ -1204,7 +1197,6 @@ export function renderTripDetail() {
   if (chipsEl) bindScrollReveal(chipsEl, '.member-chip', { enabled: doReveal });
   const kmRoot = document.getElementById('detail-known-members');
   if (kmRoot) bindScrollReveal(kmRoot, '.known-member-bar-btn', { enabled: doReveal });
-  if (payerEl) bindScrollReveal(payerEl, '.trip-stats-section, .payer-stats-row', { enabled: doReveal });
 
   syncDetailTripFormLabels();
 }

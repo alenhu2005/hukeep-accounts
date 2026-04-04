@@ -98,7 +98,7 @@ flowchart TB
 | 路徑 | 說明 |
 |------|------|
 | [index.html](index.html) | 唯一 HTML 入口；含 `<base>` 修正（GitHub Pages 子路徑）、PWA meta |
-| [styles.css](styles.css) | 全站樣式（單檔） |
+| [css/](css/) | 全站樣式（依用途分多檔，載入順序見 `index.html`） |
 | [manifest.json](manifest.json) | PWA 名稱、圖示、`start_url` |
 | [sw.js](sw.js) | Service Worker；**`CACHE_NAME` 版本號**變更可強制更新快取資源 |
 | [.nojekyll](.nojekyll) | GitHub Pages 不使用 Jekyll |
@@ -316,7 +316,7 @@ npm test
 修改建議對照：
 
 - 同步流程：`js/bootstrap.js`、`js/api.js`、`js/offline-queue.js`
-- 畫面：`js/views-*.js` → `js/actions.js`、`styles.css`
+- 畫面：`js/views-*.js` → `js/actions.js`（`js/actions/` 子模組）、`css/*.css`
 - 結算與規則：`js/finance.js`、`js/data.js`、`js/model.js`
 - PWA／離線資源：`sw.js`、`manifest.json`
 

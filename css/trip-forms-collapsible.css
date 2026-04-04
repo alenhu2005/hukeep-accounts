@@ -1,0 +1,84 @@
+/* Split chips, inline add, collapsible */
+/* ── Split chips ── */
+.split-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.split-chip {
+  padding: 5px 12px; border-radius: 99px; border: 1px solid transparent;
+  font-size: 12px; font-weight: 500; cursor: pointer;
+  transition: background 0.2s var(--ease-soft), color 0.2s ease, transform 0.12s ease;
+  background: #f3f4f6; color: var(--text-muted);
+}
+.split-chip:active { transform: scale(0.96); }
+.split-chip.active { background: var(--primary); color: white; }
+.split-custom-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+.split-custom-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 120px;
+  gap: 8px;
+  align-items: center;
+}
+.split-custom-name {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.split-custom-input--locked {
+  background: var(--bg-secondary) !important;
+  color: var(--text-muted) !important;
+  border-color: var(--border) !important;
+  cursor: not-allowed !important;
+  opacity: 0.9;
+}
+
+/* ── Per person note ── */
+.per-person-note { font-size: 11px; color: var(--text-muted); margin-top: 4px; min-height: 16px; }
+
+/* ── Inline add row ── */
+.inline-add { display: flex; gap: 6px; }
+.inline-add .form-input { flex: 1; }
+
+/* ── Collapsible（高度展開／收合動畫，全站共用） ──
+   minmax(0,…) 避免子項 min-content 把列高頂開；收合時關閉 padding 避免露出「消費項目」等第一行。 */
+.collapsible-panel {
+  display: grid;
+  grid-template-rows: minmax(0, 0fr);
+  min-height: 0;
+  transition: grid-template-rows 0.38s var(--ease-soft);
+}
+.collapsible-panel.is-open {
+  grid-template-rows: minmax(0, 1fr);
+}
+.collapsible-panel:not(.is-open) {
+  overflow: hidden;
+}
+.collapsible-panel__inner {
+  overflow: hidden;
+  min-height: 0;
+  min-width: 0;
+  transition: padding-top 0.38s var(--ease-soft), padding-bottom 0.38s var(--ease-soft);
+}
+.collapsible-panel:not(.is-open) .collapsible-panel__inner.card-body {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+.collapsible-panel:not(.is-open) .settlement-collapse-panel-inner {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+.toggle-btn {
+  background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 2px;
+  border-radius: 6px;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.toggle-btn:hover { background: rgba(0,0,0,.05); }
+.toggle-btn:active { transform: scale(0.92); }
+.toggle-btn svg {
+  width: 16px; height: 16px; fill: currentColor; display: block;
+}

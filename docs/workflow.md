@@ -12,7 +12,7 @@
 
 1. 先改資料/邏輯（`js/data.js`、`js/finance.js`、`js/api.js`）
 2. 再改 view（`js/views-*.js`）
-3. 最後改事件行為（`js/actions.js`）與樣式（`styles.css`）
+3. 最後改事件行為（`js/actions.js`／`js/actions/`）與樣式（`css/*.css`，順序見 `index.html`）
 4. 補測試（`test/*.test.js`）
 
 ## 同步機制重點

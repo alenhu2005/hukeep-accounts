@@ -5,7 +5,7 @@
 ## 1) 入口與資源（Root）
 
 - `index.html`：唯一 HTML 入口，包含頁面骨架、對話框容器、底部導覽、PWA 載入點。
-- `styles.css`：全站樣式（目前單檔）。
+- `css/*.css`：全站樣式（依用途分檔：`base`、`layout`、`home`、`trip-lottery`、`forms-controls`、`records-history`、`analysis`、`trip-cards`、`members-rare`、`trip-forms-collapsible`、`shell-nav`、`overlays-feedback`、`sheets-directory`、`dark-a11y`；`index.html` 中 `<link>` 順序須與相依關係一致）。
 - `sw.js`：Service Worker（快取與離線策略）。
 - `manifest.json`：PWA 描述檔。
 - `.nojekyll`：GitHub Pages 靜態部署設定。
@@ -51,7 +51,9 @@
 
 ### E. 行為與工具
 
-- `actions.js`：表單、按鈕、資料提交、編輯、上傳等互動動作。
+- `actions.js`：行為匯總（re-export）；實作在 `actions/`（`shared`、`home-daily`、`trip-form`、`trips-members`、`trip-expense`、`edit`、`misc`）。
+- `ui-collapsible.js`：共用收合區塊（`toggleCollapsible`），供 HTML／views／actions 使用。
+- `trip-stats-modal.js`：出遊統計頂欄彈窗與圓餅收合狀態。
 - `sync-ui.js`：同步狀態列與更新提示。
 - `sync-pause.js`：使用者輸入時暫停同步。
 - `session-ui.js`：工作階段還原與保存。

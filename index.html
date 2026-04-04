@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <script>
-    // GitHub Pages：若網址是 /repo 而沒有結尾 /，相對路徑 js/、styles.css 會錯解析到網域根目錄 → 載入失敗
+    // GitHub Pages：若網址是 /repo 而沒有結尾 /，相對路徑 js/、css/ 會錯解析到網域根目錄 → 載入失敗
     (function () {
       if (location.protocol === 'file:') return;
       var p = location.pathname;
@@ -32,7 +32,20 @@
     // Apply theme immediately to avoid flash
     (function(){ if(localStorage.getItem('theme')==='dark') document.documentElement.classList.add('dark'); })();
   </script>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/home.css">
+  <link rel="stylesheet" href="css/trip-lottery.css">
+  <link rel="stylesheet" href="css/forms-controls.css">
+  <link rel="stylesheet" href="css/records-history.css">
+  <link rel="stylesheet" href="css/analysis.css">
+  <link rel="stylesheet" href="css/trip-cards.css">
+  <link rel="stylesheet" href="css/members-rare.css">
+  <link rel="stylesheet" href="css/trip-forms-collapsible.css">
+  <link rel="stylesheet" href="css/shell-nav.css">
+  <link rel="stylesheet" href="css/overlays-feedback.css">
+  <link rel="stylesheet" href="css/sheets-directory.css">
+  <link rel="stylesheet" href="css/dark-a11y.css">
 </head>
 <body>
 <div id="app">
@@ -408,6 +421,19 @@
     </div>
   </div>
 
+  <!-- 出遊統計（頂欄「統計」彈窗） -->
+  <div class="member-preview-overlay" id="trip-stats-modal-overlay" onclick="if(event.target===this)closeTripStatsModal()">
+    <div class="member-preview-panel" role="dialog" aria-modal="true" aria-labelledby="trip-stats-modal-title" onclick="event.stopPropagation()">
+      <div class="member-preview-header">
+        <h3 id="trip-stats-modal-title">出遊統計</h3>
+        <button type="button" class="member-dir-close" onclick="closeTripStatsModal()" aria-label="關閉">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </div>
+      <div class="member-preview-body" id="trip-stats-modal-body"></div>
+    </div>
+  </div>
+
   <!-- ═══════════════ PAGE: 分析 ═══════════════ -->
   <div id="page-analysis" class="page">
     <header class="header">
@@ -427,6 +453,9 @@
       </button>
       <h1 id="detail-name">行程</h1>
       <div class="header-meta" id="detail-count"></div>
+      <button type="button" class="header-icon-btn trip-header-stats-btn" onclick="openTripStatsModal()" title="出遊統計" aria-label="開啟出遊統計">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M11 2v20c-5.07-.5-9-4.79-9-10s3.93-9.5 9-10zm2.03 0v8.99H22c-.47-4.74-4.24-8.52-8.97-8.99zm0 11.01V22c4.74-.47 8.5-4.25 8.97-8.99h-8.97z"/></svg>
+      </button>
       <button type="button" id="trip-lottery-trigger" class="header-icon-btn trip-lottery-trigger" onclick="toggleTripLotteryPanel(event)" title="抽籤" aria-label="抽籤" aria-expanded="false" aria-controls="trip-lottery-popover" style="display:none">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM7.5 18c-.83 0-1.5-.67-1.5-1.5S6.67 15 7.5 15s1.5.67 1.5 1.5S8.33 18 7.5 18zm0-9C6.67 9 6 8.33 6 7.5S6.67 6 7.5 6 9 6.67 9 7.5 8.33 9 7.5 9zm4.5 4.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4.5 4.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm0-9c-.83 0-1.5-.67-1.5-1.5S15.67 6 16.5 6s1.5.67 1.5 1.5S17.33 9 16.5 9z"/></svg>
       </button>
@@ -545,26 +574,6 @@
         <div id="detail-expenses-panel" class="collapsible-panel is-open">
           <div class="collapsible-panel__inner detail-expenses-panel-inner">
             <div id="detail-expenses"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Trip stats (below 歷史紀錄) -->
-      <div class="card" id="trip-payer-card">
-        <button type="button" class="card-header card-header--toggle" id="trip-stats-header-toggle" onclick="toggleCollapsible('trip-stats-body','trip-stats-toggle-icon','trip-stats-header-toggle')" aria-expanded="false" aria-controls="trip-stats-body" title="收合／展開出遊統計">
-          <span class="card-title">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
-            出遊統計
-          </span>
-          <span class="card-header-trail">
-            <span class="toggle-btn toggle-btn--header-decor" aria-hidden="true">
-              <svg id="trip-stats-toggle-icon" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
-            </span>
-          </span>
-        </button>
-        <div id="trip-stats-body" class="collapsible-panel">
-          <div class="collapsible-panel__inner trip-stats-panel-inner">
-            <div id="trip-payer-stats"></div>
           </div>
         </div>
       </div>

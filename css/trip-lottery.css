@@ -1,0 +1,478 @@
+/* Trip header lottery overlay */
+/* ── 出遊：抽籤（頂欄圖示 + 浮層） ── */
+#page-trip-detail .trip-header-stats-btn {
+  flex-shrink: 0;
+}
+#page-trip-detail .trip-header-stats-btn svg {
+  display: block;
+}
+#page-trip-detail .trip-lottery-trigger {
+  flex-shrink: 0;
+}
+#page-trip-detail .trip-lottery-trigger svg {
+  display: block;
+}
+/* 出遊詳情：新增消費／歷史紀錄卡片同寬、標題列撐滿 */
+#page-trip-detail .main > #add-expense-card,
+#page-trip-detail .main > #detail-expenses-card {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  align-self: stretch;
+}
+#page-trip-detail #add-expense-card > .card-header,
+#page-trip-detail #detail-expenses-card > .card-header {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+#page-trip-detail #add-expense-card > .card-header .card-title,
+#page-trip-detail #detail-expenses-card > .card-header .card-title {
+  flex: 1;
+  min-width: 0;
+}
+#page-trip-detail #detail-expenses-card > .card-header .card-title-block {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+#page-trip-detail #detail-expenses-card > .card-header .card-title-block > .card-title {
+  flex: 0 1 auto;
+}
+.trip-history-header-meta {
+  flex: 0 1 auto;
+  min-width: 0;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--text-muted);
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* 收合歷史紀錄時不顯示行程區間（標題列仍保留「歷史紀錄」與箭頭） */
+#detail-expenses-card:has(#detail-expenses-panel:not(.is-open)) .trip-history-header-meta {
+  display: none !important;
+}
+#page-trip-detail #detail-expenses-card .detail-expenses-hint {
+  display: none;
+}
+/* 出遊：數字炸彈（全螢幕；入口在抽籤浮層底部） */
+.trip-number-bomb-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  background: var(--bg);
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: max(16px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+.trip-number-bomb-overlay[hidden] {
+  display: none !important;
+}
+.trip-number-bomb-inner {
+  max-width: 420px;
+  margin: 0 auto;
+}
+.trip-number-bomb-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.trip-number-bomb-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+}
+.trip-number-bomb-section {
+  margin-bottom: 18px;
+}
+.trip-number-bomb-select {
+  width: 100%;
+  max-width: 100%;
+}
+.trip-number-bomb-custom-range {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+.trip-number-bomb-custom-range .form-input {
+  flex: 1;
+  min-width: 0;
+}
+.trip-number-bomb-tilde {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.trip-number-bomb-members {
+  margin: 8px 0 0;
+  padding-left: 1.25rem;
+}
+.trip-number-bomb-warn {
+  color: var(--text-muted);
+  margin: 8px 0 0;
+}
+.trip-number-bomb-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 8px 0 0;
+}
+.trip-number-bomb-actions {
+  margin-top: 24px;
+}
+.trip-number-bomb-actions--ended {
+  margin-top: 20px;
+}
+.trip-number-bomb-range {
+  font-size: 1.1rem;
+  line-height: 1.5;
+  margin: 0 0 20px;
+  text-align: center;
+}
+.trip-number-bomb-turn {
+  margin-bottom: 20px;
+  text-align: center;
+}
+.trip-number-bomb-turn-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.trip-number-bomb-turn-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.trip-number-bomb-turn-name {
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+.trip-number-bomb-guess-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.trip-number-bomb-guess-input {
+  flex: 1;
+  min-width: 0;
+}
+.trip-number-bomb-history {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 13px;
+}
+.trip-number-bomb-history-item {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.trip-number-bomb-history-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.trip-number-bomb-history-guess {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+.trip-number-bomb-history-res {
+  min-width: 3em;
+  text-align: right;
+  color: var(--text-muted);
+}
+.trip-number-bomb-inner--ended .trip-number-bomb-boom {
+  text-align: center;
+  font-size: 2.5rem;
+  line-height: 1.2;
+  margin: 8px 0 12px;
+}
+.trip-number-bomb-ended-line,
+.trip-number-bomb-ended-bomb {
+  text-align: center;
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+}
+.trip-lottery-popover {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 52px;
+  width: min(360px, calc(100vw - 20px));
+  z-index: 250;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+.trip-lottery-popover:not([hidden]) {
+  pointer-events: auto;
+}
+.trip-lottery-popover:not([hidden]) .trip-lottery-popover-inner {
+  animation: popoverCardIn 0.28s var(--ease-out) both;
+}
+.trip-lottery-popover-inner {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+  padding: 14px 16px 16px;
+  margin-top: 4px;
+}
+html.dark .trip-lottery-popover-inner {
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.42);
+}
+.trip-lottery-popover-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.trip-lottery-popover-title--nbomb-secret {
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: default;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.trip-lottery-hint--popover {
+  margin-bottom: 10px;
+  font-size: 11px;
+}
+.trip-lottery-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+.trip-lottery-display--popover {
+  min-height: 46px;
+  font-size: 19px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+.trip-lottery-display {
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  border-radius: 14px;
+  background: var(--bg-secondary);
+  border: 1px dashed var(--border);
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  text-align: center;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s var(--ease-soft);
+}
+.trip-lottery-display--spinning {
+  border-style: solid;
+  border-color: rgba(59, 130, 246, 0.35);
+  background: var(--primary-light);
+  animation: tripLotteryPulse 0.38s ease-in-out infinite alternate;
+}
+html.dark .trip-lottery-display--spinning {
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(96, 165, 250, 0.4);
+}
+@keyframes tripLotteryPulse {
+  from { transform: scale(1); opacity: 1; }
+  to { transform: scale(1.02); opacity: 0.92; }
+}
+.trip-lottery-display--reveal {
+  animation: tripLotteryReveal 0.65s var(--ease-spring) both;
+  border-color: rgba(16, 185, 129, 0.45);
+  background: linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%);
+}
+html.dark .trip-lottery-display--reveal {
+  background: linear-gradient(180deg, rgba(6, 78, 59, 0.35) 0%, rgba(5, 46, 22, 0.5) 100%);
+  border-color: rgba(52, 211, 153, 0.45);
+}
+@keyframes tripLotteryReveal {
+  0% { transform: scale(0.96); filter: blur(4px); }
+  55% { transform: scale(1.04); filter: blur(0); }
+  100% { transform: scale(1); filter: blur(0); }
+}
+.trip-lottery-popover-inner .trip-lottery-pool-wrap {
+  margin-bottom: 10px;
+}
+.trip-lottery-pool-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+.trip-lottery-pool-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.trip-lottery-pool {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.45;
+  word-break: break-word;
+}
+.trip-lottery-pool--manage {
+  font-weight: 500;
+}
+.trip-lottery-pool-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  margin-bottom: 6px;
+}
+.trip-lottery-pool-tags--empty {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  padding: 4px 0;
+}
+.trip-lottery-pool-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 4px 3px 10px;
+  border-radius: 99px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+.trip-lottery-avatar {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: var(--bg-tertiary);
+  font-size: 11px;
+  font-weight: 800;
+}
+.trip-lottery-avatar-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+.trip-lottery-result-avatar-only .trip-lottery-avatar {
+  width: 72px;
+  height: 72px;
+  font-size: 28px;
+  border-width: 1px;
+}
+.trip-lottery-pool-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 40px;
+  min-height: 40px;
+  width: 40px;
+  height: 40px;
+  margin: -8px -6px -8px 0;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.trip-lottery-pool-remove:hover {
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--danger);
+}
+.trip-lottery-pool-add {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.trip-lottery-add-input {
+  flex: 1;
+  min-width: 0;
+  height: 34px;
+  padding: 0 10px;
+  font-size: 13px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text);
+}
+.trip-lottery-add-select {
+  flex: 1;
+  min-width: 0;
+  height: 34px;
+  font-size: 13px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text);
+}
+.trip-lottery-pool-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin: 0 0 8px;
+  line-height: 1.45;
+}
+.trip-lottery-keep {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  margin-bottom: 14px;
+  line-height: 1.45;
+}
+.trip-lottery-keep input {
+  margin-top: 2px;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+.trip-lottery-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+.trip-lottery-popover-inner .trip-lottery-actions .btn-primary {
+  flex: 1;
+  min-width: 0;
+}
+.trip-lottery-actions .btn-primary {
+  flex: 1;
+  min-width: 120px;
+}

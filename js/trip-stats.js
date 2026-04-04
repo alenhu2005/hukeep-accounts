@@ -33,7 +33,14 @@ function walletEffectiveBurden(name, shareExclGambleMap, gamblePlMap) {
   return Math.round(sh - net);
 }
 
-export function renderTripStatsCard(members, expenses) {
+/**
+ * @param {string[]} members
+ * @param {object[]} expenses
+ * @param {{ idSuffix?: string }} [opts] 若設 `idSuffix: '-modal'`，圓餅區 id 與 onclick 與頁內區隔，避免重複 id。
+ */
+export function renderTripStatsCard(members, expenses, opts = {}) {
+  const idSuffix = opts.idSuffix ?? '';
+  const pieToggleClick = idSuffix ? 'toggleTripStatsPieCollapseModal()' : 'toggleTripStatsPieCollapse()';
   const voidCount = expenses.filter(e => e._voided).length;
   const { active, generalOnly, hasGambling } = tripStatsExpenseSplit(expenses);
 
@@ -166,12 +173,12 @@ export function renderTripStatsCard(members, expenses) {
       ${tripGamblePlHTML}
       <div class="trip-pie-toolbar">
         <span class="trip-stats-label trip-stats-label--pie-toolbar">分類支出</span>
-        <button type="button" id="trip-stats-pie-fold-btn" class="trip-pie-fold-btn" onclick="toggleTripStatsPieCollapse()" aria-expanded="${pieExpanded ? 'true' : 'false'}" aria-controls="trip-stats-pie-panel" title="收合／展開圓餅圖" aria-label="收合或展開圓餅圖">
+        <button type="button" id="trip-stats-pie-fold-btn${idSuffix}" class="trip-pie-fold-btn" onclick="${pieToggleClick}" aria-expanded="${pieExpanded ? 'true' : 'false'}" aria-controls="trip-stats-pie-panel${idSuffix}" title="收合／展開圓餅圖" aria-label="收合或展開圓餅圖">
           <span class="trip-pie-fold-label">圓餅圖</span>
-          <svg id="trip-stats-pie-toggle-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="${tripPieToggleIconPath}"/></svg>
+          <svg id="trip-stats-pie-toggle-icon${idSuffix}" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="${tripPieToggleIconPath}"/></svg>
         </button>
       </div>
-      <div id="trip-stats-pie-panel" class="collapsible-panel${pieExpanded ? ' is-open' : ''}">
+      <div id="trip-stats-pie-panel${idSuffix}" class="collapsible-panel${pieExpanded ? ' is-open' : ''}">
         <div class="collapsible-panel__inner trip-stats-pie-panel-inner">
           ${pieInner}
         </div>

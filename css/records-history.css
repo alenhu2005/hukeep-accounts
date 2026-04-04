@@ -1,0 +1,520 @@
+/* Records, calendar, badges, section headers */
+/* ── Record items ── */
+.record-item {
+  padding: 12px 16px; display: flex; align-items: center; gap: 12px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.22s ease;
+}
+.record-item:last-child { border-bottom: none; }
+
+/* Scroll-driven list reveal (see utils.bindScrollReveal) */
+[data-scroll-reveal="active"] .record-item.scroll-reveal-pending,
+[data-scroll-reveal="active"] .trip-day-group.scroll-reveal-pending,
+[data-scroll-reveal="active"] .member-chip.scroll-reveal-pending,
+[data-scroll-reveal="active"] .known-member-bar-btn.scroll-reveal-pending,
+[data-scroll-reveal="active"] .trip-stats-section.scroll-reveal-pending,
+[data-scroll-reveal="active"] .payer-stats-row.scroll-reveal-pending,
+[data-scroll-reveal="active"] .member-dir-item.scroll-reveal-pending {
+  opacity: 0;
+  transform: translateY(8px);
+}
+[data-scroll-reveal="active"] .record-item.scroll-reveal-visible {
+  animation: recordRowIn 0.38s var(--ease-out) both;
+  animation-delay: calc(min(var(--record-i, 0), 24) * 0.02s);
+}
+[data-scroll-reveal="active"] .record-item.scroll-reveal-visible .badge,
+[data-scroll-reveal="active"] .record-item.scroll-reveal-visible .category-badge {
+  animation: badgePopIn 0.34s var(--ease-out) both;
+  animation-delay: calc(min(var(--record-i, 0), 24) * 0.02s + 0.05s);
+}
+[data-scroll-reveal="active"] .trip-day-group.scroll-reveal-visible {
+  animation: tripDayGroupIn 0.4s var(--ease-out) both;
+  animation-delay: calc(min(var(--day-i, 0), 20) * 0.025s);
+}
+[data-scroll-reveal="active"] .member-chip.scroll-reveal-visible {
+  animation: chipPopIn 0.36s var(--ease-out) both;
+  animation-delay: calc(min(var(--chip-i, 0), 16) * 0.03s);
+}
+[data-scroll-reveal="active"] .known-member-bar-btn.scroll-reveal-visible {
+  animation: kmBtnIn 0.34s var(--ease-out) both;
+  animation-delay: calc(min(var(--km-i, 0), 14) * 0.035s);
+}
+[data-scroll-reveal="active"] .trip-stats-section.scroll-reveal-visible {
+  animation: tripStatSectionIn 0.42s var(--ease-out) both;
+  animation-delay: calc(min(var(--stat-i, 0), 8) * 0.04s);
+}
+[data-scroll-reveal="active"] .payer-stats-row.scroll-reveal-visible {
+  animation: payerStatRowIn 0.36s var(--ease-out) both;
+  animation-delay: calc(min(var(--row-i, 0), 18) * 0.025s);
+}
+[data-scroll-reveal="active"] .member-dir-item.scroll-reveal-visible {
+  animation: memberDirRowIn 0.35s var(--ease-out) both;
+  animation-delay: calc(min(var(--dir-i, 0), 20) * 0.03s);
+}
+@keyframes recordRowIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes tripDayGroupIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes badgePopIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes chipPopIn {
+  from { opacity: 0; transform: scale(0.94) translateY(3px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes kmBtnIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes tripStatSectionIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes payerStatRowIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes memberDirRowIn {
+  from { opacity: 0; transform: translateX(-6px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.header-meta#home-count.home-count--tick {
+  animation: homeCountTick 0.38s var(--ease-out) both;
+}
+@keyframes homeCountTick {
+  0%, 100% { color: var(--text-muted); transform: none; }
+  40% { color: var(--primary); transform: scale(1.06); }
+}
+#balance-icon-wrap.balance-icon--pulse {
+  animation: balanceIconPulse 0.42s var(--ease-out) both;
+}
+@keyframes balanceIconPulse {
+  0%, 100% { transform: scale(1); }
+  45% { transform: scale(1.08); }
+}
+#theme-toggle.theme-toggle--spin svg {
+  animation: themeIconSpin 0.45s var(--ease-out) both;
+}
+@keyframes themeIconSpin {
+  from { transform: rotate(-56deg); opacity: 0.35; }
+  to { transform: rotate(0); opacity: 1; }
+}
+
+.record-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; flex-shrink: 0;
+}
+.record-avatar--rare {
+  position: relative;
+  overflow: visible;
+  box-shadow:
+    0 0 0 1px var(--rare-avatar-ring-a, rgba(250, 204, 21, 0.65)),
+    0 0 0 2px var(--rare-avatar-ring-b, rgba(168, 85, 247, 0.38)),
+    0 1px 8px var(--rare-avatar-shadow, rgba(6, 182, 212, 0.24));
+}
+.record-avatar--rare::before {
+  content: '';
+  position: absolute;
+  inset: -14px;
+  pointer-events: none;
+  opacity: var(--rare-deco-opacity, 0);
+  background: var(--rare-deco-bg, none);
+  filter: var(--rare-deco-filter, none);
+  transform: var(--rare-deco-transform, none);
+  z-index: 3;
+  animation: var(--rare-deco-anim, none);
+}
+.record-avatar--rare::after {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border-radius: 999px;
+  pointer-events: none;
+  z-index: 4;
+  opacity: var(--rare-ring-opacity, 0);
+  background: var(--rare-ring-bg, none);
+  mask: radial-gradient(closest-side, transparent calc(100% - 4px), #000 calc(100% - 2px));
+  -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 4px), #000 calc(100% - 2px));
+  animation: var(--rare-ring-anim, none);
+  filter: var(--rare-ring-filter, none);
+}
+.record-avatar--rare > .record-avatar-img {
+  position: relative;
+  z-index: 2;
+  border-radius: 50%;
+}
+
+/* 日常列表：頭像不加外框／光暈（行程紀錄仍保留隱藏款特效） */
+#page-home .record-avatar--rare {
+  box-shadow: none !important;
+  filter: none !important;
+}
+#page-home .record-avatar--rare::before,
+#page-home .record-avatar--rare::after {
+  display: none !important;
+  content: none !important;
+  animation: none !important;
+}
+
+.detail-expenses-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.detail-expenses-panel-inner {
+  padding: 0 0 8px;
+  transition: padding-top 0.38s var(--ease-soft), padding-bottom 0.38s var(--ease-soft);
+}
+#page-trip-detail #detail-expenses-card .detail-expenses-panel-inner {
+  padding-bottom: 6px;
+}
+.collapsible-panel:not(.is-open) .detail-expenses-panel-inner {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* Trip detail "歷史紀錄" card: leave room for rare rings/spikes */
+#detail-expenses .record-item {
+  padding: 10px calc(24px + env(safe-area-inset-right, 0px)) 10px calc(24px + env(safe-area-inset-left, 0px));
+  align-items: flex-start;
+}
+/* 多行標題＋副標時，頭像／金額／照片按鈕相對整列垂直置中（列仍 flex-start 以容納稀有款外圈） */
+#detail-expenses .record-item > .record-avatar,
+#detail-expenses .record-item > .record-photo-btn {
+  align-self: center;
+}
+#page-trip-detail #detail-expenses .record-item {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  /* 與上方日期列左右對齊，視覺上較靠左、不額外內縮 */
+  padding-left: calc(16px + env(safe-area-inset-left, 0px));
+  padding-right: calc(16px + env(safe-area-inset-right, 0px));
+}
+/* 優先顯示完整消費名稱：不截斷 …，名稱獨占一行可換行；徽章／分類在下一行 */
+#detail-expenses .record-name {
+  flex-wrap: wrap;
+  align-items: flex-start;
+  row-gap: 4px;
+  column-gap: 6px;
+}
+#detail-expenses .record-name-text {
+  flex: 1 1 100%;
+  min-width: 0;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
+}
+#detail-expenses .record-name .badge,
+#detail-expenses .record-name .category-badge {
+  flex-shrink: 0;
+}
+#detail-expenses .record-amount {
+  align-self: center;
+  margin-top: 0;
+}
+
+/* ice — make protrusions unmistakable (icy crown) */
+.member-rare--ice .member-dir-avatar--rare::before,
+.member-dir-avatar--rare.member-rare--ice::before,
+.member-rare--ice.record-avatar--rare::before,
+.record-avatar--rare.member-rare--ice::before {
+  inset: -18px;
+  opacity: 1;
+  background:
+    conic-gradient(
+      from 0deg,
+      rgba(255,255,255,0) 0 4deg,
+      rgba(255,255,255,.98) 4deg 12deg,
+      rgba(255,255,255,0) 12deg 18deg,
+      rgba(224,242,254,.95) 18deg 26deg,
+      rgba(255,255,255,0) 26deg 32deg,
+      rgba(186,230,253,.95) 32deg 40deg,
+      rgba(255,255,255,0) 40deg 46deg,
+      rgba(255,255,255,.96) 46deg 54deg,
+      rgba(255,255,255,0) 54deg 60deg
+    ),
+    radial-gradient(closest-side, rgba(255,255,255,.38), transparent 70%);
+  /* show only outside of the circle so it looks like it grows outward */
+  mask: radial-gradient(closest-side, transparent 52%, #000 58%);
+  -webkit-mask: radial-gradient(closest-side, transparent 52%, #000 58%);
+  filter:
+    drop-shadow(0 3px 10px rgba(56,189,248,.42))
+    drop-shadow(0 2px 0 rgba(255,255,255,.65));
+}
+.record-avatar.me { background: var(--primary-light); color: var(--primary); }
+.record-avatar.other { background: #f3f4f6; color: var(--text); }
+.record-avatar.settle { background: #d1fae5; color: #065f46; }
+.record-avatar.split  { background: #e0e7ff; color: #4338ca; font-size: 11px; }
+.record-avatar.multi  { background: #e0e7ff; color: #4338ca; font-size: 11px; }
+html.dark .record-avatar.other  { background: #374151; color: var(--text); }
+html.dark .record-avatar.settle { background: #064e3b; color: #6ee7b7; }
+html.dark .record-avatar.split  { background: #1e1b4b; color: #a5b4fc; }
+html.dark .record-avatar.multi  { background: #1e1b4b; color: #a5b4fc; }
+.record-info { flex: 1; min-width: 0; }
+.record-name {
+  font-size: 13px; font-weight: 500;
+  display: flex; align-items: center; gap: 6px;
+}
+.record-name-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.record-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.record-amount { font-size: 15px; font-weight: 600; flex-shrink: 0; }
+/* 還款列金額（勿用內嵌深綠，深色模式對比不足） */
+.record-amount--settle {
+  color: #065f46;
+}
+html.dark .record-amount--settle {
+  color: #6ee7b7;
+}
+/* ── Voided records ── */
+.record-item.is-voided { background: #fee2e2; }
+.badge-void { background: #fecaca; color: #991b1b; }
+
+/* ── 日常：歷史紀錄月曆（與列表同卡） ── */
+.home-history-card {
+  padding: 0;
+  overflow: hidden;
+}
+.home-calendar-open-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.home-calendar-open-btn svg {
+  flex-shrink: 0;
+  fill: currentColor;
+}
+.home-cal-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10040;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(2px);
+}
+.home-cal-modal-overlay--open {
+  display: flex;
+}
+.home-cal-modal-sheet {
+  width: 100%;
+  max-width: 400px;
+  max-height: min(90vh, 640px);
+  overflow: auto;
+  background: var(--bg-card);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18);
+}
+.home-cal-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--bg-card);
+  z-index: 1;
+}
+.home-cal-modal-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+.home-cal-modal-sheet .home-calendar {
+  padding: 12px 14px 14px;
+  border-bottom: none;
+}
+.home-records-wrap {
+  min-height: 0;
+}
+.home-records-wrap .record-item:first-child {
+  border-top: none;
+}
+.home-cal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.home-cal-nav-btn {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 10px;
+  background: var(--surface-elevated, #f8fafc);
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+}
+.home-cal-nav-btn:hover {
+  background: #f0f9ff;
+}
+.home-cal-nav-btn svg {
+  fill: currentColor;
+  display: block;
+}
+.home-cal-nav-title {
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
+  flex: 1;
+  min-width: 0;
+}
+.home-cal-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: 4px;
+}
+.home-cal-wd {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 2px 0;
+}
+.home-cal-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.home-cal-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  align-items: stretch;
+}
+.home-cal-cell {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  justify-self: stretch;
+  align-self: stretch;
+  min-height: 44px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 3px 4px;
+  gap: 2px;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+.home-cal-cell-day {
+  line-height: 1.15;
+}
+/* 有淨額時兩行：保留間距與內距，避免數字與淨額貼太緊 */
+.home-cal-cell:has(.cal-cell-delta) {
+  gap: 3px;
+  padding: 5px 4px 6px;
+  min-height: 48px;
+  justify-content: center;
+}
+.home-cal-cell:has(.cal-cell-delta) .home-cal-cell-day {
+  font-size: 12px;
+  line-height: 1.2;
+}
+/* 與分析頁月曆格共用：該日結算淨額（正＝詹欠胡，負＝胡欠詹） */
+.cal-cell-delta {
+  font-size: 8px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.home-cal-cell:hover:not(.home-cal-cell--empty) {
+  background: #f1f5f9;
+}
+.home-cal-cell--empty {
+  cursor: default;
+  min-height: 0;
+  pointer-events: none;
+}
+.home-cal-cell--today {
+  box-shadow: inset 0 0 0 2px var(--primary);
+}
+.home-cal-cell--selected {
+  background: rgba(71, 85, 105, 0.16);
+  border: 1px solid rgba(71, 85, 105, 0.4);
+  color: #334155;
+  font-weight: 700;
+}
+.home-cal-cell--selected .cal-cell-delta {
+  color: #475569;
+  opacity: 1;
+}
+.home-cal-cell--selected.home-cal-cell--today {
+  border-color: rgba(71, 85, 105, 0.45);
+  box-shadow: inset 0 0 0 2px rgba(71, 85, 105, 0.5);
+}
+
+/* ── Expand history ── */
+.show-more-btn {
+  width: 100%; border: none; background: none; padding: 10px;
+  font-size: 12px; color: var(--primary); font-weight: 600; cursor: pointer;
+  border-top: 1px solid var(--border); display: flex; align-items: center;
+  justify-content: center; gap: 4px; border-radius: 0 0 12px 12px;
+}
+.show-more-btn:hover { background: #f0f9ff; }
+
+/* ── Running balance ── */
+.record-amount-wrap { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; gap: 2px; }
+.record-running { font-size: 10px; font-weight: 500; }
+.record-running.pos { color: #059669; }
+.record-running.neg { color: #dc2626; }
+.record-running.zero { color: var(--text-muted); }
+
+.record-delete {
+  background: none; border: none; cursor: pointer; padding: 4px;
+  color: var(--text-muted); border-radius: 4px; flex-shrink: 0;
+}
+.record-delete:hover { color: var(--danger); }
+.record-delete svg { width: 14px; height: 14px; fill: currentColor; display: block; }
+
+/* ── Badge ── */
+.badge {
+  display: inline-block; padding: 1px 7px; border-radius: 99px;
+  font-size: 11px; font-weight: 500;
+  background: #f3f4f6; color: var(--text-muted); white-space: nowrap; flex-shrink: 0;
+}
+
+/* ── Section header ── */
+.section-header {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+}
+.section-title { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.section-title svg { width: 14px; height: 14px; fill: var(--text-muted); }

@@ -1,0 +1,262 @@
+/* Balance card, settlement rows */
+/* ── Balance card ── */
+.balance-bar { height: 4px; background: var(--primary); }
+.balance-bar.success { background: var(--success); }
+.balance-bar.danger  { background: var(--danger); }
+.balance-content { padding: 20px 16px; display: flex; align-items: center; gap: 16px; }
+.balance-icon {
+  width: 48px; height: 48px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.balance-icon svg { width: 24px; height: 24px; }
+.balance-label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+.balance-main {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 2px 0;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.balance-sub { font-size: 11px; color: var(--text-muted); }
+.balance-who { font-size: 12px; color: var(--text-muted); }
+
+/* 日常：與結算金額刷動同步的整頁區塊進場（僅在觸發金額動畫時套用） */
+@keyframes homeRevealIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+#page-home.home-refresh-reveal > header.header {
+  animation: homeRevealIn 0.68s var(--ease-out) both;
+}
+#page-home.home-refresh-reveal > .main > #balance-card {
+  animation: homeRevealIn 0.68s var(--ease-out) 0.07s both;
+}
+#page-home.home-refresh-reveal > .main > .card:nth-of-type(2) {
+  animation: homeRevealIn 0.68s var(--ease-out) 0.14s both;
+}
+#page-home.home-refresh-reveal > .main > div:last-child {
+  animation: homeRevealIn 0.68s var(--ease-out) 0.22s both;
+}
+
+/* ── Settlement rows ── */
+.settlement-list { padding: 14px 16px; }
+.settlement-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.settlement-header span { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+.settlement-header-meta { font-size: 11px !important; white-space: normal; text-align: right; max-width: 58%; line-height: 1.35; }
+.settlement-row {
+  display: flex; align-items: center; gap: 8px;
+  background: #fffbeb; border-radius: 8px; padding: 8px 12px; margin-bottom: 6px;
+}
+.settlement-row:last-child { margin-bottom: 0; }
+.settlement-name { font-size: 13px; font-weight: 600; color: #92400e; }
+.settlement-arrow { font-size: 14px; color: #d97706; }
+.settlement-amount { font-size: 13px; font-weight: 700; color: #92400e; margin-left: auto; }
+
+.settlement-list--visual .settlement-row--visual {
+  display: block;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px 14px 10px;
+  margin-bottom: 10px;
+  box-shadow: var(--shadow);
+}
+html.dark .settlement-list--visual .settlement-row--visual {
+  background: var(--bg-card);
+  border-color: var(--border);
+}
+.settlement-flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin-bottom: 10px;
+}
+.settlement-flow-tail {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.settlement-flow-tail .settlement-amount {
+  margin-left: 0;
+}
+.settlement-collapse-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 16px;
+  margin: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  border-radius: 12px;
+  transition: background 0.2s ease;
+}
+.settlement-collapse-trigger:hover {
+  background: var(--bg-secondary);
+}
+.settlement-collapse-trigger:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.settlement-collapse-trigger__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+}
+.settlement-collapse-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+.settlement-collapse-trigger .settlement-header-meta {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  line-height: 1.35;
+  text-align: left;
+  max-width: 100%;
+}
+.settlement-collapse-chevron {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  transition: transform 0.28s var(--ease-soft);
+}
+.settlement-collapse-panel-inner {
+  padding: 0 0 2px;
+  transition: padding-top 0.38s var(--ease-soft), padding-bottom 0.38s var(--ease-soft);
+}
+.settlement-pill {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.settlement-pill--payer {
+  background: linear-gradient(145deg, #fef3c7, #fde68a);
+  color: #92400e;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+.settlement-pill--payee {
+  background: linear-gradient(145deg, #dbeafe, #bfdbfe);
+  color: #1e40af;
+  border: 1px solid rgba(59, 130, 246, 0.35);
+}
+html.dark .settlement-pill--payer {
+  background: linear-gradient(145deg, #422006, #78350f);
+  color: #fde68a;
+  border-color: rgba(251, 191, 36, 0.25);
+}
+html.dark .settlement-pill--payee {
+  background: linear-gradient(145deg, #172554, #1e3a8a);
+  color: #bfdbfe;
+  border-color: rgba(96, 165, 250, 0.3);
+}
+button.settlement-pill.settlement-pill-avatar-btn {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  font: inherit;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+.settlement-row--visual .settlement-names {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  max-width: 42%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.settlement-row--visual .settlement-arrow {
+  color: var(--text-muted);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.settlement-row--visual .settlement-amount {
+  margin-left: auto;
+  font-size: 15px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #c2410c;
+  letter-spacing: -0.02em;
+}
+html.dark .settlement-row--visual .settlement-amount {
+  color: #fb923c;
+}
+.settlement-compare-track {
+  height: 10px;
+  border-radius: 99px;
+  background: var(--bg-secondary);
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+.settlement-compare-fill {
+  height: 100%;
+  width: 0;
+  min-width: 0;
+  border-radius: 99px;
+  background: var(--bg-tertiary);
+  transition: width 0.92s var(--ease-out);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+html.dark .settlement-compare-fill {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+.settlement-compare-track--sharedgrad {
+  position: relative;
+  background: transparent;
+}
+.settlement-compare-grad {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ffedd5 0%, #fdba74 28%, #fb923c 62%, #c2410c 100%);
+}
+html.dark .settlement-compare-grad {
+  background: linear-gradient(
+    90deg,
+    rgba(251, 146, 60, 0.42) 0%,
+    rgba(249, 115, 22, 0.55) 35%,
+    rgba(234, 88, 12, 0.88) 72%,
+    rgba(154, 52, 18, 0.98) 100%
+  );
+}
+.settlement-compare-cover {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  background: var(--bg-secondary);
+  border-radius: 0 99px 99px 0;
+  transition: width 0.92s var(--ease-out);
+}

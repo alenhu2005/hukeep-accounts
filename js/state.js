@@ -31,8 +31,10 @@ export const appState = {
   tripDetailHistoryWeekOffset: 0,
   /** 出遊歷史：選中單日 `YYYY-MM-DD`；null 表示顯示全部（依日期分組） */
   tripDetailHistoryFilterDate: null,
-  /** 出遊統計「分類支出」圓餅圖是否展開（預設 false；切換行程會重設） */
+  /** 出遊統計「分類支出」圓餅圖是否展開（目前行程；重繪時沿用） */
   tripStatsPieExpanded: false,
+  /** 各行程圓餅區是否曾展開（離開再進同一行程時還原） */
+  tripStatsPieExpandedByTrip: /** @type {Record<string, boolean>} */ ({}),
   /** 下次繪製行程列表時，「已結束行程」標題與銜接卡片刻進場 */
   revealTripsSectionNext: false,
   /** 成員目錄抽屜開啟後列表列進場（一次） */
