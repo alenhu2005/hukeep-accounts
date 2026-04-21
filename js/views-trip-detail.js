@@ -475,7 +475,7 @@ function tripHistoryStripHTML(range, weekOffset, statsByDate, filterDate, today)
 }
 
 /** 與 allRows 順序一致（較新的列在陣列後方 → 顯示時排在同日前方） */
-/** 歷史紀錄分組小計：人民幣行程時附帶依目前匯率換算之 ¥ */
+/** 歷史紀錄分組小計：人民幣行程時附帶依目前匯率換算之 ¥（灰字、與台幣間空格） */
 function tripHistorySubtotalLabel(ntSub, tripId) {
   const base = `小計 NT$${Math.round(ntSub).toLocaleString()}`;
   if (!tripId || !isTripCnyModeEnabled(tripId)) return base;
@@ -485,7 +485,7 @@ function tripHistorySubtotalLabel(ntSub, tripId) {
   const c = cnyAuxAmountFromNtd(Math.round(ntSub), rate);
   if (!(c > 0)) return base;
   const t = c.toFixed(2).replace(/\.?0+$/, '');
-  return `${base} · ¥${t}`;
+  return `${base} <span class="trip-day-sub-cny">¥${t}</span>`;
 }
 
 function buildTripLedgerOrderIndex(tripId, allRows) {

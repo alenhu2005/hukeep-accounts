@@ -720,6 +720,10 @@ html.dark #page-trip-detail #detail-expenses .trip-day-label {
 .trip-day-sub {
   font-size: 12px; font-weight: 700; color: var(--text); text-transform: none; letter-spacing: 0;
 }
+.trip-day-sub-cny {
+  color: var(--text-muted);
+  font-weight: 600;
+}
 .trip-day-items .record-item:first-child { border-radius: var(--radius) var(--radius) 0 0; }
 .trip-day-items .record-item:last-child { border-radius: 0 0 var(--radius) var(--radius); }
 .trip-day-items .record-item:only-child { border-radius: var(--radius); }
