@@ -472,6 +472,7 @@ export function applyTripCnyToTwd() {
   }
 
   updatePerPerson();
+  updateCnyRateInlineDisplay();
 }
 
 export function handleDetailCnyInput() {
@@ -526,6 +527,7 @@ export function handleDetailTotalInput() {
   }
   if (appState.detailSplitMode === 'custom') appState.detailSplitTotalTouched = true;
   updatePerPerson();
+  updateCnyRateInlineDisplay();
 }
 
 export function endDetailTotalEdit() {

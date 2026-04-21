@@ -133,14 +133,53 @@ export async function fetchLiveCnyToTwdRate(opts = {}) {
   }
 }
 
-/** 依隱藏欄 `d-cny-rate` 更新總金額列旁匯率一句話 */
+function formatNtHintLabel(n) {
+  if (!Number.isFinite(n)) return '';
+  const r = Math.round(n);
+  if (Math.abs(n - r) < 1e-6) return `NT$${r.toLocaleString()}`;
+  return `NT$${n}`;
+}
+
+function formatCnyHintLabel(v) {
+  if (!Number.isFinite(v)) return '¥0';
+  const s = v.toFixed(4).replace(/\.?0+$/, '');
+  return `¥${s}`;
+}
+
+/**
+ * 依隱藏欄 `d-cny-rate`（1 CNY = ? TWD）與總金額輸入，更新總金額列旁灰字。
+ * 有輸入且匯率有效時顯示雙幣換算；否則顯示「1 人民幣 ≈ …」參考句。
+ */
 export function updateCnyRateInlineDisplay() {
   const inline = document.getElementById('d-cny-rate-inline');
   const rateEl = document.getElementById('d-cny-rate');
   if (!inline || !rateEl) return;
-  const r = parseMoneyLike(rateEl.value);
-  if (r > 0) inline.textContent = `1 人民幣 ≈ ${r.toFixed(4)} 新台幣`;
-  else inline.textContent = '';
+
+  if (!isTripCnyModeEnabled(appState.currentTripId)) {
+    inline.textContent = '';
+    return;
+  }
+
+  const rate = parseMoneyLike(rateEl.value);
+  const amountEl = document.getElementById('d-amount');
+  const v = amountEl ? parseMoneyLike(amountEl.value) : 0;
+
+  if (rate > 0 && v > 0 && amountEl) {
+    if (appState.detailAmountCurrency === 'CNY') {
+      const nt = Math.round(v * rate);
+      inline.textContent = `${formatCnyHintLabel(v)} ≈ NT$${nt.toLocaleString()} 新台幣`;
+    } else {
+      const cnyStr = (v / rate).toFixed(4).replace(/\.?0+$/, '');
+      inline.textContent = `${formatNtHintLabel(v)} ≈ ¥${cnyStr} 人民幣`;
+    }
+    return;
+  }
+
+  if (rate > 0) {
+    inline.textContent = `1 人民幣 ≈ ${rate.toFixed(4)} 新台幣`;
+    return;
+  }
+  inline.textContent = '';
 }
 
 /** 將快取／備援寫入隱藏匯率欄，供換算使用 */
@@ -187,10 +226,14 @@ export function getDetailAmountNt() {
 /** 以新台幣金額更新總額輸入框顯示（會依目前幣別切換顯示 NT 或 ¥） */
 export function setDetailAmountFromNt(nt) {
   const totalEl = document.getElementById('d-amount');
-  if (!totalEl) return;
+  if (!totalEl) {
+    updateCnyRateInlineDisplay();
+    return;
+  }
   const n = Math.round(Number(nt) || 0);
   if (!isTripCnyModeEnabled(appState.currentTripId)) {
     totalEl.value = n > 0 ? String(n) : '';
+    updateCnyRateInlineDisplay();
     return;
   }
   const rate = parseMoneyLike(document.getElementById('d-cny-rate')?.value);
@@ -199,6 +242,7 @@ export function setDetailAmountFromNt(nt) {
   } else {
     totalEl.value = n > 0 ? String(n) : '';
   }
+  updateCnyRateInlineDisplay();
 }
 
 /** 更新總金額右側單一幣別按鈕文案（與金額欄同高，由外層 flex stretch） */
@@ -212,21 +256,20 @@ export function syncDetailAmountCurrencyToggleUi() {
 }
 
 /**
- * 右側幣別：設為指定幣別並換算顯示（僅人民幣模式行程）。
+ * 右側幣別：僅切換輸入模式（不變更輸入框內數字；使用者自行依幣別修正）。
  * @param {'TWD' | 'CNY'} cur
  */
 export function setDetailAmountCurrency(cur) {
   if (!isTripCnyModeEnabled(appState.currentTripId)) return;
   const next = cur === 'CNY' ? 'CNY' : 'TWD';
-  const nt = getDetailAmountNt();
   appState.detailAmountCurrency = next;
-  setDetailAmountFromNt(nt);
   syncDetailAmountCurrencyToggleUi();
   const inp = document.getElementById('d-amount');
   if (inp) {
     inp.setAttribute('inputmode', next === 'CNY' ? 'decimal' : 'numeric');
     inp.setAttribute('aria-label', next === 'CNY' ? '金額（人民幣）' : '金額（新台幣）');
   }
+  updateCnyRateInlineDisplay();
 }
 
 /** 在 NT$ / ¥ 輸入模式間切換（單鍵） */

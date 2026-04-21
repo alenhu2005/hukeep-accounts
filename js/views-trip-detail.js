@@ -100,6 +100,9 @@ export function resetTripDetailAmountDraft(opts = {}) {
       inp.setAttribute('aria-disabled', 'false');
     });
   }
+
+  syncDetailAmountCurrencyToggleUi();
+  updateCnyRateInlineDisplay();
 }
 
 function playTripSettlementAnimations() {
