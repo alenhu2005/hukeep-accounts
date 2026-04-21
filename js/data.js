@@ -128,6 +128,12 @@ export function getTripExpensesFromRows(tripId, allRows) {
       ...(e.photoUrl !== undefined ? { photoUrl: e.photoUrl } : {}),
       ...(e.photoFileId !== undefined ? { photoFileId: e.photoFileId } : {}),
       ...(e.category !== undefined ? { category: e.category } : {}),
+      ...(e.amount !== undefined && e.amount !== null && e.amount !== ''
+        ? { amount: Math.max(0, parseFloat(e.amount) || 0) }
+        : {}),
+      ...(e.fxFeeNtd !== undefined && e.fxFeeNtd !== null && e.fxFeeNtd !== ''
+        ? { fxFeeNtd: Math.max(0, parseFloat(e.fxFeeNtd) || 0) }
+        : {}),
     };
   }
   const adds = dedupeLedgerAddsById(
@@ -177,7 +183,14 @@ export function getTripExpensesFromRows(tripId, allRows) {
       }
       if (!payers) delete rec.payers;
       if (!splitDetails) delete rec.splitDetails;
+      const cny = parseFloat(rec.amountCny);
+      if (Number.isFinite(cny) && cny > 0) rec.amountCny = cny;
+      else delete rec.amountCny;
       if (editMap[r.id]) rec = { ...rec, ...editMap[r.id] };
+      rec.amount = parseFloat(rec.amount) || 0;
+      const fxPost = parseFloat(rec.fxFeeNtd);
+      if (Number.isFinite(fxPost) && fxPost > 0) rec.fxFeeNtd = fxPost;
+      else delete rec.fxFeeNtd;
       return rec;
     })
     .slice()

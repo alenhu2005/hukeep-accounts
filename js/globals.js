@@ -5,6 +5,7 @@
 import { navigate } from './navigation.js';
 import { cancelDialog } from './dialog.js';
 import { toggleTheme } from './theme.js';
+import { toggleAccentMenu, closeAccentMenu, setAccentTheme } from './accent-theme.js';
 import {
   toggleHomeHistory,
   shiftHomeCalendarMonth,
@@ -28,6 +29,7 @@ import {
   clearTripHistoryDayFilter,
 } from './views-trip-detail.js';
 import * as actions from './actions.js';
+import { toggleDetailAmountCurrency } from './trip-cny-rate.js';
 import {
   startTripLotteryDraw,
   setTripLotteryKeepInPool,
@@ -165,6 +167,9 @@ Object.assign(window, {
   openBackupMenu: actions.openBackupMenu,
   closeBackupMenu: actions.closeBackupMenu,
   toggleTheme,
+  toggleAccentMenu,
+  closeAccentMenu,
+  setAccentTheme,
   toggleHomeHistory,
   shiftHomeCalendarMonth,
   selectHomeCalendarDay,
@@ -244,6 +249,8 @@ Object.assign(window, {
   beginDetailTotalEdit: actions.beginDetailTotalEdit,
   handleDetailTotalInput: actions.handleDetailTotalInput,
   endDetailTotalEdit: actions.endDetailTotalEdit,
+  handleDetailCnyInput: actions.handleDetailCnyInput,
+  toggleDetailAmountCurrency,
   beginMultiPayEdit: actions.beginMultiPayEdit,
   endMultiPayEdit: actions.endMultiPayEdit,
   handleMultiPayAmountInput: actions.handleMultiPayAmountInput,

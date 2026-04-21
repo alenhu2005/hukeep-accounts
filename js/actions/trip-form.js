@@ -49,6 +49,20 @@ import {
 import { buildTripSettlementSummaryText } from '../trip-stats.js';
 import { toggleCollapsible } from '../ui-collapsible.js';
 import { undoOptimisticPush, parseMoneyLike, snapshotPendingHomeBalanceFromAbs, fileToJpegDataUrl } from './shared.js';
+import {
+  persistCnyTwdRate,
+  fetchLiveCnyToTwdRate,
+  isLiveCnyCacheFresh,
+  isTripCnyModeEnabled,
+  getDetailAmountNt,
+  setDetailAmountFromNt,
+  updateCnyRateInlineDisplay,
+} from '../trip-cny-rate.js';
+
+function refreshDetailAmountDisplayAfterRate() {
+  const nt = getDetailAmountNt();
+  setDetailAmountFromNt(nt);
+}
 
 /** 新增消費標題列：整列收合；點「賭博模式」等內嵌按鈕時不收合 */
 export function tripDetailFormHeaderClick(e) {
@@ -99,7 +113,7 @@ export function toggleMultiPay() {
     appState.detailMultiPayTouchedRows = {};
     appState.detailMultiPayNextRowId = 1;
     // If total already has value, treat it as user-provided so residual locking can work immediately.
-    appState.detailMultiPayTotalTouched = parseMoneyLike(document.getElementById('d-amount')?.value) > 0;
+    appState.detailMultiPayTotalTouched = getDetailAmountNt() > 0;
     addPayerRow(members);
     addPayerRow(members);
     refreshPayerToggleDisabledState();
@@ -188,12 +202,11 @@ function maybeCollapseMultiPayToSingle() {
     else if (trip.members[0]) appState.detailPaidBy = trip.members[0];
   }
   // UX: collapsing back to single-pay should not clear total amount.
-  const totalEl = document.getElementById('d-amount');
-  const hadTotal = parseMoneyLike(totalEl?.value) > 0;
+  const hadTotal = getDetailAmountNt() > 0;
   resetTripDetailAmountDraft({ keepTotal: true });
   // If total was empty, keep it convenient by filling from the last remaining payer amount.
-  if (!hadTotal && totalEl && amt > 0) {
-    totalEl.value = String(Math.round(amt));
+  if (!hadTotal && amt > 0) {
+    setDetailAmountFromNt(Math.round(amt));
   }
 
   renderTripDetail();
@@ -284,8 +297,7 @@ export function handleMultiPayAmountInput(payerAmountInput) {
   // If total is fixed by user input, prevent any single payer row from pushing sum > total.
   // Important: exclude disabled (auto-residual) row from cap calc to avoid "1 digit then stuck".
   if (appState.detailMultiPay) {
-    const totalEl = document.getElementById('d-amount');
-    const totalVal = parseMoneyLike(totalEl?.value);
+    const totalVal = getDetailAmountNt();
     if (appState.detailMultiPayTotalTouched && totalVal > 0) {
       const otherSum = Array.from(document.querySelectorAll('#d-payers-list .payer-amount'))
         .filter(el => el !== inp && !el.disabled)
@@ -359,7 +371,7 @@ export function toggleDetailSplitMode() {
   appState.detailSplitMode = appState.detailSplitMode === 'custom' ? 'equal' : 'custom';
   syncDetailTripFormLabels();
   if (appState.detailSplitMode === 'custom') {
-    appState.detailSplitTotalTouched = parseMoneyLike(document.getElementById('d-amount')?.value) > 0;
+    appState.detailSplitTotalTouched = getDetailAmountNt() > 0;
   } else {
     // Back to equal split: clear all custom split values/state.
     appState.detailSplitCustom = {};
@@ -382,7 +394,7 @@ export function setDetailSplitAmount(name, rawValue) {
 
   // Custom split guard: never let split total exceed total amount.
   if (appState.detailSplitMode === 'custom') {
-    const total = parseMoneyLike(document.getElementById('d-amount')?.value);
+    const total = getDetailAmountNt();
     // Enforce hard cap whenever total has a value (or multi-pay mode),
     // regardless of whether the total input was the last touched field.
     if (total > 0 || appState.detailMultiPay) {
@@ -427,6 +439,68 @@ export function endDetailSplitEdit(name) {
   updatePerPerson();
 }
 
+/**
+ * 人民幣模式下：依輸入幣別與匯率更新內部台幣分攤；選 ¥ 時不覆寫輸入框為台幣。
+ */
+export function applyTripCnyToTwd() {
+  if (!isTripCnyModeEnabled(appState.currentTripId)) return;
+  const rateEl = document.getElementById('d-cny-rate');
+  const totalEl = document.getElementById('d-amount');
+  if (!totalEl) return;
+  const rate = parseMoneyLike(rateEl?.value);
+
+  if (appState.detailSplitTotalDerived) {
+    appState.detailSplitTotalDerived = false;
+    totalEl.disabled = false;
+    totalEl.classList.remove('split-custom-input--locked');
+    totalEl.setAttribute('aria-disabled', 'false');
+  }
+
+  if (appState.detailMultiPay) {
+    appState.detailMultiPayTotalTouched = true;
+    appState.detailMultiPayLockedTarget = '';
+  }
+  if (appState.detailSplitMode === 'custom') {
+    appState.detailSplitTotalTouched = true;
+  }
+
+  if (appState.detailAmountCurrency === 'CNY') {
+    const cny = parseMoneyLike(totalEl.value);
+    if (cny > 0 && rate > 0) persistCnyTwdRate(rate);
+  } else if (rate > 0) {
+    persistCnyTwdRate(rate);
+  }
+
+  updatePerPerson();
+}
+
+export function handleDetailCnyInput() {
+  applyTripCnyToTwd();
+}
+
+/**
+ * 向公開 API 取得 CNY→TWD，更新隱藏匯率欄、總金額列旁一句匯率，並觸發換算。
+ * @param {{ force?: boolean }} [opts] force=true 時強制重抓（略過 45 分鐘快取）
+ */
+export async function refreshTripLiveCnyRateUi(opts = {}) {
+  if (!isTripCnyModeEnabled(appState.currentTripId)) return;
+  const force = !!(opts && opts.force);
+  const rateEl = document.getElementById('d-cny-rate');
+  if (!rateEl) return;
+
+  const got = await fetchLiveCnyToTwdRate({ force });
+  if (!got) {
+    updateCnyRateInlineDisplay();
+    return;
+  }
+
+  rateEl.value = String(got.rate);
+  updateCnyRateInlineDisplay();
+
+  applyTripCnyToTwd();
+  refreshDetailAmountDisplayAfterRate();
+}
+
 export function beginDetailTotalEdit() {
   appState.detailSplitEditingMember = '';
   // If total was derived (auto), allow user to override by unlocking it.
@@ -446,7 +520,7 @@ export function handleDetailTotalInput() {
   // Any manual edit means total is no longer derived.
   if (appState.detailSplitTotalDerived) appState.detailSplitTotalDerived = false;
   if (appState.detailMultiPay) {
-    appState.detailMultiPayTotalTouched = parseMoneyLike(document.getElementById('d-amount')?.value) > 0;
+    appState.detailMultiPayTotalTouched = getDetailAmountNt() > 0;
     // If user clears total, stop forcing a locked multi-pay row.
     if (!appState.detailMultiPayTotalTouched) appState.detailMultiPayLockedTarget = '';
   }

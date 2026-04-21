@@ -4,6 +4,7 @@ import {
   computeSettlements,
   computePayerTotals,
   computeMemberShareTotals,
+  computeExpenseShares,
   computeTripDaySubtotals,
   dailyExpenseBalanceDeltaForUserA,
   accumulateDailyGamblingWinLose,
@@ -57,6 +58,29 @@ describe('computeSettlements', () => {
     expect(out[0].amount).toBeCloseTo(50);
   });
 
+  it('均分含匯差手續費：分攤與結算一併放大', () => {
+    const out = computeSettlements(['胡', '詹'], [
+      {
+        amount: 100,
+        fxFeeNtd: 20,
+        paidBy: '胡',
+        splitAmong: ['胡', '詹'],
+        _voided: false,
+      },
+    ]);
+    expect(out).toHaveLength(1);
+    expect(out[0].from).toBe('詹');
+    expect(out[0].to).toBe('胡');
+    expect(out[0].amount).toBeCloseTo(60);
+    const sh = computeExpenseShares({
+      amount: 100,
+      fxFeeNtd: 20,
+      splitAmong: ['胡', '詹'],
+    });
+    expect(sh[0].amount).toBeCloseTo(60);
+    expect(sh[1].amount).toBeCloseTo(60);
+  });
+
   it('已記錄還款 adjustment 抵銷後無待轉帳', () => {
     const out = computeSettlements(
       ['胡', '詹'],
@@ -93,6 +117,26 @@ describe('computeSettlements', () => {
     expect(out[0].amount).toBeCloseTo(100);
   });
 
+  it('多人出款：手續費依出資比例加到先付金額', () => {
+    const out = computeSettlements(['甲', '乙', '丙'], [
+      {
+        amount: 300,
+        fxFeeNtd: 30,
+        paidBy: '多人',
+        payers: [
+          { name: '甲', amount: 200 },
+          { name: '乙', amount: 100 },
+        ],
+        splitAmong: ['甲', '乙', '丙'],
+        _voided: false,
+      },
+    ]);
+    expect(out).toHaveLength(1);
+    expect(out[0].from).toBe('丙');
+    expect(out[0].to).toBe('甲');
+    expect(out[0].amount).toBeCloseTo(110);
+  });
+
   it('詳細分攤：依 splitDetails 計算而非平均分', () => {
     const out = computeSettlements(['甲', '乙', '丙'], [
       {
@@ -113,6 +157,27 @@ describe('computeSettlements', () => {
     expect(byFrom['乙'].amount).toBeCloseTo(120);
     expect(byFrom['丙'].to).toBe('甲');
     expect(byFrom['丙'].amount).toBeCloseTo(130);
+  });
+
+  it('詳細分攤含手續費：依原比例放大至消費＋手續費', () => {
+    const out = computeSettlements(['甲', '乙', '丙'], [
+      {
+        amount: 360,
+        fxFeeNtd: 36,
+        paidBy: '甲',
+        splitAmong: ['甲', '乙', '丙'],
+        splitDetails: [
+          { name: '甲', amount: 110 },
+          { name: '乙', amount: 120 },
+          { name: '丙', amount: 130 },
+        ],
+        _voided: false,
+      },
+    ]);
+    expect(out).toHaveLength(2);
+    const byFrom = Object.fromEntries(out.map(x => [x.from, x]));
+    expect(byFrom['乙'].amount).toBeCloseTo(132);
+    expect(byFrom['丙'].amount).toBeCloseTo(143);
   });
 });
 
@@ -162,6 +227,13 @@ describe('computeTripDaySubtotals', () => {
     ]);
     expect(m['2024-01-01']).toBeCloseTo(15);
     expect(m['2024-01-02']).toBeCloseTo(3);
+  });
+
+  it('同日加總含 fxFeeNtd', () => {
+    const m = computeTripDaySubtotals([
+      { _voided: false, date: '2024-01-01', amount: 100, fxFeeNtd: 10 },
+    ]);
+    expect(m['2024-01-01']).toBeCloseTo(110);
   });
 });
 

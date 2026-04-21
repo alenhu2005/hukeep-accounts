@@ -28,6 +28,19 @@
   border-radius: 8px; display: flex; align-items: center;
   justify-content: center; flex-shrink: 0;
 }
+button.header-icon {
+  margin: 0;
+  padding: 0;
+  border: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+button.header-icon:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
 .header-icon svg { width: 16px; height: 16px; fill: white; }
 .header h1 { font-size: 15px; font-weight: 600; flex: 1; }
 .header-meta { font-size: 12px; color: var(--text-muted); white-space: nowrap; }

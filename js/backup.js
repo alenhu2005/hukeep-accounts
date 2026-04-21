@@ -130,7 +130,13 @@ function humanSummaryForRow(r, tripNames, opts = {}) {
     const cat = r.category ? ` · ${r.category}` : '';
     const nb = !forCsv && r.note ? ` · 備註：${r.note}` : '';
     const itemLabel = r.item || '（無項目）';
-    return `「${tname}」·「${itemLabel}」NT$${amt} · ${pay} · 分攤：${splitLabel}${cat}${nb}`;
+    const cnyVal = parseFloat(r.amountCny);
+    const cnyPart =
+      Number.isFinite(cnyVal) && cnyVal > 0 ? ` · ¥${String(cnyVal.toFixed(2).replace(/\.?0+$/, ''))}` : '';
+    const fxVal = parseFloat(r.fxFeeNtd);
+    const fxPart =
+      Number.isFinite(fxVal) && fxVal > 0 ? ` · 匯差手續 NT$${fmtMoney(fxVal)}` : '';
+    return `「${tname}」·「${itemLabel}」NT$${amt}${cnyPart}${fxPart} · ${pay} · 分攤：${splitLabel}${cat}${nb}`;
   }
 
   if (r.type === 'tripExpense' && r.action === 'void') {

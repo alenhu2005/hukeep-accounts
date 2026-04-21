@@ -1,0 +1,61 @@
+/* 主題色：由 html[data-accent] 切換，與 localStorage `accent` 同步（見 js/accent-theme.js） */
+
+html[data-accent='blue'] {
+  --primary: #3b82f6;
+  --primary-light: #eff6ff;
+  --primary-dark: #1d4ed8;
+}
+html.dark[data-accent='blue'] {
+  --primary-light: rgba(59, 130, 246, 0.15);
+  --primary-dark: #93c5fd;
+}
+
+html[data-accent='teal'] {
+  --primary: #0d9488;
+  --primary-light: #ecfdf5;
+  --primary-dark: #0f766e;
+}
+html.dark[data-accent='teal'] {
+  --primary-light: rgba(13, 148, 136, 0.18);
+  --primary-dark: #5eead4;
+}
+
+html[data-accent='violet'] {
+  --primary: #7c3aed;
+  --primary-light: #f5f3ff;
+  --primary-dark: #6d28d9;
+}
+html.dark[data-accent='violet'] {
+  --primary-light: rgba(124, 58, 237, 0.18);
+  --primary-dark: #c4b5fd;
+}
+
+html[data-accent='rose'] {
+  --primary: #e11d48;
+  --primary-light: #fff1f2;
+  --primary-dark: #be123c;
+}
+html.dark[data-accent='rose'] {
+  --primary-light: rgba(225, 29, 72, 0.18);
+  --primary-dark: #fda4af;
+}
+
+html[data-accent='amber'] {
+  --primary: #d97706;
+  --primary-light: #fffbeb;
+  --primary-dark: #b45309;
+}
+html.dark[data-accent='amber'] {
+  --primary-light: rgba(217, 119, 6, 0.18);
+  --primary-dark: #fcd34d;
+}
+
+html[data-accent='emerald'] {
+  --primary: #059669;
+  --primary-light: #ecfdf5;
+  --primary-dark: #047857;
+}
+html.dark[data-accent='emerald'] {
+  --primary-light: rgba(5, 150, 105, 0.18);
+  --primary-dark: #6ee7b7;
+}

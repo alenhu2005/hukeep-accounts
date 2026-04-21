@@ -108,6 +108,9 @@ export const appState = {
   /** multi-pay UI: next unique row id */
   detailMultiPayNextRowId: 1,
 
+  /** 出遊新增消費總額欄：人民幣模式下 `TWD` | `CNY`（單一輸入框，右側切換） */
+  detailAmountCurrency: 'TWD',
+
   /** 出遊新增消費：賭博模式（文案與分類鎖定） */
   detailGamblingMode: false,
 

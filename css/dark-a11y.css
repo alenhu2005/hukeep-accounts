@@ -10,8 +10,7 @@ html.dark {
   --bg-secondary: #1e293b;
   --bg-tertiary: #334155;
   --bg-card: #1e293b;
-  --primary-light: rgba(59,130,246,.15);
-  --primary-dark: #93c5fd;
+  /* --primary-light / --primary-dark：依 html[data-accent] 於 accent-themes.css */
 }
 
 html.dark .header { background: rgba(15,23,42,.92); }
@@ -23,7 +22,10 @@ html.dark #sync-status-bar {
 html.dark .sync-status-badge--ok { background: #064e3b; color: #6ee7b7; }
 html.dark .sync-status-badge--warn { background: #78350f; color: #fcd34d; }
 html.dark .sync-status-badge--err { background: #7f1d1d; color: #fecaca; }
-html.dark .sync-status-badge--syncing { background: rgba(59,130,246,.2); color: #93c5fd; }
+html.dark .sync-status-badge--syncing {
+  background: color-mix(in srgb, var(--primary) 22%, transparent);
+  color: var(--primary-dark);
+}
 html.dark #loading-overlay { background: #0f172a; color: var(--text); }
 html.dark .record-running.pos { color: #34d399; }
 html.dark .record-running.neg { color: #f87171; }
@@ -34,7 +36,7 @@ html.dark .badge-void { background: #7f1d1d; color: #fca5a5; }
 html.dark .settle-btn { background: #064e3b; color: #6ee7b7; }
 html.dark .settle-btn:hover { background: #065f46; }
 html.dark .edit-photo-preview { background: #0f172a; }
-html.dark .show-more-btn:hover { background: rgba(59,130,246,.1); }
+html.dark .show-more-btn:hover { background: color-mix(in srgb, var(--primary) 12%, transparent); }
 html.dark .home-cal-nav-btn {
   background: #1e293b;
 }
@@ -279,11 +281,11 @@ html.dark .btn-ghost.backup-tech-btn:hover { background: var(--bg-tertiary); }
   text-align: left;
   background: var(--primary-light);
   border-radius: 12px;
-  border: 1px solid rgba(59, 130, 246, 0.22);
+  border: 1px solid color-mix(in srgb, var(--primary) 24%, transparent);
 }
 html.dark .trip-stats-section.trip-stats-wallet-out {
-  background: rgba(59, 130, 246, 0.12);
-  border-color: rgba(96, 165, 250, 0.32);
+  background: color-mix(in srgb, var(--primary) 14%, transparent);
+  border-color: color-mix(in srgb, var(--primary) 30%, transparent);
 }
 .trip-stats-wallet-out-list {
   display: flex;
@@ -298,11 +300,11 @@ html.dark .trip-stats-section.trip-stats-wallet-out {
   padding: 8px 12px;
   background: rgba(255, 255, 255, 0.55);
   border-radius: 10px;
-  border: 1px solid rgba(59, 130, 246, 0.12);
+  border: 1px solid color-mix(in srgb, var(--primary) 14%, transparent);
 }
 html.dark .trip-stats-wallet-out-row {
   background: rgba(0, 0, 0, 0.18);
-  border-color: rgba(96, 165, 250, 0.22);
+  border-color: color-mix(in srgb, var(--primary) 24%, transparent);
 }
 .trip-stats-wallet-out-name {
   font-weight: 600;
@@ -464,7 +466,10 @@ html.dark .trip-pie-fold-btn:hover {
   width: 22px; height: 22px; border-radius: 6px; background: var(--primary-light); color: var(--primary-dark);
   font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
-html.dark .payer-stats-rank { background: rgba(59,130,246,.2); color: #93c5fd; }
+html.dark .payer-stats-rank {
+  background: color-mix(in srgb, var(--primary) 22%, transparent);
+  color: var(--primary-dark);
+}
 .payer-stats-name { flex: 1; font-weight: 600; min-width: 0; }
 .payer-stats-amt { font-weight: 700; color: var(--text); text-align: right; white-space: nowrap; }
 .payer-stats-pct { font-size: 11px; color: var(--text-muted); margin-left: 6px; font-weight: 600; }
@@ -780,10 +785,12 @@ html.dark .form-input.is-invalid {
   .member-dir-avatar--rare,
   #edit-overlay.open,
   #backup-overlay.open,
+  #accent-menu-overlay.open,
   .dialog,
   .member-preview-panel,
   .edit-dialog,
   .backup-dialog,
+  .accent-menu,
   .toast-item {
     animation: none !important;
   }

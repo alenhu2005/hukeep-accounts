@@ -49,6 +49,7 @@ import {
 import { buildTripSettlementSummaryText } from '../trip-stats.js';
 import { toggleCollapsible } from '../ui-collapsible.js';
 import { undoOptimisticPush, parseMoneyLike, snapshotPendingHomeBalanceFromAbs, fileToJpegDataUrl } from './shared.js';
+import { getDetailAmountNt, isTripCnyModeEnabled, syncDetailAmountCurrencyToggleUi } from '../trip-cny-rate.js';
 
 export async function submitTripExpense() {
   const item = document.getElementById('d-item').value.trim();
@@ -131,8 +132,7 @@ export async function submitTripExpense() {
       return;
     }
     amount = payers.reduce((s, p) => s + p.amount, 0);
-    const totalEl = document.getElementById('d-amount');
-    const totalVal = totalEl ? parseMoneyLike(totalEl.value) : 0;
+    const totalVal = getDetailAmountNt();
     if (totalVal > 0 && Math.abs(totalVal - amount) > 0.01) {
       const lock = String(appState.detailMultiPayLockedTarget || '');
       if (lock.startsWith('row:')) {
@@ -170,7 +170,7 @@ export async function submitTripExpense() {
     paidBy = '';
     extraFields = appState.detailSplitMode === 'custom' ? { payers, splitDetails } : { payers };
   } else {
-    amount = parseMoneyLike(document.getElementById('d-amount').value);
+    amount = getDetailAmountNt();
     paidBy = appState.detailPaidBy;
     if (!amount || amount <= 0) {
       toast('請輸入有效金額');
@@ -202,6 +202,13 @@ export async function submitTripExpense() {
     category = GAMBLING_CATEGORY;
   }
 
+  const amountCnyVal =
+    isTripCnyModeEnabled(appState.currentTripId) &&
+    appState.detailAmountCurrency === 'CNY' &&
+    getDetailAmountNt() > 0
+      ? parseMoneyLike(document.getElementById('d-amount')?.value)
+      : 0;
+
   const btn = document.getElementById('d-submit');
   btn.disabled = true;
   btn.textContent = '記帳中…';
@@ -218,6 +225,7 @@ export async function submitTripExpense() {
     date: todayStr(),
     note,
     ...(category ? { category } : {}),
+    ...(amountCnyVal > 0 ? { amountCny: amountCnyVal } : {}),
     ...extraFields,
   };
   appState.allRows.push(row);
@@ -236,6 +244,13 @@ export async function submitTripExpense() {
 
   document.getElementById('d-item').value = '';
   document.getElementById('d-amount').value = '';
+  appState.detailAmountCurrency = 'TWD';
+  syncDetailAmountCurrencyToggleUi();
+  const amtInp = document.getElementById('d-amount');
+  if (amtInp) {
+    amtInp.setAttribute('inputmode', 'numeric');
+    amtInp.setAttribute('aria-label', '金額（新台幣）');
+  }
   document.getElementById('d-note').value = '';
   if (appState.detailSplitMode === 'custom') {
     appState.detailSplitCustom = {};

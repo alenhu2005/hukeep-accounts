@@ -1,4 +1,61 @@
 /* Trip header lottery overlay */
+/* ── 出遊：長按頂欄行程名開啟人民幣模式 ── */
+#page-trip-detail #detail-name.detail-name--cny-longpress {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+/* 出遊新增消費：總金額單欄 + 右側幣別切換 */
+#page-trip-detail .detail-amount-row {
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+#page-trip-detail .detail-cny-rate-inline {
+  flex: 1 1 140px;
+  min-width: 0;
+  align-self: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  line-height: 1.3;
+}
+#page-trip-detail .detail-amount-input {
+  flex: 1;
+  min-width: 0;
+}
+#page-trip-detail .detail-amount-currency-wrap {
+  display: flex;
+  flex-shrink: 0;
+  align-self: stretch;
+}
+#page-trip-detail .detail-currency-toggle {
+  margin: 0;
+  align-self: stretch;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+#page-trip-detail .detail-currency-toggle:hover {
+  filter: brightness(1.05);
+}
+#page-trip-detail .detail-currency-toggle:active {
+  filter: brightness(0.95);
+}
 /* ── 出遊：抽籤（頂欄圖示 + 浮層） ── */
 #page-trip-detail .trip-header-stats-btn {
   flex-shrink: 0;
@@ -282,13 +339,13 @@ html.dark .trip-lottery-popover-inner {
 }
 .trip-lottery-display--spinning {
   border-style: solid;
-  border-color: rgba(59, 130, 246, 0.35);
+  border-color: color-mix(in srgb, var(--primary) 34%, transparent);
   background: var(--primary-light);
   animation: tripLotteryPulse 0.38s ease-in-out infinite alternate;
 }
 html.dark .trip-lottery-display--spinning {
-  background: rgba(59, 130, 246, 0.12);
-  border-color: rgba(96, 165, 250, 0.4);
+  background: color-mix(in srgb, var(--primary) 14%, transparent);
+  border-color: color-mix(in srgb, var(--primary) 38%, transparent);
 }
 @keyframes tripLotteryPulse {
   from { transform: scale(1); opacity: 1; }

@@ -3,6 +3,7 @@ import { appState } from './state.js';
 import { loadCache, loadData, flushPostOutbox } from './api.js';
 import { render } from './render-registry.js';
 import { updateThemeIcon } from './theme.js';
+import { applyAccentMetaFromDom, closeAccentMenu } from './accent-theme.js';
 import { updateSyncUI } from './sync-ui.js';
 import { registerOverlayFocusTrap } from './dialog-a11y.js';
 import { initAmountInputs } from './amount-input.js';
@@ -170,6 +171,7 @@ function initBottomNavTouchNavigate() {
 
 export async function initApp() {
   updateThemeIcon();
+  applyAccentMetaFromDom();
   loadCache();
   updateSyncUI();
 
@@ -189,6 +191,10 @@ export async function initApp() {
   registerOverlayFocusTrap('backup-overlay', {
     closeFn: () => actions.closeBackupMenu(),
     panelSelector: '.backup-dialog',
+  });
+  registerOverlayFocusTrap('accent-menu-overlay', {
+    closeFn: closeAccentMenu,
+    panelSelector: '.accent-menu',
   });
 
   initAmountInputs();

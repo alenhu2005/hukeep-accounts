@@ -168,7 +168,7 @@ html.dark .settlement-list--visual .settlement-row--visual {
 .settlement-pill--payee {
   background: linear-gradient(145deg, #dbeafe, #bfdbfe);
   color: #1e40af;
-  border: 1px solid rgba(59, 130, 246, 0.35);
+  border: 1px solid color-mix(in srgb, var(--primary) 34%, transparent);
 }
 html.dark .settlement-pill--payer {
   background: linear-gradient(145deg, #422006, #78350f);

@@ -27,7 +27,7 @@
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   font-size: 11px; font-weight: 700;
-  border: 1px solid rgba(59,130,246,.25);
+  border: 1px solid color-mix(in srgb, var(--primary) 26%, transparent);
 }
 
 /* 一般成員色：淡底色 + 單層色環（貼齊圖緣、無白隙；小頭像用細環） */
@@ -478,11 +478,11 @@ html.dark .settlement-pill.member-tone {
 .member-rare--cosmic {
   --rare-border: rgba(168,85,247,.72);
   --rare-ring: rgba(168,85,247,.16);
-  --rare-shadow: rgba(59,130,246,.16);
+  --rare-shadow: color-mix(in srgb, var(--primary) 18%, transparent);
   --rare-bg-a: rgba(124,58,237,.16);
-  --rare-bg-b: rgba(59,130,246,.08);
+  --rare-bg-b: color-mix(in srgb, var(--primary) 10%, transparent);
   --rare-glow-a: rgba(168,85,247,.20);
-  --rare-glow-b: rgba(59,130,246,.12);
+  --rare-glow-b: color-mix(in srgb, var(--primary) 14%, transparent);
   --rare-shimmer: 3.0s;
   --rare-after-opacity: .44;
   --rare-after-bg:
@@ -494,9 +494,9 @@ html.dark .settlement-pill.member-tone {
   --rare-after-anim: rareDrift 7.2s ease-in-out infinite;
   /* orbit ring */
   --rare-ring-opacity: .68;
-  --rare-ring-bg: conic-gradient(from 0deg, rgba(124,58,237,0), rgba(124,58,237,.52), rgba(59,130,246,.42), rgba(192,38,211,.44), rgba(124,58,237,0));
+  --rare-ring-bg: conic-gradient(from 0deg, rgba(124,58,237,0), rgba(124,58,237,.52), color-mix(in srgb, var(--primary) 42%, transparent), rgba(192,38,211,.44), rgba(124,58,237,0));
   --rare-ring-anim: rareRingRotate 11.5s linear infinite;
-  --rare-ring-filter: drop-shadow(0 0 18px rgba(124,58,237,.26)) drop-shadow(0 0 10px rgba(59,130,246,.18));
+  --rare-ring-filter: drop-shadow(0 0 18px rgba(124,58,237,.26)) drop-shadow(0 0 10px color-mix(in srgb, var(--primary) 20%, transparent));
   --rare-frame: 7.4s;
   --rare-bar-a:#a855f7; --rare-bar-b:#60a5fa; --rare-bar-c:#e879f9;
   --rare-frame-a:#a855f7; --rare-frame-b:#60a5fa; --rare-frame-c:#e879f9; --rare-frame-d:#22d3ee;
@@ -631,7 +631,7 @@ html.dark .settlement-pill.member-tone {
 .member-rare--ice {
   --rare-border: rgba(56,189,248,.70);
   --rare-ring: rgba(56,189,248,.14);
-  --rare-shadow: rgba(59,130,246,.12);
+  --rare-shadow: color-mix(in srgb, var(--primary) 14%, transparent);
   --rare-bg-a: rgba(56,189,248,.10);
   --rare-bg-b: rgba(99,102,241,.07);
   --rare-glow-a: rgba(125,211,252,.24);

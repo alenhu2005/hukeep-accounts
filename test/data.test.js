@@ -127,6 +127,83 @@ describe('getTripExpensesFromRows', () => {
     expect(ex).toHaveLength(1);
     expect(ex[0]._voided).toBe(true);
   });
+
+  it('tripExpense 可帶 amountCny（輔助人民幣），amount 仍為新台幣', () => {
+    const rows = [
+      {
+        type: 'tripExpense',
+        action: 'add',
+        id: 'e-cny',
+        tripId: 't1',
+        amount: '300',
+        amountCny: '88.5',
+        paidBy: '胡',
+        splitAmong: '["胡","詹"]',
+        date: '2024-03-01',
+        item: '午餐',
+      },
+    ];
+    const ex = getTripExpensesFromRows('t1', rows);
+    expect(ex).toHaveLength(1);
+    expect(ex[0].amount).toBe(300);
+    expect(ex[0].amountCny).toBe(88.5);
+  });
+
+  it('tripExpense edit 可覆寫 amount', () => {
+    const rows = [
+      {
+        type: 'tripExpense',
+        action: 'add',
+        id: 'e-amt',
+        tripId: 't1',
+        amount: '200',
+        paidBy: '甲',
+        splitAmong: '["甲","乙"]',
+        date: '2024-04-01',
+        item: '外幣刷卡',
+      },
+      {
+        type: 'tripExpense',
+        action: 'edit',
+        id: 'e-amt',
+        date: '2024-04-02',
+        amount: '250',
+      },
+    ];
+    const ex = getTripExpensesFromRows('t1', rows);
+    expect(ex[0].amount).toBe(250);
+  });
+
+  it('tripExpense edit 可補登／覆寫 fxFeeNtd，0 則清除', () => {
+    const rows = [
+      {
+        type: 'tripExpense',
+        action: 'add',
+        id: 'e-fx',
+        tripId: 't1',
+        amount: '200',
+        paidBy: '甲',
+        splitAmong: '["甲","乙"]',
+        date: '2024-04-01',
+        item: '外幣刷卡',
+      },
+      {
+        type: 'tripExpense',
+        action: 'edit',
+        id: 'e-fx',
+        date: '2024-04-01',
+        fxFeeNtd: '15',
+      },
+    ];
+    const ex = getTripExpensesFromRows('t1', rows);
+    expect(ex[0].fxFeeNtd).toBe(15);
+
+    const cleared = getTripExpensesFromRows('t1', [
+      rows[0],
+      { type: 'tripExpense', action: 'edit', id: 'e-fx', date: '2024-04-01', fxFeeNtd: 0 },
+    ]);
+    expect(cleared[0].fxFeeNtd).toBeUndefined();
+  });
 });
 
 describe('gamblingSplitFromCatTotals', () => {

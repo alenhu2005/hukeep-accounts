@@ -30,7 +30,7 @@ import {
   TRIP_COLORS,
   pickRandomTripColorId,
 } from '../data.js';
-import { computeBalance, computeSettlements } from '../finance.js';
+import { computeBalance, computeExpenseShares, computeSettlements } from '../finance.js';
 import { showConfirm, showAlert } from '../dialog.js';
 import { guessCategoryFromItem, GAMBLING_CATEGORY } from '../category.js';
 import { navigate } from '../navigation.js';
@@ -130,6 +130,19 @@ export function openEditRecord(r) {
     if (submitBtn) submitBtn.style.display = '';
   }
 
+  const tripAmtGrp = document.getElementById('edit-trip-amount-group');
+  const tripAmtInput = document.getElementById('edit-trip-amount');
+  if (tripAmtGrp && tripAmtInput) {
+    if (isTripSettlement || r.type !== 'tripExpense') {
+      tripAmtGrp.style.display = 'none';
+      tripAmtInput.value = '';
+    } else {
+      tripAmtGrp.style.display = '';
+      const v = parseFloat(r.amount) || 0;
+      tripAmtInput.value = v > 0 ? String(Math.round(v)) : '';
+    }
+  }
+
   const voidBtn = document.getElementById('edit-void-btn');
   if (voidBtn) {
     const canVoid =
@@ -171,8 +184,8 @@ export function openEditRecord(r) {
       const names = r.splitAmong.map(m => esc(String(m))).join('、');
       const trip = r.tripId ? getTripById(r.tripId) : null;
       if (hasCustomSplit) {
-        const lines = r.splitDetails
-          .map(s => `${esc(String(s.name || ''))} NT$${Math.round(parseFloat(s.amount) || 0)}`)
+        const lines = computeExpenseShares(r)
+          .map(s => `${esc(String(s.name || ''))} NT$${Math.round(s.amount)}`)
           .join('、');
         splitHtml = `<div class="edit-summary-split" role="group" aria-label="分攤說明">
           <div class="edit-summary-split-row"><span class="edit-summary-split-k">分攤對象</span><span class="edit-summary-split-v">${names}</span></div>
@@ -180,7 +193,8 @@ export function openEditRecord(r) {
         </div>`;
       } else {
         const n = r.splitAmong.length;
-        const per = Math.round(amt / n);
+        const sh = computeExpenseShares(r);
+        const per = sh.length ? Math.round(sh[0].amount) : Math.round(amt / n);
         const tm = trip?.members?.length ?? 0;
         const fullTrip = tm > 0 && n === tm;
         splitHtml = `<div class="edit-summary-split" role="group" aria-label="分攤說明">
@@ -190,8 +204,13 @@ export function openEditRecord(r) {
       }
     }
 
+    const cnyRaw = parseFloat(r.amountCny);
+    const cnyPart =
+      Number.isFinite(cnyRaw) && cnyRaw > 0
+        ? ` · ¥${cnyRaw.toFixed(2).replace(/\.?0+$/, '')}`
+        : '';
     summary.innerHTML = `<div class="edit-summary-item">${esc(r.item || '—')}</div>`
-      + `<div class="edit-summary-meta">${esc(r.date || '')}${payLine ? ' · ' + payLine : ''}${amt ? ' · NT$' + Math.round(amt) : ''}</div>`
+      + `<div class="edit-summary-meta">${esc(r.date || '')}${payLine ? ' · ' + payLine : ''}${amt ? ' · NT$' + Math.round(amt) : ''}${cnyPart}</div>`
       + splitHtml;
     if (!prefersReducedMotion()) {
       summary.classList.remove('edit-summary--swap');
@@ -238,6 +257,9 @@ export function closeEditRecord() {
   }, 340);
   appState._editRecord = null;
   editPhotoPendingChange = null;
+
+  const tripAmtInp = document.getElementById('edit-trip-amount');
+  if (tripAmtInp) tripAmtInp.value = '';
 
   // Clear preview UI; next openEditRecord will reload stored photo.
   setEditPhotoPreview(null);
@@ -320,6 +342,20 @@ export async function submitEditRecord() {
     toast('離線狀態無法上傳照片，請連上網路後再試');
     return;
   }
+  let tripAmountPatch = {};
+  if (isTrip) {
+    const newAmt = parseMoneyLike(document.getElementById('edit-trip-amount')?.value);
+    if (!Number.isFinite(newAmt) || newAmt <= 0) {
+      toast('請輸入有效的新台幣金額');
+      return;
+    }
+    const origAmt = parseFloat(appState._editRecord.amount) || 0;
+    const amountChanged = Math.abs(origAmt - newAmt) > 1e-6;
+    tripAmountPatch = {
+      amount: newAmt,
+      ...(amountChanged ? { fxFeeNtd: 0 } : {}),
+    };
+  }
   const optimisticRow = {
     type: appState._editRecord.type,
     action: 'edit',
@@ -327,6 +363,7 @@ export async function submitEditRecord() {
     date,
     note,
     category,
+    ...tripAmountPatch,
     ...(hasPhoto ? { photoUrl: photoUrlToSet, photoFileId: '' } : {}),
   };
   const postPayload = {
@@ -336,6 +373,7 @@ export async function submitEditRecord() {
     date,
     note,
     category,
+    ...tripAmountPatch,
     ...(hasPhoto ? { photoDataUrl: photoDataUrlToSend, photoFileId: '' } : {}),
   };
   appState.allRows.push(optimisticRow);

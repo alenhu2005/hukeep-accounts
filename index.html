@@ -31,6 +31,12 @@
   <script>
     // Apply theme immediately to avoid flash
     (function(){ if(localStorage.getItem('theme')==='dark') document.documentElement.classList.add('dark'); })();
+    // 主題色（與 css/accent-themes.css、js/accent-theme.js 同步）
+    (function(){
+      var ids = ['blue','teal','violet','rose','amber','emerald'];
+      var a = localStorage.getItem('accent');
+      document.documentElement.setAttribute('data-accent', ids.indexOf(a) >= 0 ? a : 'blue');
+    })();
   </script>
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/layout.css">
@@ -46,6 +52,7 @@
   <link rel="stylesheet" href="css/overlays-feedback.css">
   <link rel="stylesheet" href="css/sheets-directory.css">
   <link rel="stylesheet" href="css/dark-a11y.css">
+  <link rel="stylesheet" href="css/accent-themes.css">
 </head>
 <body>
 <div id="app">
@@ -81,6 +88,42 @@
     資料已更新
   </div>
 
+  <!-- 主題色 -->
+  <div id="accent-menu-overlay" onclick="if(event.target===this)closeAccentMenu()" aria-hidden="true">
+    <div class="accent-menu" role="dialog" aria-modal="true" aria-labelledby="accent-menu-title" onclick="event.stopPropagation()">
+      <div class="accent-menu-header">
+        <h3 id="accent-menu-title">主題色</h3>
+        <button type="button" class="accent-menu-close" onclick="closeAccentMenu()" aria-label="關閉">&times;</button>
+      </div>
+      <div class="accent-menu-grid" role="listbox" aria-label="選擇主題色">
+        <button type="button" class="accent-menu-btn" data-accent-id="blue" role="option" onclick="setAccentTheme('blue')">
+          <span class="accent-swatch" style="background:#3b82f6" aria-hidden="true"></span>
+          標準藍
+        </button>
+        <button type="button" class="accent-menu-btn" data-accent-id="teal" role="option" onclick="setAccentTheme('teal')">
+          <span class="accent-swatch" style="background:#0d9488" aria-hidden="true"></span>
+          青綠
+        </button>
+        <button type="button" class="accent-menu-btn" data-accent-id="violet" role="option" onclick="setAccentTheme('violet')">
+          <span class="accent-swatch" style="background:#7c3aed" aria-hidden="true"></span>
+          紫羅蘭
+        </button>
+        <button type="button" class="accent-menu-btn" data-accent-id="rose" role="option" onclick="setAccentTheme('rose')">
+          <span class="accent-swatch" style="background:#e11d48" aria-hidden="true"></span>
+          玫瑰紅
+        </button>
+        <button type="button" class="accent-menu-btn" data-accent-id="amber" role="option" onclick="setAccentTheme('amber')">
+          <span class="accent-swatch" style="background:#d97706" aria-hidden="true"></span>
+          琥珀
+        </button>
+        <button type="button" class="accent-menu-btn" data-accent-id="emerald" role="option" onclick="setAccentTheme('emerald')">
+          <span class="accent-swatch" style="background:#059669" aria-hidden="true"></span>
+          翠綠
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Edit record dialog -->
   <div id="edit-overlay" onclick="if(event.target===this)closeEditRecord()">
     <div class="edit-dialog" role="dialog" aria-modal="true" aria-labelledby="edit-dialog-title">
@@ -106,6 +149,19 @@
           <option value="賭博">🎰 賭博</option>
           <option value="其他">📦 其他</option>
         </select>
+      </div>
+      <div class="form-group" id="edit-trip-amount-group" style="display:none">
+        <label class="form-label" for="edit-trip-amount">新台幣金額</label>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">若覺得換算或刷卡金額不對，請改為實際新台幣總額</div>
+        <input
+          type="text"
+          id="edit-trip-amount"
+          class="form-input form-input-amount"
+          placeholder="0"
+          inputmode="numeric"
+          enterkeyhint="done"
+          aria-label="出遊消費新台幣金額"
+        >
       </div>
       <div class="form-group" id="edit-note-photo-group">
         <label class="form-label">備注</label>
@@ -202,9 +258,9 @@
   <!-- ═══════════════ PAGE: 日常 ═══════════════ -->
   <div id="page-home" class="page active">
     <header class="header">
-      <div class="header-icon">
-        <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-      </div>
+      <button type="button" class="header-icon" onclick="toggleAccentMenu(event)" title="主題色" aria-label="主題色">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+      </button>
       <h1>記帳本</h1>
       <div class="header-meta" id="home-count">0 筆</div>
       <div class="header-tools">
@@ -338,9 +394,9 @@
   <!-- ═══════════════ PAGE: 出遊列表 ═══════════════ -->
   <div id="page-trips" class="page">
     <header class="header">
-      <div class="header-icon">
-        <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-      </div>
+      <button type="button" class="header-icon" onclick="toggleAccentMenu(event)" title="主題色" aria-label="主題色">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+      </button>
       <h1>出遊記帳</h1>
       <button class="btn btn-primary btn-sm" onclick="showCreateTripForm()">
         <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
@@ -437,9 +493,9 @@
   <!-- ═══════════════ PAGE: 分析 ═══════════════ -->
   <div id="page-analysis" class="page">
     <header class="header">
-      <div class="header-icon">
-        <svg viewBox="0 0 24 24"><path d="M11 2v20c-5.07-.5-9-4.79-9-10s3.93-9.5 9-10zm2.03 0v8.99H22c-.47-4.74-4.24-8.52-8.97-8.99zm0 11.01V22c4.74-.47 8.5-4.25 8.97-8.99h-8.97z"/></svg>
-      </div>
+      <button type="button" class="header-icon" onclick="toggleAccentMenu(event)" title="主題色" aria-label="主題色">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 2v20c-5.07-.5-9-4.79-9-10s3.93-9.5 9-10zm2.03 0v8.99H22c-.47-4.74-4.24-8.52-8.97-8.99zm0 11.01V22c4.74-.47 8.5-4.25 8.97-8.99h-8.97z"/></svg>
+      </button>
       <h1>消費分析</h1>
     </header>
     <div id="analysis-content" style="padding:16px 16px 100px"></div>
@@ -512,13 +568,20 @@
               enterkeyhint="next" onkeydown="focusAmountAfterTripItem(event)">
           </div>
           <div class="form-group" id="d-amount-group">
-            <label class="form-label">總金額 (NT$)</label>
-            <input type="text" id="d-amount" class="form-input form-input-amount" placeholder="0"
-              lang="en" spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off"
-              inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" aria-label="總金額"
-              onfocus="beginDetailTotalEdit()"
-              onblur="endDetailTotalEdit()"
-              oninput="handleDetailTotalInput(this.value)">
+            <label class="form-label" id="d-amount-label">總金額</label>
+            <input type="hidden" id="d-cny-rate" value="" aria-hidden="true">
+            <div class="detail-amount-row">
+              <input type="text" id="d-amount" class="form-input form-input-amount detail-amount-input" placeholder="0"
+                lang="en" spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off"
+                inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" aria-label="金額（新台幣）"
+                onfocus="beginDetailTotalEdit()"
+                onblur="endDetailTotalEdit()"
+                oninput="handleDetailTotalInput(this.value)">
+              <div id="d-amount-currency-wrap" class="detail-amount-currency-wrap" style="display:none">
+                <button type="button" id="d-currency-toggle" class="detail-currency-toggle" onclick="toggleDetailAmountCurrency()">NT$</button>
+              </div>
+              <span id="d-cny-rate-inline" class="detail-cny-rate-inline" style="display:none" aria-live="polite"></span>
+            </div>
           </div>
           <div class="form-group">
             <label class="form-label" style="display:flex;justify-content:space-between;align-items:center">

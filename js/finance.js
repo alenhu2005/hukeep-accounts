@@ -1,21 +1,44 @@
 import { USER_A, USER_B } from './config.js';
 import { GAMBLING_CATEGORY } from './category.js';
 
-function computeExpenseShares(expense) {
+/** 出遊消費：匯差／手續費（新台幣），>0 才視為有效 */
+export function tripExpenseFxFeeNtd(e) {
+  const fx = parseFloat(e?.fxFeeNtd);
+  return Number.isFinite(fx) && fx > 0 ? fx : 0;
+}
+
+export function tripExpenseBillNtd(e) {
+  return (parseFloat(e?.amount) || 0) + tripExpenseFxFeeNtd(e);
+}
+
+/**
+ * 每人分攤金額（新台幣）；詳細分攤時依原比例放大至「消費＋匯差手續費」。
+ * @param {{ amount?: number|string; fxFeeNtd?: number|string; splitAmong?: string[]; splitDetails?: { name?: string; amount?: number|string }[] }} expense
+ */
+export function computeExpenseShares(expense) {
+  const baseAmt = parseFloat(expense.amount) || 0;
+  const fee = tripExpenseFxFeeNtd(expense);
+  const bill = baseAmt + fee;
   const details = Array.isArray(expense.splitDetails)
     ? expense.splitDetails
-      .map(d => ({
-        name: String(d?.name || '').trim(),
-        amount: parseFloat(d?.amount) || 0,
-      }))
-      .filter(d => d.name && d.amount > 0.0001)
+        .map(d => ({
+          name: String(d?.name || '').trim(),
+          amount: parseFloat(d?.amount) || 0,
+        }))
+        .filter(d => d.name && d.amount > 0.0001)
     : [];
   if (details.length > 0) {
-    return details;
+    const baseSum = details.reduce((s, d) => s + d.amount, 0);
+    if (baseSum > 0.0001) {
+      return details.map(d => ({
+        name: d.name,
+        amount: (d.amount * bill) / baseSum,
+      }));
+    }
   }
   const splitAmong = Array.isArray(expense.splitAmong) ? expense.splitAmong : [];
   const n = splitAmong.length || 1;
-  const share = (parseFloat(expense.amount) || 0) / n;
+  const share = bill / n;
   return splitAmong.map(name => ({ name, amount: share }));
 }
 
@@ -64,6 +87,8 @@ export function computeSettlements(members, expenses, adjustments = []) {
   });
   for (const e of expenses.filter(x => !x._voided)) {
     const shares = computeExpenseShares(e);
+    const fee = tripExpenseFxFeeNtd(e);
+    const baseAmt = parseFloat(e.amount) || 0;
     const payerRows =
       e.payers && Array.isArray(e.payers)
         ? e.payers.filter(
@@ -71,12 +96,21 @@ export function computeSettlements(members, expenses, adjustments = []) {
           )
         : [];
     if (payerRows.length > 0) {
-      for (const p of payerRows) {
-        const n = String(p.name).trim();
-        bal[n] = (bal[n] || 0) + (parseFloat(p.amount) || 0);
+      const paidTotal = payerRows.reduce((s, p) => s + (parseFloat(p.amount) || 0), 0);
+      if (paidTotal > 0.0001) {
+        for (const p of payerRows) {
+          const n = String(p.name).trim();
+          const pa = parseFloat(p.amount) || 0;
+          bal[n] = (bal[n] || 0) + pa + fee * (pa / paidTotal);
+        }
+      } else {
+        const names = payerRows.map(p => String(p.name || '').trim()).filter(Boolean);
+        const k = names.length || 1;
+        const add = fee / k;
+        for (const n of names) bal[n] = (bal[n] || 0) + add;
       }
     } else if (e.paidBy && e.paidBy !== '多人') {
-      bal[e.paidBy] = (bal[e.paidBy] || 0) + e.amount;
+      bal[e.paidBy] = (bal[e.paidBy] || 0) + baseAmt + fee;
     }
     for (const s of shares) {
       bal[s.name] = (bal[s.name] || 0) - s.amount;
@@ -112,15 +146,28 @@ export function computePayerTotals(expenses) {
   const totals = {};
   for (const e of expenses) {
     if (e._voided) continue;
+    const fee = tripExpenseFxFeeNtd(e);
+    const baseAmt = parseFloat(e.amount) || 0;
     if (e.payers && Array.isArray(e.payers)) {
-      for (const p of e.payers) {
-        const n = p && String(p.name || '').trim();
-        if (!n || (parseFloat(p.amount) || 0) <= 0) continue;
-        totals[n] = (totals[n] || 0) + (parseFloat(p.amount) || 0);
+      const payerRows = e.payers.filter(
+        p => p && String(p.name || '').trim() && (parseFloat(p.amount) || 0) > 0.0001,
+      );
+      const paidTotal = payerRows.reduce((s, p) => s + (parseFloat(p.amount) || 0), 0);
+      if (payerRows.length > 0 && paidTotal > 0.0001) {
+        for (const p of payerRows) {
+          const n = String(p.name).trim();
+          const pa = parseFloat(p.amount) || 0;
+          totals[n] = (totals[n] || 0) + pa + fee * (pa / paidTotal);
+        }
+      } else if (payerRows.length > 0) {
+        const names = payerRows.map(p => String(p.name || '').trim()).filter(Boolean);
+        const k = names.length || 1;
+        const add = fee / k;
+        for (const n of names) totals[n] = (totals[n] || 0) + add;
       }
     } else if (e.paidBy && e.paidBy !== '多人') {
       const n = e.paidBy;
-      totals[n] = (totals[n] || 0) + (parseFloat(e.amount) || 0);
+      totals[n] = (totals[n] || 0) + baseAmt + fee;
     }
   }
   return totals;
@@ -147,7 +194,7 @@ export function computeTripDaySubtotals(expenses) {
     if (e._voided) continue;
     const d = e.date || '（無日期）';
     if (!byDay[d]) byDay[d] = 0;
-    byDay[d] += e.amount;
+    byDay[d] += (parseFloat(e.amount) || 0) + tripExpenseFxFeeNtd(e);
   }
   return byDay;
 }
@@ -219,15 +266,28 @@ export function computeTripGamblingWinLoseByMember(expenses) {
     for (const s of shares) {
       shareMap[s.name] = (shareMap[s.name] || 0) + s.amount;
     }
+    const fee = tripExpenseFxFeeNtd(e);
+    const baseAmt = parseFloat(e.amount) || 0;
     const payerMap = {};
     if (e.payers && Array.isArray(e.payers)) {
-      for (const p of e.payers) {
-        const n = p && String(p.name || '').trim();
-        if (!n) continue;
-        payerMap[n] = (payerMap[n] || 0) + (parseFloat(p.amount) || 0);
+      const payerRows = e.payers.filter(
+        p => p && String(p.name || '').trim() && (parseFloat(p.amount) || 0) > 0.0001,
+      );
+      const paidTotal = payerRows.reduce((s, p) => s + (parseFloat(p.amount) || 0), 0);
+      if (payerRows.length > 0 && paidTotal > 0.0001) {
+        for (const p of payerRows) {
+          const n = String(p.name).trim();
+          const pa = parseFloat(p.amount) || 0;
+          payerMap[n] = (payerMap[n] || 0) + pa + fee * (pa / paidTotal);
+        }
+      } else {
+        const names = payerRows.map(p => String(p.name || '').trim()).filter(Boolean);
+        const k = names.length || 1;
+        const add = fee / k;
+        for (const n of names) payerMap[n] = (payerMap[n] || 0) + add;
       }
     } else if (e.paidBy && e.paidBy !== '多人') {
-      payerMap[e.paidBy] = (payerMap[e.paidBy] || 0) + (parseFloat(e.amount) || 0);
+      payerMap[e.paidBy] = (payerMap[e.paidBy] || 0) + baseAmt + fee;
     }
     const names = new Set([...Object.keys(payerMap), ...Object.keys(shareMap)]);
     for (const n of names) {

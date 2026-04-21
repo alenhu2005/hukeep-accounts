@@ -10,13 +10,23 @@ import {
   isHiddenMemberColorId,
   getHiddenMemberStyleKey,
 } from './data.js';
-import { computeSettlements } from './finance.js';
+import { computeExpenseShares, computeSettlements, tripExpenseBillNtd, tripExpenseFxFeeNtd } from './finance.js';
 import { categoryBadgeHTML } from './category.js';
-import { esc, jq, jqAttr, memberToneClass, memberToneVars, prefersReducedMotion, bindScrollReveal } from './utils.js';
+import { esc, jq, jqAttr, memberToneClass, memberToneVars, prefersReducedMotion, bindScrollReveal, toast } from './utils.js';
 import { emptyHTML } from './views-shared.js';
 import { navigate } from './navigation.js';
 import { addDaysTaipei, compareDateStr, normalizeDate, todayStr, weekdayTaipeiSundayZero } from './time.js';
 import { renderTripLotteryCard } from './trip-lottery.js';
+import {
+  hydrateTripCnyRateInput,
+  isTripCnyModeEnabled,
+  enableTripCnyModePermanent,
+  getDetailAmountNt,
+  setDetailAmountFromNt,
+  syncDetailAmountCurrencyToggleUi,
+  updateCnyRateInlineDisplay,
+} from './trip-cny-rate.js';
+import { showConfirm } from './dialog.js';
 
 let tripSettleAnimGen = 0;
 
@@ -51,6 +61,7 @@ export function resetTripDetailAmountDraft(opts = {}) {
   if (totalEl && !keepTotal) {
     totalEl.value = '';
   }
+  if (!keepTotal) appState.detailAmountCurrency = 'TWD';
   if (totalEl) {
     totalEl.disabled = false;
     totalEl.classList.remove('split-custom-input--locked');
@@ -210,6 +221,22 @@ function tripPhotoThumb(e) {
   </button>`;
 }
 
+/** 人民幣輔助金額顯示（最多兩位小數、去尾隨 0） */
+function tripExpenseCnyHtml(e) {
+  const c = parseFloat(e.amountCny);
+  if (!Number.isFinite(c) || c <= 0) return '';
+  const t = c.toFixed(2).replace(/\.?0+$/, '');
+  const mute = e._voided ? '' : 'color:var(--text-muted);';
+  return `<div style="font-size:13px;font-weight:600;margin-top:2px;${mute}">¥${t}</div>`;
+}
+
+function tripExpenseFxFeeHtml(e) {
+  const fee = tripExpenseFxFeeNtd(e);
+  if (fee <= 0) return '';
+  const mute = e._voided ? '' : 'color:var(--text-muted);';
+  return `<div style="font-size:12px;font-weight:600;margin-top:2px;${mute}">手續／匯差 NT$${Math.round(fee)}</div>`;
+}
+
 function tripExpenseHTML(e, totalMembers, recordIndex = 0) {
   const ri = `--record-i:${recordIndex};`;
   const hasCustomSplit = Array.isArray(e.splitDetails) && e.splitDetails.length > 0;
@@ -219,13 +246,14 @@ function tripExpenseHTML(e, totalMembers, recordIndex = 0) {
   const noteEl = e.note ? `<div class="record-note">${esc(e.note)}</div>` : '';
   const clickAttr = e._voided ? '' : `onclick='openEditRecordById(${jq(e.id)},true)' style="cursor:pointer" title="點擊編輯"`;
   const photoEl = tripPhotoThumb(e);
+  const shareLines = computeExpenseShares(e);
   const splitMeta = hasCustomSplit
-    ? e.splitDetails.map(s => `${esc(s.name)} NT$${Math.round(parseFloat(s.amount) || 0)}`).join('、')
+    ? shareLines.map(s => `${esc(s.name)} NT$${Math.round(s.amount)}`).join('、')
     : '';
 
   if (e.payers && Array.isArray(e.payers)) {
     const payerStr = e.payers.map(p => `${esc(p.name)} NT$${Math.round(p.amount)}`).join(' ＋ ');
-    const perPerson = Math.round(e.amount / (e.splitAmong.length || 1));
+    const perPerson = shareLines.length ? Math.round(shareLines[0].amount) : 0;
     return `<div class="record-item${e._voided ? ' is-voided' : ''}" style="${ri}">
       ${tripRecordAvatar('多', 'multi')}
       <div class="record-info" ${clickAttr}>
@@ -238,7 +266,7 @@ function tripExpenseHTML(e, totalMembers, recordIndex = 0) {
         ${noteEl}
       </div>
       ${photoEl}
-      <div class="record-amount" style="${e._voided ? 'color:#9ca3af;text-decoration:line-through' : ''}">NT$${Math.round(e.amount)}</div>
+      <div class="record-amount" style="${e._voided ? 'color:#9ca3af;text-decoration:line-through' : ''}"><div>NT$${Math.round(e.amount)}</div>${tripExpenseFxFeeHtml(e)}${tripExpenseCnyHtml(e)}</div>
     </div>`;
   }
 
@@ -250,11 +278,11 @@ function tripExpenseHTML(e, totalMembers, recordIndex = 0) {
         <span class="badge${e._voided ? ' badge-void' : ''}">${e._voided ? '已撤回' : esc(label)}</span>
         ${categoryBadgeHTML(e.category)}
       </div>
-      <div class="record-meta">${esc(e.date)} · ${esc(e.paidBy)}付${hasCustomSplit ? ` · ${splitMeta}` : ` · 每人 NT$${Math.round(e.amount / (e.splitAmong.length || 1))}`}</div>
+      <div class="record-meta">${esc(e.date)} · ${esc(e.paidBy)}付${hasCustomSplit ? ` · ${splitMeta}` : ` · 每人 NT$${shareLines.length ? Math.round(shareLines[0].amount) : 0}`}</div>
       ${noteEl}
     </div>
     ${photoEl}
-    <div class="record-amount" style="${e._voided ? 'color:#9ca3af;text-decoration:line-through' : ''}">NT$${Math.round(e.amount)}</div>
+    <div class="record-amount" style="${e._voided ? 'color:#9ca3af;text-decoration:line-through' : ''}"><div>NT$${Math.round(e.amount)}</div>${tripExpenseFxFeeHtml(e)}${tripExpenseCnyHtml(e)}</div>
   </div>`;
 }
 
@@ -481,7 +509,7 @@ function buildTripExpensesByDayHTML(expenses, settlements, trip, allRows, filter
       for (const item of list) flatItems.push(item);
     }
     const totalCount = flatItems.length;
-    const totalSub = expenses.filter(e => !e._voided).reduce((s, e) => s + e.amount, 0);
+    const totalSub = expenses.filter(e => !e._voided).reduce((s, e) => s + tripExpenseBillNtd(e), 0);
     const subLabel = `小計 NT$${Math.round(totalSub).toLocaleString()}`;
     return `
     <div class="trip-day-group trip-day-group--all" style="--day-i:0">
@@ -506,7 +534,7 @@ function buildTripExpensesByDayHTML(expenses, settlements, trip, allRows, filter
       const list = byDay[d];
       sortDayList(list);
       const expensesOnly = list.filter(x => x.kind === 'expense').map(x => x.data);
-      const sub = expensesOnly.filter(e => !e._voided).reduce((s, e) => s + e.amount, 0);
+      const sub = expensesOnly.filter(e => !e._voided).reduce((s, e) => s + tripExpenseBillNtd(e), 0);
       const subLabel = `小計 NT$${Math.round(sub).toLocaleString()}`;
       return `
     <div class="trip-day-group" style="--day-i:${dayIdx}">
@@ -639,7 +667,7 @@ export function renderSplitCustomList() {
   }
   const members = appState.detailSplitAmong.slice();
   const touchedMap = appState.detailSplitTouched || {};
-  const totalVal = parseMoneyLike(document.getElementById('d-amount')?.value);
+  const totalVal = getDetailAmountNt();
   // Treat "total has value" as ready even if total wasn't the last interacted field.
   const totalReady = totalVal > 0 || (appState.detailMultiPay && totalVal > 0);
   const active = document.activeElement;
@@ -735,7 +763,7 @@ function renderSettlement(members, expenses, trip) {
     : [];
   const settlements = computeSettlements(members, active, adjustments);
   const dueSettlements = settlements.filter(s => Math.round(parseFloat(s.amount) || 0) > 0);
-  const total = active.reduce((s, e) => s + e.amount, 0);
+  const total = active.reduce((s, e) => s + tripExpenseBillNtd(e), 0);
 
   if (dueSettlements.length === 0) {
     bar.className = 'balance-bar';
@@ -810,12 +838,12 @@ function updatePerPerson() {
     // In multi-pay mode we still need split (custom) locking/autofill.
     updateMultiPayTotal();
   }
-  const a = parseFloat(document.getElementById('d-amount').value) || 0;
+  const a = getDetailAmountNt();
   const note = document.getElementById('d-per-person');
   if (appState.detailSplitMode === 'custom') {
     if (note) note.textContent = '';
     const totalEl = document.getElementById('d-amount');
-    const total = parseMoneyLike(totalEl?.value);
+    const total = getDetailAmountNt();
     const members = appState.detailSplitAmong.slice();
     // Treat "total has value" as ready even if total wasn't the last interacted field.
     const totalReady = total > 0 || (appState.detailMultiPay && total > 0);
@@ -850,7 +878,7 @@ function updatePerPerson() {
         return s + (Number.isFinite(v) ? v : 0);
       }, 0);
       if (sumFromState > 0) {
-        totalEl.value = String(Math.round(sumFromState));
+        setDetailAmountFromNt(Math.round(sumFromState));
         appState.detailSplitTotalTouched = false;
         appState.detailSplitTotalDerived = true;
       }
@@ -926,7 +954,7 @@ function updatePerPerson() {
 
     // If total is the locked/unfilled one, keep it synced to member split sum.
     if (totalEl && lock === 'total' && active !== totalEl) {
-      totalEl.value = String(Math.round(sum));
+      setDetailAmountFromNt(Math.round(sum));
     }
 
     return;
@@ -955,7 +983,7 @@ function updateMultiPayTotal() {
     .filter(r => r.name);
 
   const totalEl = document.getElementById('d-amount');
-  const totalVal = parseMoneyLike(totalEl?.value);
+  const totalVal = getDetailAmountNt();
 
   const sumPayers = payerRows.reduce((s, r) => s + r.amount, 0);
 
@@ -1005,7 +1033,7 @@ function updateMultiPayTotal() {
   if (lockTarget === 'total' && totalEl) {
     if (active !== totalEl) {
       // If user hasn't provided total, keep it synced to payer sum.
-      totalEl.value = sumPayers > 0 ? String(Math.round(sumPayers)) : '';
+      setDetailAmountFromNt(sumPayers > 0 ? Math.round(sumPayers) : 0);
       // Only disable when we're in auto-total mode (user did not provide total).
       const autoTotal = !userProvidedTotal;
       totalEl.disabled = autoTotal;
@@ -1068,6 +1096,62 @@ export function clearTripHistoryDayFilter() {
   renderTripDetail();
 }
 
+/** 長按頂欄行程名：確認後永久開啟此行程的人民幣模式（不可關閉） */
+function bindTripDetailNameCnyModeLongPress(nameEl, trip) {
+  if (!nameEl || !trip) return;
+  const cnyOn = isTripCnyModeEnabled(trip.id);
+  const key = `${trip.id}-${trip._closed ? 'c' : 'o'}-${cnyOn ? 'on' : 'off'}`;
+  if (nameEl.dataset.cnyLongpressKey === key) return;
+  nameEl.dataset.cnyLongpressKey = key;
+  nameEl._cnyLongpressAbort?.abort();
+  const ac = new AbortController();
+  nameEl._cnyLongpressAbort = ac;
+
+  nameEl.classList.toggle('detail-name--cny-longpress', !trip._closed && !cnyOn);
+
+  let timer = null;
+  const clearTimer = () => {
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+    }
+  };
+  const run = () => {
+    clearTimer();
+    if (trip._closed || isTripCnyModeEnabled(trip.id)) return;
+    void (async () => {
+      const ok = await showConfirm(
+        '開啟人民幣模式？',
+        '此行程將永久顯示「人民幣／參考匯率」欄位，並與新台幣互相換算。開啟後無法關閉。',
+      );
+      if (!ok) return;
+      enableTripCnyModePermanent(trip.id);
+      toast('已開啟人民幣模式');
+      renderTripDetail();
+    })();
+  };
+  const start = () => {
+    if (trip._closed || isTripCnyModeEnabled(trip.id)) return;
+    clearTimer();
+    timer = setTimeout(run, 650);
+  };
+
+  nameEl.addEventListener('touchstart', start, { signal: ac.signal, passive: true });
+  nameEl.addEventListener('touchend', clearTimer, { signal: ac.signal });
+  nameEl.addEventListener('touchcancel', clearTimer, { signal: ac.signal });
+  nameEl.addEventListener('mousedown', start, { signal: ac.signal });
+  nameEl.addEventListener('mouseup', clearTimer, { signal: ac.signal });
+  nameEl.addEventListener('mouseleave', clearTimer, { signal: ac.signal });
+  nameEl.addEventListener(
+    'contextmenu',
+    e => {
+      if (trip._closed || isTripCnyModeEnabled(trip.id)) return;
+      e.preventDefault();
+    },
+    { signal: ac.signal },
+  );
+}
+
 export function renderTripDetail() {
   const trip = getTripById(appState.currentTripId);
   if (!trip) {
@@ -1084,7 +1168,33 @@ export function renderTripDetail() {
   appState._tripExpenseCache = expenses;
   appState._tripSettlementCache = settlements;
 
-  document.getElementById('detail-name').textContent = trip.name;
+  const nameEl = document.getElementById('detail-name');
+  if (nameEl) {
+    nameEl.textContent = trip.name;
+    bindTripDetailNameCnyModeLongPress(nameEl, trip);
+    if (isTripCnyModeEnabled(trip.id)) nameEl.removeAttribute('title');
+    else if (!trip._closed) nameEl.title = '長按行程名稱可開啟人民幣模式（開啟後無法關閉）';
+    else nameEl.removeAttribute('title');
+  }
+  const cnyOn = isTripCnyModeEnabled(trip.id);
+  if (!cnyOn) appState.detailAmountCurrency = 'TWD';
+  const ccyWrap = document.getElementById('d-amount-currency-wrap');
+  const rateInline = document.getElementById('d-cny-rate-inline');
+  if (ccyWrap) ccyWrap.style.display = cnyOn ? '' : 'none';
+  if (rateInline) rateInline.style.display = cnyOn ? '' : 'none';
+  if (cnyOn) {
+    syncDetailAmountCurrencyToggleUi();
+    updateCnyRateInlineDisplay();
+  }
+  const amtInp = document.getElementById('d-amount');
+  if (amtInp && cnyOn) {
+    amtInp.setAttribute('inputmode', appState.detailAmountCurrency === 'CNY' ? 'decimal' : 'numeric');
+    amtInp.setAttribute('aria-label', appState.detailAmountCurrency === 'CNY' ? '金額（人民幣）' : '金額（新台幣）');
+  } else if (amtInp) {
+    amtInp.setAttribute('inputmode', 'numeric');
+    amtInp.setAttribute('aria-label', '金額（新台幣）');
+  }
+
   const activeTotal = expenses.filter(e => !e._voided).length;
   document.getElementById('detail-count').textContent = `有效 ${activeTotal} 筆`;
 
@@ -1223,6 +1333,13 @@ export function syncDetailTripFormLabels() {
   if (gambleBtn) {
     gambleBtn.classList.toggle('d-gambling-toggle--on', !!g);
     gambleBtn.setAttribute('aria-pressed', g ? 'true' : 'false');
+  }
+  if (isTripCnyModeEnabled(appState.currentTripId)) {
+    hydrateTripCnyRateInput();
+    import('./actions/trip-form.js').then(m => {
+      m.applyTripCnyToTwd();
+      void m.refreshTripLiveCnyRateUi({ force: false });
+    });
   }
 }
 

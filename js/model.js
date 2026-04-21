@@ -63,6 +63,8 @@ import { normalizeDate } from './time.js';
  * @property {string} [date]
  * @property {string} [note]
  * @property {string} [category]
+ * @property {string|number} [amountCny] — 選填；輔助紀錄人民幣，分帳仍以 amount（新台幣）為準
+ * @property {string|number} [fxFeeNtd] — 選填；舊資料／表單補登之匯差手續（新台幣），併入分攤；編輯若變更 amount 則會清除
  * @property {Array<{name:string,amount:number|string}>|string|null} [payers]
  * @property {boolean} [_voided]
  */
@@ -134,6 +136,20 @@ export function normalizeRow(r) {
       } catch {
         r.splitDetails = null;
       }
+    }
+    if (r.amountCny != null && String(r.amountCny).trim() !== '') {
+      const cny = parseFloat(r.amountCny);
+      if (Number.isFinite(cny) && cny > 0) r.amountCny = cny;
+      else delete r.amountCny;
+    } else {
+      delete r.amountCny;
+    }
+    if (r.fxFeeNtd != null && String(r.fxFeeNtd).trim() !== '') {
+      const fx = parseFloat(r.fxFeeNtd);
+      if (Number.isFinite(fx) && fx > 0) r.fxFeeNtd = fx;
+      else delete r.fxFeeNtd;
+    } else {
+      delete r.fxFeeNtd;
     }
   } else if (r.type === 'tripSettlement') {
     r.tripId = r.tripId ?? '';

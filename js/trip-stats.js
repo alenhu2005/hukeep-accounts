@@ -2,6 +2,8 @@ import {
   computeMemberShareTotals,
   computePayerTotals,
   computeSettlements,
+  tripExpenseBillNtd,
+  tripExpenseFxFeeNtd,
   computeTripDaySubtotals,
   computeTripGamblingWinLoseByMember,
 } from './finance.js';
@@ -51,10 +53,12 @@ export function renderTripStatsCard(members, expenses, opts = {}) {
     return `<div class="card-body trip-stats-body"><div class="payer-stats-empty">有效消費為 0（${voidCount} 筆已撤回）</div></div>`;
   }
 
-  const totalSpend = active.reduce((s, e) => s + e.amount, 0);
-  const generalSpend = generalOnly.reduce((s, e) => s + e.amount, 0);
+  const totalSpend = active.reduce((s, e) => s + tripExpenseBillNtd(e), 0);
+  const generalSpend = generalOnly.reduce((s, e) => s + tripExpenseBillNtd(e), 0);
   const gambleSpendSum = Math.round(
-    active.filter(e => e.category === GAMBLING_CATEGORY).reduce((s, e) => s + (parseFloat(e.amount) || 0), 0),
+    active
+      .filter(e => e.category === GAMBLING_CATEGORY)
+      .reduce((s, e) => s + (parseFloat(e.amount) || 0) + tripExpenseFxFeeNtd(e), 0),
   );
 
   const payers = computePayerTotals(generalOnly);
@@ -79,7 +83,7 @@ export function renderTripStatsCard(members, expenses, opts = {}) {
 
   const catTotals = {};
   for (const e of active) {
-    const a = parseFloat(e.amount) || 0;
+    const a = tripExpenseBillNtd(e);
     const cat = e.category || '未分類';
     catTotals[cat] = (catTotals[cat] || 0) + a;
   }
@@ -304,8 +308,8 @@ export function renderTripStatsCard(members, expenses, opts = {}) {
 export function buildTripSettlementSummaryText(trip, expenses) {
   const voidCount = expenses.filter(e => e._voided).length;
   const { active: nonVoid, generalOnly, hasGambling } = tripStatsExpenseSplit(expenses);
-  const total = nonVoid.reduce((s, e) => s + e.amount, 0);
-  const generalTotal = generalOnly.reduce((s, e) => s + e.amount, 0);
+  const total = nonVoid.reduce((s, e) => s + tripExpenseBillNtd(e), 0);
+  const generalTotal = generalOnly.reduce((s, e) => s + tripExpenseBillNtd(e), 0);
 
   const payers = computePayerTotals(generalOnly);
   const share = computeMemberShareTotals(trip.members, generalOnly);

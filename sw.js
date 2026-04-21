@@ -1,5 +1,5 @@
 // Bump this to force clients to refresh cached assets.
-const CACHE_NAME = 'ledger-v52';
+const CACHE_NAME = 'ledger-v53';
 
 const STATIC_ASSETS = [
   './',
@@ -18,6 +18,7 @@ const STATIC_ASSETS = [
   './css/overlays-feedback.css',
   './css/sheets-directory.css',
   './css/dark-a11y.css',
+  './css/accent-themes.css',
   './manifest.json',
   './js/main.js',
   './js/bootstrap.js',
@@ -39,6 +40,7 @@ const STATIC_ASSETS = [
   './js/actions/shared.js',
   './js/actions/home-daily.js',
   './js/actions/trip-form.js',
+  './js/trip-cny-rate.js',
   './js/actions/trips-members.js',
   './js/actions/trip-expense.js',
   './js/actions/edit.js',
@@ -55,6 +57,7 @@ const STATIC_ASSETS = [
   './js/pie-chart.js',
   './js/category.js',
   './js/theme.js',
+  './js/accent-theme.js',
   './js/dialog.js',
   './js/dialog-a11y.js',
   './js/amount-input.js',
