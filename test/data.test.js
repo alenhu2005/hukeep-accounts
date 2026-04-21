@@ -235,6 +235,33 @@ describe('getTripExpensesFromRows', () => {
     expect(ex[0].category).toBe('交通');
   });
 
+  it('tripExpense edit 僅改金額且 category 為空字串時不沖掉原分類（試算表常見）', () => {
+    const rows = [
+      {
+        type: 'tripExpense',
+        action: 'add',
+        id: 'e-blank-cat',
+        tripId: 't1',
+        category: '餐飲',
+        amount: '200',
+        paidBy: '甲',
+        splitAmong: '["甲","乙"]',
+        date: '2024-04-01',
+        item: '午餐',
+      },
+      {
+        type: 'tripExpense',
+        action: 'edit',
+        id: 'e-blank-cat',
+        date: '2024-04-02',
+        amount: '250',
+        category: '',
+      },
+    ];
+    const ex = getTripExpensesFromRows('t1', rows);
+    expect(ex[0].category).toBe('餐飲');
+  });
+
   it('tripExpense edit 可補登／覆寫 fxFeeNtd，0 則清除', () => {
     const rows = [
       {

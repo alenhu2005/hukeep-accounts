@@ -100,7 +100,11 @@ export function normalizeRow(r) {
     if (r.action === 'edit') {
       if ('category' in r) {
         const v = r.category;
-        r.category = v == null || v === '' ? '' : String(v).trim();
+        if (v == null || (typeof v === 'string' && v.trim() === '')) {
+          delete r.category;
+        } else {
+          r.category = String(v).trim();
+        }
       } else {
         delete r.category;
       }
@@ -138,7 +142,11 @@ export function normalizeRow(r) {
     if (r.action === 'edit') {
       if ('category' in r) {
         const v = r.category;
-        r.category = v == null || v === '' ? '' : String(v).trim();
+        if (v == null || (typeof v === 'string' && v.trim() === '')) {
+          delete r.category;
+        } else {
+          r.category = String(v).trim();
+        }
       } else {
         delete r.category;
       }

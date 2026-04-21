@@ -40,7 +40,7 @@ export function getDailyRecordsFromRows(allRows) {
       note: e.note ?? '',
       ...(e.photoUrl !== undefined ? { photoUrl: e.photoUrl } : {}),
       ...(e.photoFileId !== undefined ? { photoFileId: e.photoFileId } : {}),
-      ...(e.category !== undefined ? { category: e.category } : {}),
+      ...(String(e.category ?? '').trim() !== '' ? { category: String(e.category).trim() } : {}),
     };
   }
   const adds = dedupeLedgerAddsById(
@@ -141,7 +141,7 @@ export function getTripExpensesFromRows(tripId, allRows) {
       note: e.note ?? '',
       ...(e.photoUrl !== undefined ? { photoUrl: e.photoUrl } : {}),
       ...(e.photoFileId !== undefined ? { photoFileId: e.photoFileId } : {}),
-      ...(e.category !== undefined ? { category: e.category } : {}),
+      ...(String(e.category ?? '').trim() !== '' ? { category: String(e.category).trim() } : {}),
       ...(e.amount !== undefined && e.amount !== null && e.amount !== ''
         ? { amount: Math.max(0, parseFloat(e.amount) || 0) }
         : {}),
