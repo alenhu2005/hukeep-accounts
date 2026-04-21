@@ -18,6 +18,7 @@ import {
   getDailyRecords,
   getTripById,
   getTripExpenses,
+  getTripExpenseAmountRevisionTrail,
   getTripSettlementAdjustmentsFromRows,
   getKnownMemberNames,
   getAvatarUrlByMemberName,
@@ -209,8 +210,30 @@ export function openEditRecord(r) {
       Number.isFinite(cnyRaw) && cnyRaw > 0
         ? ` · ¥${cnyRaw.toFixed(2).replace(/\.?0+$/, '')}`
         : '';
+    let amountRevHtml = '';
+    if (r.type === 'tripExpense' && r.id) {
+      const rev = getTripExpenseAmountRevisionTrail(r.id, appState.allRows);
+      if (rev.length >= 2) {
+        const rows = rev
+          .map((s, i) => {
+            const d = esc(String(s.date || '').slice(0, 10));
+            const delta = i > 0 ? s.amount - rev[i - 1].amount : 0;
+            const deltaHtml =
+              i > 0 && delta !== 0
+                ? ` <span class="edit-summary-amt-rev-delta">${delta > 0 ? '+' : ''}${delta}</span>`
+                : '';
+            return `<div class="edit-summary-amt-rev-row">${d}　NT$${s.amount.toLocaleString()}${deltaHtml}</div>`;
+          })
+          .join('');
+        amountRevHtml = `<div class="edit-summary-amt-rev" role="group" aria-label="金額修訂紀錄">
+          <div class="edit-summary-amt-rev__label">金額修訂紀錄</div>
+          <div class="edit-summary-amt-rev__rows">${rows}</div>
+        </div>`;
+      }
+    }
     summary.innerHTML = `<div class="edit-summary-item">${esc(r.item || '—')}</div>`
       + `<div class="edit-summary-meta">${esc(r.date || '')}${payLine ? ' · ' + payLine : ''}${amt ? ' · NT$' + Math.round(amt) : ''}${cnyPart}</div>`
+      + amountRevHtml
       + splitHtml;
     if (!prefersReducedMotion()) {
       summary.classList.remove('edit-summary--swap');

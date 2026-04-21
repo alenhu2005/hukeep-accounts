@@ -7,6 +7,7 @@ export const GAMBLING_CATEGORY = '賭博';
 export const CATEGORIES = [
   { value: '餐飲', emoji: '🍽', label: '🍽 餐飲' },
   { value: '交通', emoji: '🚌', label: '🚌 交通' },
+  { value: '住宿', emoji: '🛏', label: '🛏 住宿' },
   { value: '購物', emoji: '🛍', label: '🛍 購物' },
   { value: '娛樂', emoji: '🎉', label: '🎉 娛樂' },
   { value: '生活', emoji: '🏠', label: '🏠 生活' },
@@ -17,6 +18,7 @@ export const CATEGORIES = [
 const CATEGORY_STYLE_LIGHT = {
   餐飲: 'background:#fef3c7;color:#92400e',
   交通: 'background:#dbeafe;color:#1e40af',
+  住宿: 'background:#ccfbf1;color:#115e59',
   購物: 'background:#ede9fe;color:#5b21b6',
   娛樂: 'background:#fce7f3;color:#9d174d',
   生活: 'background:#d1fae5;color:#065f46',
@@ -26,6 +28,7 @@ const CATEGORY_STYLE_LIGHT = {
 const CATEGORY_STYLE_DARK = {
   餐飲: 'background:#78350f;color:#fcd34d',
   交通: 'background:#1e3a5f;color:#93c5fd',
+  住宿: 'background:#134e4a;color:#5eead4',
   購物: 'background:#2e1065;color:#c4b5fd',
   娛樂: 'background:#831843;color:#f9a8d4',
   生活: 'background:#064e3b;color:#6ee7b7',
@@ -40,6 +43,27 @@ export const CATEGORY_STYLE = new Proxy({}, {
 });
 
 export const CATEGORY_KEYWORDS = {
+  // 須在「餐飲」之前：避免「飯店」先被「飯」判成餐飲
+  住宿: [
+    '住宿',
+    '飯店',
+    '酒店',
+    '民宿',
+    '旅館',
+    '旅店',
+    '訂房',
+    '青旅',
+    '旅宿',
+    '套房',
+    'motel',
+    'hostel',
+    'hotel',
+    'airbnb',
+    'bnb',
+    '訂飯店',
+    '泡湯',
+    '溫泉旅館',
+  ],
   餐飲: [
     '餐',
     '飯',

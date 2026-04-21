@@ -20,7 +20,7 @@ function getGeminiCategory(item) {
             text:
               '消費項目「' +
               item +
-              '」屬於哪個類別？只能從以下選一個，直接回答詞語：餐飲、交通、購物、娛樂、生活、賭博、其他。' +
+              '」屬於哪個類別？只能從以下選一個，直接回答詞語：餐飲、交通、住宿、購物、娛樂、生活、賭博、其他。' +
               '博弈、撲克、麻將、德州撲克、百家樂、21點、骰子、押注等歸類為賭博。',
           },
         ],
@@ -41,7 +41,7 @@ function getGeminiCategory(item) {
     var parts = body.candidates[0].content.parts;
     var text = parts[parts.length - 1].text.trim();
 
-    var cats = ['餐飲', '交通', '購物', '娛樂', '生活', '賭博', '其他'];
+    var cats = ['餐飲', '交通', '住宿', '購物', '娛樂', '生活', '賭博', '其他'];
     var found = cats.find(function (c) {
       return text.indexOf(c) >= 0;
     });

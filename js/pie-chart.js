@@ -3,6 +3,7 @@ import { esc } from './utils.js';
 export const CAT_PIE_COLORS = {
   餐飲: '#ea580c',
   交通: '#2563eb',
+  住宿: '#0d9488',
   購物: '#7c3aed',
   娛樂: '#db2777',
   生活: '#059669',

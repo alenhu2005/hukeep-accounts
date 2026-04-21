@@ -71,6 +71,26 @@
 }
 .edit-summary-item { font-size: 15px; font-weight: 600; }
 .edit-summary-meta { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+.edit-summary-amt-rev {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.edit-summary-amt-rev__label {
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+.edit-summary-amt-rev__rows { line-height: 1.55; }
+.edit-summary-amt-rev-row { font-variant-numeric: tabular-nums; }
+.edit-summary-amt-rev-delta {
+  margin-left: 4px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
 html.dark .edit-summary {
   background: var(--bg-tertiary);
   border: 1px solid rgba(148, 163, 184, 0.12);

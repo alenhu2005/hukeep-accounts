@@ -198,12 +198,44 @@ export function hydrateTripCnyRateInput() {
   updateCnyRateInlineDisplay();
 }
 
+/**
+ * 由「四捨五入後的台幣」還原輸入框的人民幣字串。
+ * 直接用 nt/rate 會出現 199.999999（浮點）；改為找最短小數位使 round(cny×rate)===nt。
+ */
 function formatCnyInputFromNt(nt, rate) {
   const n = Number(nt) || 0;
   if (n <= 0 || !(rate > 0)) return '';
   const raw = n / rate;
   if (!Number.isFinite(raw) || raw <= 0) return '';
+
+  const ntFromCny = c => Math.round(c * rate);
+
+  for (let d = 0; d <= 4; d++) {
+    const factor = 10 ** d;
+    const c = Math.round(raw * factor) / factor;
+    if (c > 0 && ntFromCny(c) === n) {
+      if (d === 0) return String(c);
+      return c.toFixed(d).replace(/\.?0+$/, '');
+    }
+  }
+
+  const nearInt = Math.round(raw);
+  if (Math.abs(raw - nearInt) < 1e-4) return String(nearInt);
   return raw.toFixed(4).replace(/\.?0+$/, '');
+}
+
+/**
+ * 由新台幣帳面與匯率（1 CNY = rate TWD）推算輔助用人民幣數值，寫入紀錄 `amountCny` 或列表試算。
+ * @param {number|string} ntBill
+ * @param {number} rate
+ * @returns {number}
+ */
+export function cnyAuxAmountFromNtd(ntBill, rate) {
+  const n = Math.round(Number(ntBill) || 0);
+  if (n <= 0 || !(rate > 0)) return 0;
+  const s = formatCnyInputFromNt(n, rate);
+  const v = parseFloat(String(s).replace(/,/g, ''));
+  return Number.isFinite(v) && v > 0 ? v : 0;
 }
 
 /**

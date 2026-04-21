@@ -25,6 +25,9 @@ import {
   setDetailAmountFromNt,
   syncDetailAmountCurrencyToggleUi,
   updateCnyRateInlineDisplay,
+  readLiveCnyCache,
+  readSavedCnyTwdRate,
+  cnyAuxAmountFromNtd,
 } from './trip-cny-rate.js';
 import { showConfirm } from './dialog.js';
 
@@ -224,10 +227,20 @@ function tripPhotoThumb(e) {
   </button>`;
 }
 
-/** 人民幣輔助金額顯示（最多兩位小數、去尾隨 0） */
+/** 人民幣輔助金額：有存檔用存檔；否則人民幣行程下依目前匯率換算（舊台幣帳補顯示） */
 function tripExpenseCnyHtml(e) {
-  const c = parseFloat(e.amountCny);
-  if (!Number.isFinite(c) || c <= 0) return '';
+  let c = parseFloat(e.amountCny);
+  if (!Number.isFinite(c) || c <= 0) {
+    const tid = e.tripId;
+    if (!tid || !isTripCnyModeEnabled(tid)) return '';
+    const live = readLiveCnyCache();
+    const rate = live && live.rate > 0 ? live.rate : readSavedCnyTwdRate();
+    if (!(rate > 0)) return '';
+    const nt = Math.round(parseFloat(e.amount) || 0);
+    if (nt <= 0) return '';
+    c = cnyAuxAmountFromNtd(nt, rate);
+    if (!(c > 0)) return '';
+  }
   const t = c.toFixed(2).replace(/\.?0+$/, '');
   const mute = e._voided ? '' : 'color:var(--text-muted);';
   return `<div style="font-size:13px;font-weight:600;margin-top:2px;${mute}">¥${t}</div>`;
@@ -462,6 +475,19 @@ function tripHistoryStripHTML(range, weekOffset, statsByDate, filterDate, today)
 }
 
 /** 與 allRows 順序一致（較新的列在陣列後方 → 顯示時排在同日前方） */
+/** 歷史紀錄分組小計：人民幣行程時附帶依目前匯率換算之 ¥ */
+function tripHistorySubtotalLabel(ntSub, tripId) {
+  const base = `小計 NT$${Math.round(ntSub).toLocaleString()}`;
+  if (!tripId || !isTripCnyModeEnabled(tripId)) return base;
+  const live = readLiveCnyCache();
+  const rate = live && live.rate > 0 ? live.rate : readSavedCnyTwdRate();
+  if (!(rate > 0) || !(ntSub > 0)) return base;
+  const c = cnyAuxAmountFromNtd(Math.round(ntSub), rate);
+  if (!(c > 0)) return base;
+  const t = c.toFixed(2).replace(/\.?0+$/, '');
+  return `${base} · ¥${t}`;
+}
+
 function buildTripLedgerOrderIndex(tripId, allRows) {
   const idx = new Map();
   allRows.forEach((row, i) => {
@@ -513,7 +539,7 @@ function buildTripExpensesByDayHTML(expenses, settlements, trip, allRows, filter
     }
     const totalCount = flatItems.length;
     const totalSub = expenses.filter(e => !e._voided).reduce((s, e) => s + tripExpenseBillNtd(e), 0);
-    const subLabel = `小計 NT$${Math.round(totalSub).toLocaleString()}`;
+    const subLabel = tripHistorySubtotalLabel(totalSub, trip.id);
     return `
     <div class="trip-day-group trip-day-group--all" style="--day-i:0">
       <div class="trip-day-label">
@@ -538,7 +564,7 @@ function buildTripExpensesByDayHTML(expenses, settlements, trip, allRows, filter
       sortDayList(list);
       const expensesOnly = list.filter(x => x.kind === 'expense').map(x => x.data);
       const sub = expensesOnly.filter(e => !e._voided).reduce((s, e) => s + tripExpenseBillNtd(e), 0);
-      const subLabel = `小計 NT$${Math.round(sub).toLocaleString()}`;
+      const subLabel = tripHistorySubtotalLabel(sub, trip.id);
       return `
     <div class="trip-day-group" style="--day-i:${dayIdx}">
       <div class="trip-day-label">

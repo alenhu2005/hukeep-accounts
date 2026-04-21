@@ -3,12 +3,14 @@ import {
   getDailyRecordsFromRows,
   buildTripFromRows,
   getTripExpensesFromRows,
+  getTripExpenseAmountRevisionTrail,
   getTripPaletteColorId,
   pickRandomTripColorId,
   getHiddenMemberStyleKey,
   HIDDEN_MEMBER_COLORS,
 } from '../js/data.js';
 import { gamblingSplitFromCatTotals, GAMBLING_CATEGORY } from '../js/category.js';
+import { normalizeRow } from '../js/model.js';
 
 describe('getDailyRecordsFromRows', () => {
   it('彙整 add 並套用 void / edit', () => {
@@ -172,6 +174,51 @@ describe('getTripExpensesFromRows', () => {
     ];
     const ex = getTripExpensesFromRows('t1', rows);
     expect(ex[0].amount).toBe(250);
+  });
+
+  it('getTripExpenseAmountRevisionTrail 彙整 add 與 edit 金額', () => {
+    const rows = [
+      {
+        type: 'tripExpense',
+        action: 'add',
+        id: 'e-rev',
+        tripId: 't1',
+        amount: '200',
+        paidBy: '甲',
+        splitAmong: '["甲","乙"]',
+        date: '2026-04-20',
+        item: '測試',
+      },
+      { type: 'tripExpense', action: 'edit', id: 'e-rev', date: '2026-04-21', amount: '250' },
+    ];
+    const trail = getTripExpenseAmountRevisionTrail('e-rev', rows);
+    expect(trail).toEqual([
+      { date: '2026-04-20', amount: 200 },
+      { date: '2026-04-21', amount: 250 },
+    ]);
+  });
+
+  it('tripExpense edit 經正規化後未帶 category 時保留原分類', () => {
+    const edit = { type: 'tripExpense', action: 'edit', id: 'e-cat', date: '2024-05-02', amount: '100' };
+    normalizeRow(edit);
+    expect('category' in edit).toBe(false);
+    const rows = [
+      {
+        type: 'tripExpense',
+        action: 'add',
+        id: 'e-cat',
+        tripId: 't1',
+        category: '交通',
+        amount: '200',
+        paidBy: '甲',
+        splitAmong: '["甲","乙"]',
+        date: '2024-04-01',
+        item: '車票',
+      },
+      edit,
+    ];
+    const ex = getTripExpensesFromRows('t1', rows);
+    expect(ex[0].category).toBe('交通');
   });
 
   it('tripExpense edit 可補登／覆寫 fxFeeNtd，0 則清除', () => {

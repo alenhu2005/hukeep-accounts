@@ -97,7 +97,16 @@ export function normalizeRow(r) {
     r.date = normalizeDate(r.date);
     r.amount = r.amount ?? 0;
     r.note = r.note || '';
-    r.category = typeof r.category === 'string' ? r.category.trim() : '';
+    if (r.action === 'edit') {
+      if ('category' in r) {
+        const v = r.category;
+        r.category = v == null || v === '' ? '' : String(v).trim();
+      } else {
+        delete r.category;
+      }
+    } else {
+      r.category = typeof r.category === 'string' ? r.category.trim() : '';
+    }
   } else if (r.type === 'settlement') {
     r.item = '還款';
     r.paidBy = r.paidBy ?? '';
@@ -122,7 +131,16 @@ export function normalizeRow(r) {
     r.amount = r.amount ?? 0;
     r.date = normalizeDate(r.date);
     r.note = r.note || '';
-    r.category = typeof r.category === 'string' ? r.category.trim() : '';
+    if (r.action === 'edit') {
+      if ('category' in r) {
+        const v = r.category;
+        r.category = v == null || v === '' ? '' : String(v).trim();
+      } else {
+        delete r.category;
+      }
+    } else {
+      r.category = typeof r.category === 'string' ? r.category.trim() : '';
+    }
     if (typeof r.payers === 'string') {
       try {
         r.payers = JSON.parse(r.payers);

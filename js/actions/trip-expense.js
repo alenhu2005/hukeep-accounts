@@ -49,7 +49,12 @@ import {
 import { buildTripSettlementSummaryText } from '../trip-stats.js';
 import { toggleCollapsible } from '../ui-collapsible.js';
 import { undoOptimisticPush, parseMoneyLike, snapshotPendingHomeBalanceFromAbs, fileToJpegDataUrl } from './shared.js';
-import { getDetailAmountNt, isTripCnyModeEnabled, syncDetailAmountCurrencyToggleUi } from '../trip-cny-rate.js';
+import {
+  getDetailAmountNt,
+  isTripCnyModeEnabled,
+  syncDetailAmountCurrencyToggleUi,
+  cnyAuxAmountFromNtd,
+} from '../trip-cny-rate.js';
 
 export async function submitTripExpense() {
   const item = document.getElementById('d-item').value.trim();
@@ -202,12 +207,16 @@ export async function submitTripExpense() {
     category = GAMBLING_CATEGORY;
   }
 
-  const amountCnyVal =
-    isTripCnyModeEnabled(appState.currentTripId) &&
-    appState.detailAmountCurrency === 'CNY' &&
-    getDetailAmountNt() > 0
-      ? parseMoneyLike(document.getElementById('d-amount')?.value)
-      : 0;
+  const cnyTrip = isTripCnyModeEnabled(appState.currentTripId);
+  const rate = parseMoneyLike(document.getElementById('d-cny-rate')?.value);
+  let amountCnyVal = 0;
+  if (cnyTrip && rate > 0 && amount > 0) {
+    if (appState.detailAmountCurrency === 'CNY') {
+      amountCnyVal = parseMoneyLike(document.getElementById('d-amount')?.value);
+    } else {
+      amountCnyVal = cnyAuxAmountFromNtd(amount, rate);
+    }
+  }
 
   const btn = document.getElementById('d-submit');
   btn.disabled = true;
