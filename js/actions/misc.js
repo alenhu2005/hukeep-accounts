@@ -48,7 +48,15 @@ import {
 } from '../views-trip-detail.js';
 import { buildTripSettlementSummaryText } from '../trip-stats.js';
 import { toggleCollapsible } from '../ui-collapsible.js';
-import { undoOptimisticPush, parseMoneyLike, snapshotPendingHomeBalanceFromAbs, fileToJpegDataUrl } from './shared.js';
+import {
+  undoOptimisticPush,
+  parseMoneyLike,
+  snapshotPendingHomeBalanceFromAbs,
+  fileToJpegDataUrl,
+  snapshotRows,
+  restoreRowsSnapshot,
+  applyOptimisticPayload,
+} from './shared.js';
 import { renderMemberDirectory } from './trips-members.js';
 
 // ── Avatar uploader (global, per memberName) ──────────────────────────────
@@ -113,35 +121,33 @@ export async function handleAvatarSelected(ev) {
   }
 
   // Optimistic: 立刻在 UI 顯示，之後下一次同步會用 Drive URL 覆蓋。
-  const optimisticRow = {
+  const payload = {
     type: 'avatar',
     action: 'set',
     id: uid(),
     memberName,
     avatarScope: scope,
-    avatarUrl: dataUrl,
+    avatarDataUrl: dataUrl,
   };
-  appState.allRows.push(optimisticRow);
+  const snapshot = snapshotRows();
+  applyOptimisticPayload(payload);
   if (appState.currentPage === 'home') renderHome();
   else if (appState.currentTripId) renderTripDetail();
   if (document.getElementById('member-dir-panel')?.classList.contains('is-open')) renderMemberDirectory();
 
   try {
-    const pr = await postRow(
-      {
-        type: 'avatar',
-        action: 'set',
-        id: optimisticRow.id,
-        memberName,
-        avatarScope: scope,
-        avatarDataUrl: dataUrl,
-      },
-      // 圖片不上離線佇列：避免 localStorage 容量問題 & 離線顯示不一致
-      { syncTarget: optimisticRow, allowQueue: false },
-    );
+    const syncTarget =
+      appState.allRows.find(
+        r =>
+          r &&
+          r.type === 'avatar' &&
+          r.memberName === memberName &&
+          String(r.avatarScope || 'auto') === String(scope || 'auto'),
+      ) || null;
+    const pr = await postRow(payload, { syncTarget, allowQueue: false });
     toast(pr.status === 'queued' ? '已暫存，連上網路後會自動上傳' : '頭像已更新');
   } catch (e) {
-    undoOptimisticPush(optimisticRow);
+    restoreRowsSnapshot(snapshot);
     if (appState.currentPage === 'home') renderHome();
     else if (appState.currentTripId) renderTripDetail();
     if (document.getElementById('member-dir-panel')?.classList.contains('is-open')) renderMemberDirectory();
@@ -155,4 +161,3 @@ export function openBackupMenu() {
 export function closeBackupMenu() {
   document.getElementById('backup-overlay')?.classList.remove('open');
 }
-

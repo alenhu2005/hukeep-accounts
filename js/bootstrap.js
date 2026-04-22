@@ -1,6 +1,6 @@
 import { POLL_MS } from './config.js';
 import { appState } from './state.js';
-import { loadCache, loadData, flushPostOutbox } from './api.js';
+import { ensureClientStorageSchema, loadCache, loadData, flushPostOutbox } from './api.js';
 import { render } from './render-registry.js';
 import { updateThemeIcon } from './theme.js';
 import { applyAccentMetaFromDom, closeAccentMenu } from './accent-theme.js';
@@ -172,6 +172,7 @@ function initBottomNavTouchNavigate() {
 export async function initApp() {
   updateThemeIcon();
   applyAccentMetaFromDom();
+  ensureClientStorageSchema();
   loadCache();
   updateSyncUI();
 

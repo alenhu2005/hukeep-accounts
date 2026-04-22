@@ -1,235 +1,132 @@
-function getSheet(name) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName(name);
-  if (!sheet) sheet = ss.insertSheet(name);
-  return sheet;
-}
+# GAS 程式碼
 
-function getGeminiCategory(item) {
-  var apiKey = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
-  if (!apiKey || !item) return '';
-  var url =
-    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' +
-    apiKey;
+目前文件版 GAS 已改成和實作版相同的 `current-state + archive` 架構。
 
-  var payload = {
-    contents: [
-      {
-        parts: [
-          {
-            text:
-              '消費項目「' +
-              item +
-              '」屬於哪個類別？只能從以下選一個，直接回答詞語：餐飲、交通、住宿、購物、娛樂、生活、賭博、其他。' +
-              '博弈、撲克、麻將、德州撲克、百家樂、21點、骰子、押注等歸類為賭博。',
-          },
-        ],
-      },
-    ],
-    generationConfig: { maxOutputTokens: 200, temperature: 0, thinkingConfig: { thinkingBudget: 0 } },
-  };
+實際要部署到 Google Apps Script 的來源檔，請以：
 
-  try {
-    var res = UrlFetchApp.fetch(url, {
-      method: 'POST',
-      contentType: 'application/json',
-      payload: JSON.stringify(payload),
-      muteHttpExceptions: true,
-      deadline: 10,
-    });
-    var body = JSON.parse(res.getContentText());
-    var parts = body.candidates[0].content.parts;
-    var text = parts[parts.length - 1].text.trim();
+- [gas/current-state.gs](/Users/alen/Documents/Codex/2026-04-22-github-plugin-github-openai-curated-gthub/hukeep-accounts/gas/current-state.gs)
 
-    var cats = ['餐飲', '交通', '住宿', '購物', '娛樂', '生活', '賭博', '其他'];
-    var found = cats.find(function (c) {
-      return text.indexOf(c) >= 0;
-    });
-    return found || '';
-  } catch (e) {
-    return '';
-  }
-}
+為主。這份文件主要說明工作表結構、行為規則與部署流程，避免文件和實作再次分岐。
 
-/* ===== Drive 圖片上傳 ===== */
-var LEDGER_PHOTO_FOLDER_NAME = 'ledger-app-uploads';
-var LEDGER_PHOTO_SUBFOLDERS_BY_KEY = {
-  photo: 'photos',
-  tripPhoto: 'trip-photos',
-  avatar: 'avatars',
-};
-var MAX_IMAGE_BYTES = 4 * 1024 * 1024;
+## 架構
 
-function ensureRootFolder_() {
-  var folderId = PropertiesService.getScriptProperties().getProperty('PHOTO_FOLDER_ID');
-  if (folderId) {
-    try {
-      return DriveApp.getFolderById(folderId);
-    } catch (e) {
-      // folder ID 失效（已刪除等），改用名稱搜尋或新建
-    }
-  }
+### Active 工作表
 
-  var folders = DriveApp.getRootFolder().getFoldersByName(LEDGER_PHOTO_FOLDER_NAME);
-  if (folders.hasNext()) return folders.next();
-  return DriveApp.getRootFolder().createFolder(LEDGER_PHOTO_FOLDER_NAME);
-}
+- `日常消費`
+- `日常還款`
+- `行程`
+- `出遊消費`
+- `出遊還款`
+- `成員`
+- `頭像`
 
-function ensureSubFolder_(subName) {
-  var root = ensureRootFolder_();
-  if (!subName) return root;
+這些工作表只保留目前有效的 current state。
 
-  var folders = root.getFoldersByName(subName);
-  if (folders.hasNext()) return folders.next();
-  return root.createFolder(subName);
-}
+其中會進入歷史紀錄的帳務資料，若被使用者「撤回」，不會真的刪列，而是直接把 active 列標成 `voided=true`：
 
-function uploadImageDataUrlToDrive_(dataUrl, filePrefix, subFolderName) {
-  if (!dataUrl) return null;
+- `日常消費`
+- `日常還款`
+- `出遊消費`
+- `出遊還款`
 
-  var m = dataUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
-  if (!m) throw new Error('Invalid image DataUrl');
+### Archive 工作表
 
-  var mime = m[1];
-  var b64 = m[2];
-  var bytes = Utilities.base64Decode(b64);
+- `封存_日常事件`
+- `封存_出遊事件`
+- `封存_人物事件`
 
-  if (!bytes || bytes.length <= 0) throw new Error('Empty image bytes');
-  if (bytes.length > MAX_IMAGE_BYTES) throw new Error('Image too large');
+這些工作表保留完整事件歷程。
 
-  var folder = ensureSubFolder_(subFolderName);
-  var ext = mime.split('/')[1] || 'jpg';
-  var fileName = (filePrefix || 'img') + '_' + Utilities.getUuid() + '.' + ext;
+## 行為規則
 
-  var blob = Utilities.newBlob(bytes, mime, fileName);
-  var file = folder.createFile(blob);
+### 新增
 
-  try {
-    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-  } catch (e) {
-    // 權限設定失敗不中斷
-  }
+- `add`：寫入 active 表
+- 同時 append 一筆相同 payload 到 archive 表
 
-  var fileId = file.getId();
-  var url = 'https://lh3.googleusercontent.com/d/' + fileId;
-  return { url: url, fileId: fileId };
-}
+### 編輯
 
-function processAllImageDataUrls_(data) {
-  Object.keys(data).forEach(function (key) {
-    if (!key || key.slice(-7) !== 'DataUrl') return;
+- `edit`：直接覆寫 active 表對應列
+- 同時 append 一筆 `edit` 事件到 archive
 
-    var base = key.slice(0, -7);
-    var dataUrl = data[key];
-    var subFolderName = LEDGER_PHOTO_SUBFOLDERS_BY_KEY[base] || '';
+規則：
 
-    if (!dataUrl) {
-      data[base + 'Url'] = '';
-      data[base + 'FileId'] = '';
-      delete data[key];
-      return;
-    }
+- 金額變更要保留歷史，所以 `tripExpense.amount` 的編輯仍會寫入 archive，供前端查修訂紀錄
+- 備註與分類在 active 內直接覆蓋即可；archive 仍會保留這次 edit 事件，但顯示層目前只取金額歷程
 
-    var uploaded = uploadImageDataUrlToDrive_(dataUrl, base, subFolderName);
-    if (uploaded) {
-      data[base + 'Url'] = uploaded.url;
-      data[base + 'FileId'] = uploaded.fileId;
-      delete data[key];
-    }
-  });
-}
+### 撤回
 
-function doPost(e) {
-  try {
-    var data = JSON.parse(e.postData.contents);
+以下資料只允許撤回，不允許真刪除：
 
-    processAllImageDataUrls_(data);
+- `daily`
+- `settlement`
+- `tripExpense`
+- `tripSettlement`
 
-    var sheetName;
-    if (data.type === 'daily' || data.type === 'settlement') {
-      sheetName = '日常';
-    } else if (data.type === 'avatar') {
-      sheetName = '人物';
-    } else {
-      sheetName = '出遊';
-    }
+行為：
 
-    var sheet = getSheet(sheetName);
+- active 列保留
+- 將 `voided` 設為 `true`
+- append 一筆 `void` 或 `delete` 事件到 archive
 
-    var keys = Object.keys(data);
-    if (sheet.getLastRow() === 0) {
-      sheet.appendRow(keys);
-    }
+### 真刪除
 
-    var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+以下資料可以真刪除：
 
-    keys.forEach(function (key) {
-      if (headers.indexOf(key) === -1) {
-        sheet.getRange(1, headers.length + 1).setValue(key);
-        headers.push(key);
-      }
-    });
+- `trip`：刪除整個行程，並級聯刪除 active 中關聯的出遊消費與出遊還款
+- `memberProfile`：以 `deleted=true` 標記成員已移除
 
-    if (headers.indexOf('category') === -1) {
-      sheet.getRange(1, headers.length + 1).setValue('category');
-      headers.push('category');
-    }
+## 歷史查詢
 
-    // 行程列（type=trip）可含 action=add／close／reopen／setColor／enableCnyMode 等；皆 append 至「出遊」表。
+`doGet` 預設只回 active current state。
 
-    if (data.action === 'add' && (data.type === 'daily' || data.type === 'tripExpense') && data.item) {
-      var catIn = data.category != null ? String(data.category).trim() : '';
-      if (!catIn) {
-        data.category = getGeminiCategory(data.item);
-      }
-    }
+若要查單筆歷史，使用：
 
-    var rowData = headers.map(function (h) {
-      return data[h] !== undefined ? data[h] : '';
-    });
+```text
+GET ?mode=history&type=tripExpense&id=<id>
+```
 
-    sheet.appendRow(rowData);
+若只帶 `type`（不帶 `id`），會回該 type 的完整 archive 歷史。
 
-    return ContentService.createTextOutput(JSON.stringify({ result: 'success' })).setMimeType(
-      ContentService.MimeType.JSON,
-    );
-  } catch (error) {
-    return ContentService.createTextOutput(JSON.stringify({ result: 'error', message: error.toString() })).setMimeType(
-      ContentService.MimeType.JSON,
-    );
-  }
-}
+目前前端用它來顯示出遊消費的金額修訂紀錄。
 
-function doGet(e) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var records = [];
+## 試算表遷移
 
-  ['日常', '出遊', '人物'].forEach(function (name) {
-    var sheet = ss.getSheetByName(name);
-    if (!sheet || sheet.getLastRow() === 0) return;
+如果舊試算表還是 append-only 的：
 
-    var data = sheet.getDataRange().getValues();
-    var headers = data[0];
+1. 保留舊工作表 `日常`、`出遊`、`人物`
+2. 將 [gas/current-state.gs](/Users/alen/Documents/Codex/2026-04-22-github-plugin-github-openai-curated-gthub/hukeep-accounts/gas/current-state.gs) 貼到 Apps Script
+3. 執行 `migrateLegacyEventsToCurrentState()`
 
-    for (var i = 1; i < data.length; i++) {
-      var obj = {};
-      for (var j = 0; j < headers.length; j++) {
-        obj[headers[j]] = data[i][j];
-      }
-      records.push(obj);
-    }
-  });
+結果：
 
-  return ContentService.createTextOutput(JSON.stringify(records)).setMimeType(ContentService.MimeType.JSON);
-}
+- 舊事件會先複製到 archive 工作表
+- active 工作表會重建成 current-state
+- 舊的撤回資料會保留在 active 並標成 `voided=true`
+- 若 legacy 分頁沒有資料，`migrateLegacyEventsToCurrentState()` 會直接結束，不會清空 active
 
-function authorizeDrive() {
-  var testFolder = DriveApp.getRootFolder().createFolder('__ledger_auth_test__');
-  Logger.log('建立資料夾成功：' + testFolder.getName());
-  DriveApp.removeFolder(testFolder);
-  Logger.log('Drive 讀寫權限正常');
-}
+## 圖片與頭像
 
-function testGemini() {
-  Logger.log(getGeminiCategory('便當'));
-}
+GAS 仍支援把 `photoDataUrl` / `avatarDataUrl` 上傳到 Google Drive，再把：
+
+- `photoUrl`
+- `photoFileId`
+- `avatarUrl`
+- `avatarFileId`
+
+回填到 active 與 archive。
+
+## 部署方式
+
+1. 建立或打開綁定試算表的 Apps Script 專案
+2. 將 [gas/current-state.gs](/Users/alen/Documents/Codex/2026-04-22-github-plugin-github-openai-curated-gthub/hukeep-accounts/gas/current-state.gs) 內容貼上
+3. 視需要設定 Script Properties：
+   - `GEMINI_API_KEY`
+   - `PHOTO_FOLDER_ID`
+4. 部署為 Web App
+5. 把新 URL 更新到 [js/config.js](/Users/alen/Documents/Codex/2026-04-22-github-plugin-github-openai-curated-gthub/hukeep-accounts/js/config.js)
+
+## 維護原則
+
+- 文件與實作若有差異，以 [gas/current-state.gs](/Users/alen/Documents/Codex/2026-04-22-github-plugin-github-openai-curated-gthub/hukeep-accounts/gas/current-state.gs) 為準
+- 後續若再改 GAS，記得同步更新這份文件與 README 的後端摘要

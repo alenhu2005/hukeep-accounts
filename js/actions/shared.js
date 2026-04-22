@@ -1,11 +1,24 @@
 import { appState } from '../state.js';
 import { getDailyRecords } from '../data.js';
 import { computeBalance } from '../finance.js';
+import { applyCurrentStatePayload, cloneRowsSnapshot } from '../current-state.js';
 
 
 export function undoOptimisticPush(row) {
   const idx = appState.allRows.lastIndexOf(row);
   if (idx !== -1) appState.allRows.splice(idx, 1);
+}
+
+export function snapshotRows() {
+  return cloneRowsSnapshot(appState.allRows);
+}
+
+export function restoreRowsSnapshot(snapshot) {
+  appState.allRows = cloneRowsSnapshot(snapshot || []);
+}
+
+export function applyOptimisticPayload(payload, { pending = true } = {}) {
+  applyCurrentStatePayload(appState.allRows, payload, { pending });
 }
 
 export function parseMoneyLike(v) {
@@ -52,4 +65,3 @@ export async function fileToJpegDataUrl(file, { maxDim = 1024, quality = 0.78 } 
     URL.revokeObjectURL(url);
   }
 }
-

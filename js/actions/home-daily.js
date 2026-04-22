@@ -48,7 +48,15 @@ import {
 } from '../views-trip-detail.js';
 import { buildTripSettlementSummaryText } from '../trip-stats.js';
 import { toggleCollapsible } from '../ui-collapsible.js';
-import { undoOptimisticPush, parseMoneyLike, snapshotPendingHomeBalanceFromAbs, fileToJpegDataUrl } from './shared.js';
+import {
+  undoOptimisticPush,
+  parseMoneyLike,
+  snapshotPendingHomeBalanceFromAbs,
+  fileToJpegDataUrl,
+  snapshotRows,
+  restoreRowsSnapshot,
+  applyOptimisticPayload,
+} from './shared.js';
 
 // ── Home form ────────────────────────────────────────────────────────────────
 export function setHomePaidBy(val) {
@@ -107,15 +115,16 @@ export async function recordTripSettlementOneAction(el) {
     amount,
   };
 
-  const startLen = appState.allRows.length;
-  appState.allRows.push(row);
+  const snapshot = snapshotRows();
+  applyOptimisticPayload(row);
   renderTripDetail();
 
   try {
-    const pr = await postRow(row);
+    const sentRow = appState.allRows.find(r => r && r.type === 'tripSettlement' && r.id === row.id) || row;
+    const pr = await postRow(row, { syncTarget: sentRow });
     toast(pr.status === 'queued' ? '已暫存，連上網路後會自動上傳' : '已記錄還款');
   } catch (e) {
-    undoOptimisticPush(row);
+    restoreRowsSnapshot(snapshot);
     renderTripDetail();
     toast(formatPostError(e));
   }
@@ -134,14 +143,16 @@ export async function recordSettlement() {
   if (!ok) return;
 
   const row = { type: 'settlement', action: 'add', id: uid(), date: todayStr(), amount, paidBy: debtor };
+  const snapshot = snapshotRows();
   snapshotPendingHomeBalanceFromAbs();
-  appState.allRows.push(row);
+  applyOptimisticPayload(row);
   renderHome();
   try {
-    const pr = await postRow(row);
+    const sentRow = appState.allRows.find(r => r && r.type === 'settlement' && r.id === row.id) || row;
+    const pr = await postRow(row, { syncTarget: sentRow });
     toast(pr.status === 'queued' ? '已暫存，連上網路後會自動上傳' : '已記錄還款！');
   } catch (e) {
-    undoOptimisticPush(row);
+    restoreRowsSnapshot(snapshot);
     cancelHomeBalanceAnim();
     renderHome();
     toast(formatPostError(e));
@@ -194,16 +205,18 @@ export async function submitDailyRecord() {
     note,
     ...extraFields,
   };
+  const snapshot = snapshotRows();
   snapshotPendingHomeBalanceFromAbs();
-  appState.allRows.push(row);
+  applyOptimisticPayload(row);
   pauseSyncBriefly(5000);
   renderHome();
 
   try {
-    const pr = await postRow(row);
+    const sentRow = appState.allRows.find(r => r && r.type === 'daily' && r.id === row.id) || row;
+    const pr = await postRow(row, { syncTarget: sentRow });
     toast(pr.status === 'queued' ? '已暫存，連上網路後會自動上傳' : '已記帳！');
   } catch (e) {
-    undoOptimisticPush(row);
+    restoreRowsSnapshot(snapshot);
     cancelHomeBalanceAnim();
     renderHome();
     toast(formatPostError(e));
@@ -225,21 +238,22 @@ export async function voidDailyRecord(id) {
   const amount = parseFloat(r.amount) || 0;
   const ok = await showConfirm(
     '撤回這筆紀錄？',
-    `「${label}」— NT$${Math.round(amount)} 將標記為撤回，帳面隨之更動，紀錄仍保留。`,
+    `「${label}」— NT$${Math.round(amount)} 會保留在歷史紀錄中，但不再列入目前帳務。`,
   );
   if (!ok) return;
-  const row = { type: 'daily', action: 'void', id };
+  const row = { type: r.type === 'settlement' ? 'settlement' : 'daily', action: 'void', id };
+  const snapshot = snapshotRows();
   snapshotPendingHomeBalanceFromAbs();
-  appState.allRows.push(row);
+  applyOptimisticPayload(row, { pending: false });
   renderHome();
   try {
-    const pr = await postRow(row);
-    toast(pr.status === 'queued' ? '已暫存，連上網路後會自動上傳' : '已撤回');
+    const syncTarget = appState.allRows.find(x => x && x.id === id && (x.type === 'daily' || x.type === 'settlement')) || null;
+    const pr = await postRow(row, { syncTarget });
+    toast(pr.status === 'queued' ? '已暫存，連上網路後會自動同步撤回' : '已撤回');
   } catch (e) {
-    undoOptimisticPush(row);
+    restoreRowsSnapshot(snapshot);
     cancelHomeBalanceAnim();
     renderHome();
     toast(formatPostError(e));
   }
 }
-

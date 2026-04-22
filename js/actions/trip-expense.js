@@ -48,7 +48,15 @@ import {
 } from '../views-trip-detail.js';
 import { buildTripSettlementSummaryText } from '../trip-stats.js';
 import { toggleCollapsible } from '../ui-collapsible.js';
-import { undoOptimisticPush, parseMoneyLike, snapshotPendingHomeBalanceFromAbs, fileToJpegDataUrl } from './shared.js';
+import {
+  undoOptimisticPush,
+  parseMoneyLike,
+  snapshotPendingHomeBalanceFromAbs,
+  fileToJpegDataUrl,
+  snapshotRows,
+  restoreRowsSnapshot,
+  applyOptimisticPayload,
+} from './shared.js';
 import {
   getDetailAmountNt,
   isTripCnyModeEnabled,
@@ -237,16 +245,18 @@ export async function submitTripExpense() {
     ...(amountCnyVal > 0 ? { amountCny: amountCnyVal } : {}),
     ...extraFields,
   };
-  appState.allRows.push(row);
+  const snapshot = snapshotRows();
+  applyOptimisticPayload(row);
   pauseSyncBriefly(5000);
   renderTripDetail();
 
   try {
-    const pr = await postRow(row);
+    const sentRow = appState.allRows.find(r => r && r.type === 'tripExpense' && r.id === row.id) || row;
+    const pr = await postRow(row, { syncTarget: sentRow });
     toast(pr.status === 'queued' ? '已暫存，連上網路後會自動上傳' : '已記帳！');
     appState.detailGamblingMode = false;
   } catch (e) {
-    undoOptimisticPush(row);
+    restoreRowsSnapshot(snapshot);
     renderTripDetail();
     toast(formatPostError(e));
   }
@@ -286,17 +296,19 @@ export async function voidTripExpenseAction(id) {
   const amount = parseFloat(r.amount) || 0;
   const ok = await showConfirm(
     '撤回這筆紀錄？',
-    `「${item}」— NT$${Math.round(amount)} 將標記為撤回，分帳隨之更動，紀錄仍保留。`,
+    `「${item}」— NT$${Math.round(amount)} 會保留在歷史紀錄中，但不再列入目前帳務。`,
   );
   if (!ok) return;
   const row = { type: 'tripExpense', action: 'void', id };
-  appState.allRows.push(row);
+  const snapshot = snapshotRows();
+  applyOptimisticPayload(row, { pending: false });
   renderTripDetail();
   try {
-    const pr = await postRow(row);
-    toast(pr.status === 'queued' ? '已暫存，連上網路後會自動上傳' : '已撤回');
+    const syncTarget = appState.allRows.find(x => x && x.type === 'tripExpense' && x.id === id) || null;
+    const pr = await postRow(row, { syncTarget });
+    toast(pr.status === 'queued' ? '已暫存，連上網路後會自動同步撤回' : '已撤回');
   } catch (e) {
-    undoOptimisticPush(row);
+    restoreRowsSnapshot(snapshot);
     renderTripDetail();
     toast(formatPostError(e));
   }
@@ -314,4 +326,3 @@ export async function copyTripSettlementSummary(tripId) {
     toast('無法複製，請檢查瀏覽器權限');
   }
 }
-

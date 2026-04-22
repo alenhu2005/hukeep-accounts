@@ -45,14 +45,14 @@ flowchart TB
     Outbox --> State
   end
   subgraph gas [Google Apps Script]
-    doGet[doGet 讀三表]
-    doPost[doPost appendRow]
+    doGet[doGet 回 active current-state]
+    doPost[doPost 寫 active 並封存 archive]
     Drive[Drive 圖片]
     doGet --> Sheets
     doPost --> Sheets
     doPost --> Drive
   end
-  Sheets[(試算表 日常/出遊/人物)]
+  Sheets[(試算表 active / archive)]
   client <-->|GET JSON / POST JSON| gas
 ```
 
@@ -187,10 +187,17 @@ npx serve
 
 ## 資料模型與同步
 
-### 事件列（Event log）
+### current-state 與 archive
 
-試算表儲存的是**事件**（`type` + `action`），例如 `add`／`edit`／`delete`／`void`。前端將多列事件**折疊**成畫面上的一筆筆紀錄（見 `js/data.js`、`js/model.js`）。  
-同一 `id` 可能有多筆 `add`（重試造成），顯示與結算會**去重**。
+試算表目前採兩層結構：
+
+- **active current-state**：只保留目前有效資料，供首頁、行程、分析頁平常讀取
+- **archive 封存事件**：保留新增、編輯、撤回等完整歷程，供歷史查詢使用
+
+其中日常 / 還款 / 出遊消費 / 出遊還款這些帳務資料，若使用者選的是「撤回」，active 不會真刪列，而是將該列標成 `voided=true`。  
+前端平常直接消費 current-state；只有像「出遊金額修訂紀錄」這類需求，才會額外查 archive。
+
+為了兼容舊資料或重試造成的重複列，前端顯示與結算仍會對同一 `id` 做去重。
 
 ### GET（全量拉取）
 
@@ -201,6 +208,7 @@ npx serve
 
 - 可重試的失敗會進入 **outbox**（`POST_OUTBOX_KEY`），連線恢復後自動依序送出。
 - 與伺服端資料合併時，會處理**尚未上傳成功的 pending 列**（`mergeFreshWithOutboxBackedPending`）。
+- current-state 版本升級時，前端會依 `CLIENT_DATA_SCHEMA_VERSION` 做一次性清理，移除舊快取與舊 outbox，避免舊事件語意把已撤回資料或已結束行程覆蓋回來。
 
 ### 背景輪詢
 
@@ -216,6 +224,7 @@ npx serve
 | `ledger_sync_last_at_v1` | 上次成功自 GAS 拉取並寫入的時間（ms） |
 | `ledger_api_url_v1` | 覆寫 API URL |
 | `ledger_post_outbox_v1` | POST 離線佇列 |
+| `ledger_data_schema_v1` | 前端本地資料 schema 版本 |
 | `theme` | 深色模式偏好 |
 | 其他 | 工作階段還原等（見 `session-ui.js`） |
 
@@ -229,9 +238,11 @@ npx serve
 
 重點摘要：
 
-- 工作表：**日常**、**出遊**、**人物**（若不存在會由程式建立）。
-- **doGet**：讀取上述工作表 `getDataRange()`，合併為單一 JSON 陣列回傳。
-- **doPost**：依 payload `appendRow`；可選 **Gemini** 推測分類（需 Script Properties 設定 API Key）。
+- 工作表分成 **active current-state** 與 **archive 封存事件** 兩層，細節見 [docs/gas程式碼.md](docs/gas程式碼.md)。
+- **doGet**：預設只回傳 active current-state；`?mode=history` 可查單筆歷史，也可只帶 `type` 查該類 archive。
+- **doPost**：新增寫入 active 並同步封存；編輯直接覆寫 active；歷史紀錄內的帳務資料只會「撤回」不會真刪除。
+- 金額編輯仍會保留 archive 歷史，備註與分類則直接覆寫 active。
+- 舊 append-only 試算表可透過 `migrateLegacyEventsToCurrentState()` 遷移到新結構。
 - **圖片**：上傳至 Drive 指定資料夾子路徑（日常／出遊照片、頭像等），大小上限見該文件。
 
 部署為「網路應用程式」時：
@@ -297,6 +308,7 @@ npm test
 |------|------|
 | 線上版仍是舊 UI | 強制重新整理（`Cmd+Shift+R` / `Ctrl+Shift+R`）；或關閉分頁重開；檢查 `sw.js` 快取版本是否已更新 |
 | 長期「僅快取」或同步失敗 | 確認 `API_URL`、GAS 部署權限、試算表連結是否正常 |
+| 行程狀態或已撤回資料看起來被加回來 | 先強制重新整理一次；current-state 版前端會清掉舊快取 / 舊 outbox，避免舊事件模型覆蓋新資料 |
 | 新增後對方看不到 | 確認對方也完成同步；背景輪詢或手動重新整理 |
 | 儲存空間／Quota | 快取含大量資料或照片 metadata 時可能觸頂；備份後使用「清除本地快取」再同步 |
 | ES Module 載入失敗 | 勿用 `file://`；改用本機 HTTP 伺服器 |

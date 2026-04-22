@@ -24,11 +24,43 @@ function dedupeLedgerAddsById(addRows) {
   return out;
 }
 
+function hasLegacyDailyEvents(allRows) {
+  return allRows.some(
+    r => r && DAILY_TYPES.has(r.type) && (r.action === 'edit' || r.action === 'void' || r.action === 'delete'),
+  );
+}
+
+function hasLegacyTripEvents(allRows) {
+  return allRows.some(
+    r =>
+      r &&
+      (r.type === 'tripExpense' || r.type === 'trip' || r.type === 'tripSettlement' || r.type === 'tripMember') &&
+      (r.action === 'edit' ||
+        r.action === 'void' ||
+        r.action === 'delete' ||
+        r.action === 'close' ||
+        r.action === 'reopen' ||
+        r.action === 'setColor' ||
+        r.action === 'enableCnyMode' ||
+        r.action === 'add' ||
+        r.action === 'remove'),
+  );
+}
+
 /**
  * 由事件列推導日常帳顯示用紀錄（不依賴 appState）。
  * @param {import('./model.js').LedgerRow[]} allRows
  */
 export function getDailyRecordsFromRows(allRows) {
+  if (!hasLegacyDailyEvents(allRows)) {
+    return dedupeLedgerAddsById(
+      allRows.filter(r => r && DAILY_TYPES.has(r.type)),
+    )
+      .map(r => ({ ...r, _voided: !!r.voided }))
+      .slice()
+      .reverse();
+  }
+
   const hardDelIds = new Set(
     allRows.filter(r => DAILY_TYPES.has(r.type) && r.action === 'delete').map(r => r.id),
   );
@@ -68,6 +100,8 @@ export function getDailyRecords() {
 export function tripCnyModeEnabledInRows(tripId, allRows) {
   const id = String(tripId || '').trim();
   if (!id || !Array.isArray(allRows)) return false;
+  const current = allRows.find(r => r && r.type === 'trip' && String(r.id || '').trim() === id && 'cnyMode' in r);
+  if (current) return !!current.cnyMode;
   return allRows.some(
     r =>
       r &&
@@ -78,6 +112,18 @@ export function tripCnyModeEnabledInRows(tripId, allRows) {
 }
 
 export function buildTripFromRows(tripRow, allRows) {
+  if ('closed' in tripRow || 'cnyMode' in tripRow || 'colorId' in tripRow) {
+    return {
+      id: tripRow.id,
+      name: tripRow.name,
+      members: [...new Set(parseArr(tripRow.members).filter(Boolean))],
+      createdAt: tripRow.createdAt,
+      _closed: !!tripRow.closed,
+      cnyMode: !!tripRow.cnyMode,
+      colorId: tripRow.colorId || '',
+    };
+  }
+
   const renames = buildRenameMap();
   let members = parseArr(tripRow.members);
   const events = allRows.filter(r => r.type === 'tripMember' && r.tripId === tripRow.id);
@@ -100,6 +146,11 @@ export function buildTripFromRows(tripRow, allRows) {
 }
 
 export function getTripsFromRows(allRows) {
+  const currentRows = allRows.filter(r => r && r.type === 'trip' && r.action === 'add' && ('closed' in r || 'colorId' in r || 'cnyMode' in r));
+  if (currentRows.length > 0 && !allRows.some(r => r && r.type === 'trip' && (r.action === 'delete' || r.action === 'close' || r.action === 'reopen'))) {
+    return currentRows.map(r => buildTripFromRows(r, allRows)).reverse();
+  }
+
   const delIds = new Set(allRows.filter(r => r.type === 'trip' && r.action === 'delete').map(r => r.id));
   const adds = dedupeLedgerAddsById(
     allRows.filter(r => r.type === 'trip' && r.action === 'add' && !delIds.has(r.id)),
@@ -118,10 +169,8 @@ export function buildTrip(tripRow) {
 }
 
 export function getTripById(id) {
-  const row = appState.allRows.find(r => r.type === 'trip' && r.action === 'add' && r.id === id);
-  if (!row) return null;
-  const delIds = new Set(appState.allRows.filter(r => r.type === 'trip' && r.action === 'delete').map(r => r.id));
-  return delIds.has(id) ? null : buildTrip(row);
+  const row = appState.allRows.find(r => r && r.type === 'trip' && r.action === 'add' && r.id === id);
+  return row ? buildTrip(row) : null;
 }
 
 /**
@@ -129,6 +178,56 @@ export function getTripById(id) {
  * @param {import('./model.js').LedgerRow[]} allRows
  */
 export function getTripExpensesFromRows(tripId, allRows) {
+  const currentRows = allRows.filter(
+    r =>
+      r &&
+      r.type === 'tripExpense' &&
+      r.action === 'add' &&
+      r.tripId === tripId &&
+      !allRows.some(x => x && x.type === 'tripExpense' && x.action === 'edit'),
+  );
+  if (currentRows.length > 0 && !allRows.some(r => r && r.type === 'tripExpense' && (r.action === 'void' || r.action === 'delete'))) {
+    return dedupeLedgerAddsById(currentRows)
+      .map(r => {
+        let payers = r.payers;
+        if (typeof payers === 'string') {
+          try {
+            payers = JSON.parse(payers);
+          } catch {
+            payers = null;
+          }
+        }
+        if (!Array.isArray(payers)) payers = undefined;
+        let splitDetails = r.splitDetails;
+        if (typeof splitDetails === 'string') {
+          try {
+            splitDetails = JSON.parse(splitDetails);
+          } catch {
+            splitDetails = null;
+          }
+        }
+        if (!Array.isArray(splitDetails)) splitDetails = undefined;
+
+        const rec = {
+          ...r,
+          amount: parseFloat(r.amount) || 0,
+          splitAmong: parseArr(r.splitAmong),
+          _voided: !!r.voided,
+          ...(payers ? { payers } : {}),
+          ...(splitDetails ? { splitDetails } : {}),
+        };
+        const cny = parseFloat(rec.amountCny);
+        if (Number.isFinite(cny) && cny > 0) rec.amountCny = cny;
+        else delete rec.amountCny;
+        const fx = parseFloat(rec.fxFeeNtd);
+        if (Number.isFinite(fx) && fx > 0) rec.fxFeeNtd = fx;
+        else delete rec.fxFeeNtd;
+        return rec;
+      })
+      .slice()
+      .reverse();
+  }
+
   const renames = buildRenameMap();
   const hardDelIds = new Set(
     allRows.filter(r => r.type === 'tripExpense' && r.action === 'delete').map(r => r.id),
@@ -230,6 +329,11 @@ export function getTripExpenses(tripId) {
 export function getTripExpenseAmountRevisionTrail(expenseId, allRows) {
   const id = String(expenseId || '').trim();
   if (!id || !Array.isArray(allRows)) return [];
+  const current = allRows.find(r => r && r.type === 'tripExpense' && r.action === 'add' && String(r.id || '').trim() === id);
+  if (current && !allRows.some(r => r && r.type === 'tripExpense' && r.action === 'edit')) {
+    const amount = Math.round(Math.max(0, parseFloat(current.amount) || 0));
+    return amount > 0 ? [{ date: current.date ? String(current.date).slice(0, 10) : '', amount }] : [];
+  }
   const match = row =>
     row && row.type === 'tripExpense' && String(row.id || '').trim() === id;
 
@@ -316,6 +420,8 @@ function tripIdHashDefaultColorIndex(tripId) {
  */
 export function getTripPaletteColorId(tripId, allRows = appState.allRows) {
   const id = tripId ?? '';
+  const currentTrip = allRows.find(r => r && r.type === 'trip' && r.action === 'add' && r.id === id && r.colorId);
+  if (currentTrip && TRIP_COLORS.some(c => c.id === currentTrip.colorId)) return currentTrip.colorId;
   let colorId = null;
   for (const r of allRows) {
     if (r && r.type === 'trip' && r.action === 'setColor' && r.id === id && r.colorId) {
@@ -331,8 +437,7 @@ export function getTripPaletteColorId(tripId, allRows = appState.allRows) {
  * @param {import('./model.js').LedgerRow[]} allRows
  */
 export function pickRandomTripColorId(allRows) {
-  const delIds = new Set(allRows.filter(r => r.type === 'trip' && r.action === 'delete').map(r => r.id));
-  const tripAdds = allRows.filter(r => r.type === 'trip' && r.action === 'add' && !delIds.has(r.id));
+  const tripAdds = allRows.filter(r => r && r.type === 'trip' && r.action === 'add');
   const used = new Set();
   for (const tr of tripAdds) {
     used.add(getTripPaletteColorId(tr.id, allRows));
@@ -407,7 +512,7 @@ export function getMemberColor(memberName) {
 
   let colorId = null;
   for (const r of appState.allRows) {
-    if (r && r.type === 'memberProfile' && r.action === 'setColor' && r.memberName && r.colorId) {
+    if (r && r.type === 'memberProfile' && r.memberName && r.colorId) {
       const who = resolveMemberName(r.memberName, renames);
       if (who === name) colorId = String(r.colorId).trim();
     }
@@ -434,6 +539,13 @@ export function isHiddenMemberColorId(id) {
 /** @returns {{ id: string, bg: string, fg: string }} */
 export function getTripColor(tripId) {
   const id = tripId ?? '';
+  const currentTrip = appState.allRows.find(r => r && r.type === 'trip' && r.action === 'add' && r.id === id);
+  if (currentTrip && currentTrip.colorId) {
+    const inPalette = TRIP_COLORS.find(c => c.id === currentTrip.colorId);
+    if (inPalette) return resolveColor(inPalette);
+    const legacy = MEMBER_COLORS.find(c => c.id === currentTrip.colorId);
+    if (legacy) return resolveColor(legacy);
+  }
   let colorId = null;
   for (const r of appState.allRows) {
     if (r && r.type === 'trip' && r.action === 'setColor' && r.id === id && r.colorId) {
@@ -454,9 +566,19 @@ export function getTripColor(tripId) {
  * @returns {{ from: string; to: string; amount: number }[]}
  */
 export function getTripSettlementAdjustmentsFromRows(tripId, allRows) {
+  if (!allRows.some(r => r && r.type === 'tripSettlement' && (r.action === 'void' || r.action === 'delete'))) {
+    return allRows
+      .filter(r => r && r.type === 'tripSettlement' && r.action === 'add' && r.tripId === tripId && !r.voided)
+      .map(r => ({
+        from: r.from,
+        to: r.to,
+        amount: parseFloat(r.amount) || 0,
+      }));
+  }
+
   const renames = buildRenameMap();
   const voidIds = new Set(
-    allRows.filter(r => r.type === 'tripSettlement' && r.action === 'void').map(r => r.id),
+    allRows.filter(r => r.type === 'tripSettlement' && (r.action === 'void' || r.action === 'delete')).map(r => r.id),
   );
   return allRows
     .filter(
@@ -479,9 +601,26 @@ export function getTripSettlementAdjustmentsFromRows(tripId, allRows) {
  * @param {import('./model.js').LedgerRow[]} allRows
  */
 export function getTripSettlementDisplayRowsFromRows(tripId, allRows) {
+  if (!allRows.some(r => r && r.type === 'tripSettlement' && (r.action === 'void' || r.action === 'delete'))) {
+    return allRows
+      .filter(r => r && r.type === 'tripSettlement' && r.action === 'add' && r.tripId === tripId)
+      .map(r => ({
+        type: 'tripSettlement',
+        id: r.id,
+        tripId: r.tripId,
+        date: normalizeDate(r.date),
+        from: r.from,
+        to: r.to,
+        amount: parseFloat(r.amount) || 0,
+        _voided: !!r.voided,
+      }))
+      .slice()
+      .reverse();
+  }
+
   const renames = buildRenameMap();
   const voidIds = new Set(
-    allRows.filter(r => r.type === 'tripSettlement' && r.action === 'void').map(r => r.id),
+    allRows.filter(r => r.type === 'tripSettlement' && (r.action === 'void' || r.action === 'delete')).map(r => r.id),
   );
   return allRows
     .filter(
@@ -508,38 +647,22 @@ export function getTripSettlementDisplayRowsFromRows(tripId, allRows) {
  * 收集所有曾出現的成員名稱（行程成員、頭像、日常使用者等）
  */
 export function getKnownMemberNames() {
-  const renames = buildRenameMap();
   const names = new Set();
   const deleted = new Set();
   for (const r of appState.allRows) {
     if (r.type === 'trip' && r.action === 'add' && r.members) {
       for (const m of parseArr(r.members)) names.add(m);
     }
-    if (r.type === 'tripMember' && r.action === 'add' && r.memberName) {
-      names.add(r.memberName);
-    }
     if (r.type === 'avatar' && r.memberName && inferAvatarScope(r.memberName, r.avatarScope || 'auto') === 'trip') {
       names.add(r.memberName);
     }
-    if (r.type === 'memberProfile' && r.action === 'delete' && r.memberName) {
-      // Deletion should apply to the *display* name after rename resolution,
-      // otherwise deleting a renamed member appears to "not work".
-      deleted.add(resolveMemberName(r.memberName, renames));
-      deleted.add(r.memberName);
-    }
-    if (r.type === 'memberProfile' && r.action === 'restore' && r.memberName) {
-      deleted.delete(resolveMemberName(r.memberName, renames));
-      deleted.delete(r.memberName);
+    if (r.type === 'memberProfile' && r.memberName) {
+      names.add(r.memberName);
+      if (r.deleted || r.action === 'delete') deleted.add(r.memberName);
+      if (r.action === 'restore') deleted.delete(r.memberName);
     }
   }
-  const result = [];
-  const seen = new Set();
-  for (const n of names) {
-    const display = resolveMemberName(n, renames);
-    if (deleted.has(display) || deleted.has(n)) continue;
-    if (!seen.has(display)) { seen.add(display); result.push(display); }
-  }
-  return result;
+  return [...names].filter(name => !deleted.has(name));
 }
 
 export { TRIP_TYPES, DAILY_TYPES };

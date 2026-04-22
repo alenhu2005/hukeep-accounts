@@ -48,7 +48,15 @@ import {
 } from '../views-trip-detail.js';
 import { buildTripSettlementSummaryText } from '../trip-stats.js';
 import { toggleCollapsible } from '../ui-collapsible.js';
-import { undoOptimisticPush, parseMoneyLike, snapshotPendingHomeBalanceFromAbs, fileToJpegDataUrl } from './shared.js';
+import {
+  undoOptimisticPush,
+  parseMoneyLike,
+  snapshotPendingHomeBalanceFromAbs,
+  fileToJpegDataUrl,
+  snapshotRows,
+  restoreRowsSnapshot,
+  applyOptimisticPayload,
+} from './shared.js';
 
 export function showCreateTripForm() {
   appState.newTripMembers = [];
@@ -175,24 +183,25 @@ export async function createTrip() {
   };
   const tripColorId = pickRandomTripColorId(appState.allRows);
   const colorRow = { type: 'trip', action: 'setColor', id: row.id, colorId: tripColorId };
-  appState.allRows.push(row);
-  appState.allRows.push(colorRow);
+  const snapshot = snapshotRows();
+  applyOptimisticPayload(row);
+  applyOptimisticPayload(colorRow);
   hideCreateTripForm();
   pauseSyncBriefly(5000);
   navigate('tripDetail', row.id);
 
   try {
-    const pr = await postRow(row);
+    const tripSyncTarget = appState.allRows.find(r => r && r.type === 'trip' && r.id === row.id) || null;
+    const pr = await postRow(row, { syncTarget: tripSyncTarget });
     toast(pr.status === 'queued' ? '已暫存，連上網路後會自動上傳' : `「${name}」行程已建立`);
     try {
-      await postRow(colorRow);
+      await postRow(colorRow, { syncTarget: tripSyncTarget });
     } catch (e2) {
-      undoOptimisticPush(colorRow);
+      restoreRowsSnapshot(snapshot);
       toast(formatPostError(e2));
     }
   } catch (e) {
-    undoOptimisticPush(colorRow);
-    undoOptimisticPush(row);
+    restoreRowsSnapshot(snapshot);
     toast(formatPostError(e));
   }
 
@@ -206,13 +215,14 @@ export async function deleteTripAction(id) {
   const ok = await showConfirm(`刪除行程「${trip.name}」？`, '這個動作無法還原，所有消費紀錄也會一併刪除。');
   if (!ok) return;
   const row = { type: 'trip', action: 'delete', id };
-  appState.allRows.push(row);
+  const snapshot = snapshotRows();
+  applyOptimisticPayload(row, { pending: false });
   renderTrips();
   try {
-    const pr = await postRow(row);
+    const pr = await postRow(row, { syncTarget: null });
     toast(pr.status === 'queued' ? '已暫存，連上網路後會自動上傳' : '行程已刪除');
   } catch (e) {
-    undoOptimisticPush(row);
+    restoreRowsSnapshot(snapshot);
     renderTrips();
     toast(formatPostError(e));
   }
@@ -224,13 +234,15 @@ export async function closeTripAction(id) {
   const ok = await showConfirm(`結束行程「${trip.name}」？`, '結束後將無法新增消費，可隨時重新開啟。');
   if (!ok) return;
   const row = { type: 'trip', action: 'close', id };
-  appState.allRows.push(row);
+  const snapshot = snapshotRows();
+  applyOptimisticPayload(row);
   renderTripDetail();
   try {
-    const pr = await postRow(row);
+    const syncTarget = appState.allRows.find(r => r && r.type === 'trip' && r.id === id) || null;
+    const pr = await postRow(row, { syncTarget });
     toast(pr.status === 'queued' ? '已暫存，連上網路後會自動上傳' : '行程已結束');
   } catch (e) {
-    undoOptimisticPush(row);
+    restoreRowsSnapshot(snapshot);
     renderTripDetail();
     toast(formatPostError(e));
   }
@@ -240,13 +252,15 @@ export async function reopenTripAction(id) {
   const trip = getTripById(id);
   if (!trip) return;
   const row = { type: 'trip', action: 'reopen', id };
-  appState.allRows.push(row);
+  const snapshot = snapshotRows();
+  applyOptimisticPayload(row);
   renderTripDetail();
   try {
-    const pr = await postRow(row);
+    const syncTarget = appState.allRows.find(r => r && r.type === 'trip' && r.id === id) || null;
+    const pr = await postRow(row, { syncTarget });
     toast(pr.status === 'queued' ? '已暫存，連上網路後會自動上傳' : `「${trip.name}」已重新開啟`);
   } catch (e) {
-    undoOptimisticPush(row);
+    restoreRowsSnapshot(snapshot);
     renderTripDetail();
     toast(formatPostError(e));
   }
@@ -285,7 +299,7 @@ function getLastPersistedMemberColorId(name) {
   if (!n) return '';
   for (let i = appState.allRows.length - 1; i >= 0; i--) {
     const r = appState.allRows[i];
-    if (r && r.type === 'memberProfile' && r.action === 'setColor' && r.memberName === n && r.colorId) {
+    if (r && r.type === 'memberProfile' && r.memberName === n && r.colorId) {
       return String(r.colorId).trim();
     }
   }
@@ -304,13 +318,16 @@ export async function flushPendingMemberColors() {
     const prevId = getLastPersistedMemberColorId(memberName);
     if (prevId === nextId) continue;
     const row = { type: 'memberProfile', action: 'setColor', memberName, colorId: nextId };
-    appState.allRows.push(row);
+    const snapshot = snapshotRows();
+    applyOptimisticPayload(row);
     try {
       // eslint-disable-next-line no-await-in-loop
-      const pr = await postRow(row);
+      const syncTarget =
+        appState.allRows.find(r => r && r.type === 'memberProfile' && r.memberName === memberName) || null;
+      const pr = await postRow(row, { syncTarget });
       if (pr.status === 'queued') toast('已暫存，連上網路後會自動上傳');
     } catch (e) {
-      undoOptimisticPush(row);
+      restoreRowsSnapshot(snapshot);
       toast(formatPostError(e));
     }
   }
@@ -569,7 +586,7 @@ function hasExplicitMemberColor(name) {
   const n = String(name || '').trim();
   if (!n) return false;
   for (const r of appState.allRows) {
-    if (r && r.type === 'memberProfile' && r.action === 'setColor' && r.memberName === n && r.colorId) {
+    if (r && r.type === 'memberProfile' && r.memberName === n && r.colorId) {
       return true;
     }
   }
@@ -584,8 +601,14 @@ async function ensureRandomMemberColor(name) {
   const picked = MEMBER_COLORS[i];
   if (!picked) return;
   const row = { type: 'memberProfile', action: 'setColor', memberName: n, colorId: picked.id };
-  appState.allRows.push(row);
-  try { await postRow(row, { updateSyncUi: false }); } catch { /* ignore */ }
+  const snapshot = snapshotRows();
+  applyOptimisticPayload(row);
+  try {
+    const syncTarget = appState.allRows.find(r => r && r.type === 'memberProfile' && r.memberName === n) || null;
+    await postRow(row, { updateSyncUi: false, syncTarget });
+  } catch {
+    restoreRowsSnapshot(snapshot);
+  }
 }
 
 export function toggleTripColorPicker(tripId) {
@@ -605,13 +628,15 @@ export function toggleTripColorPicker(tripId) {
 export async function setTripColor(tripId, colorId) {
   if (!TRIP_COLORS.some(c => c.id === colorId)) return;
   const row = { type: 'trip', action: 'setColor', id: tripId, colorId };
-  appState.allRows.push(row);
+  const snapshot = snapshotRows();
+  applyOptimisticPayload(row);
   renderTrips();
   try {
-    const pr = await postRow(row);
+    const syncTarget = appState.allRows.find(r => r && r.type === 'trip' && r.id === tripId) || null;
+    const pr = await postRow(row, { syncTarget });
     if (pr.status === 'queued') toast('已暫存，連上網路後會自動上傳');
   } catch (e) {
-    undoOptimisticPush(row);
+    restoreRowsSnapshot(snapshot);
     renderTrips();
     toast(formatPostError(e));
   }
@@ -624,14 +649,16 @@ export async function renameMemberPrompt(oldName) {
   const existing = getKnownMemberNames();
   if (existing.includes(trimmed)) { toast(`「${trimmed}」已存在`); return; }
   const row = { type: 'memberProfile', action: 'rename', memberName: oldName, newName: trimmed };
-  appState.allRows.push(row);
+  const snapshot = snapshotRows();
+  applyOptimisticPayload(row);
   renderMemberDirectory();
   refreshCurrentView();
   try {
-    const pr = await postRow(row);
+    const syncTarget = appState.allRows.find(r => r && r.type === 'memberProfile' && r.memberName === trimmed) || null;
+    const pr = await postRow(row, { syncTarget });
     if (pr.status === 'queued') toast('已暫存，連上網路後會自動上傳');
   } catch (e) {
-    undoOptimisticPush(row);
+    restoreRowsSnapshot(snapshot);
     renderMemberDirectory();
     refreshCurrentView();
     toast(formatPostError(e));
@@ -643,15 +670,17 @@ export async function deleteKnownMember(name) {
   const ok = await showConfirm(`刪除成員「${name}」？`, '該成員將從選單中移除，但已參與的行程紀錄不受影響。');
   if (!ok) return;
   const row = { type: 'memberProfile', action: 'delete', memberName: name };
-  appState.allRows.push(row);
+  const snapshot = snapshotRows();
+  applyOptimisticPayload(row);
   renderMemberDirectory();
   renderKnownMemberPicker();
   refreshCurrentView();
   try {
-    const pr = await postRow(row);
+    const syncTarget = appState.allRows.find(r => r && r.type === 'memberProfile' && r.memberName === name) || null;
+    const pr = await postRow(row, { syncTarget });
     if (pr.status === 'queued') toast('已暫存，連上網路後會自動上傳');
   } catch (e) {
-    undoOptimisticPush(row);
+    restoreRowsSnapshot(snapshot);
     renderMemberDirectory();
     renderKnownMemberPicker();
     refreshCurrentView();
@@ -672,13 +701,15 @@ export async function addDetailMemberByName(name) {
   if (trip.members.includes(name)) { toast(`「${name}」已在名單中`); return; }
   await ensureRandomMemberColor(name);
   const row = { type: 'tripMember', action: 'add', tripId: appState.currentTripId, memberName: name };
-  appState.allRows.push(row);
+  const snapshot = snapshotRows();
+  applyOptimisticPayload(row);
   renderTripDetail();
   try {
-    const pr = await postRow(row);
+    const syncTarget = appState.allRows.find(r => r && r.type === 'trip' && r.id === appState.currentTripId) || null;
+    const pr = await postRow(row, { syncTarget });
     if (pr.status === 'queued') toast('已暫存，連上網路後會自動上傳');
   } catch (e) {
-    undoOptimisticPush(row);
+    restoreRowsSnapshot(snapshot);
     renderTripDetail();
     toast(formatPostError(e));
   }
@@ -696,14 +727,16 @@ export async function addDetailMember() {
   }
   await ensureRandomMemberColor(name);
   const row = { type: 'tripMember', action: 'add', tripId: appState.currentTripId, memberName: name };
-  appState.allRows.push(row);
+  const snapshot = snapshotRows();
+  applyOptimisticPayload(row);
   input.value = '';
   renderTripDetail();
   try {
-    const pr = await postRow(row);
+    const syncTarget = appState.allRows.find(r => r && r.type === 'trip' && r.id === appState.currentTripId) || null;
+    const pr = await postRow(row, { syncTarget });
     if (pr.status === 'queued') toast('已暫存，連上網路後會自動上傳');
   } catch (e) {
-    undoOptimisticPush(row);
+    restoreRowsSnapshot(snapshot);
     renderTripDetail();
     toast(formatPostError(e));
   }
@@ -715,17 +748,18 @@ export async function removeMemberAction(name) {
   const ok = await showConfirm(`移除成員「${name}」？`, '相關的消費紀錄不會被刪除，但該成員將從行程中移除。');
   if (!ok) return;
   const row = { type: 'tripMember', action: 'remove', tripId: appState.currentTripId, memberName: name };
-  appState.allRows.push(row);
+  const snapshot = snapshotRows();
+  applyOptimisticPayload(row);
   appState.detailSplitAmong = appState.detailSplitAmong.filter(m => m !== name);
   renderTripDetail();
   try {
-    const pr = await postRow(row);
+    const syncTarget = appState.allRows.find(r => r && r.type === 'trip' && r.id === appState.currentTripId) || null;
+    const pr = await postRow(row, { syncTarget });
     if (pr.status === 'queued') toast('已暫存，連上網路後會自動上傳');
   } catch (e) {
-    undoOptimisticPush(row);
+    restoreRowsSnapshot(snapshot);
     renderTripDetail();
     toast(formatPostError(e));
   }
 }
-
 

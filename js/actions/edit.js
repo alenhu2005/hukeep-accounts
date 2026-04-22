@@ -13,7 +13,7 @@ import {
   prefersReducedMotion,
   bindScrollReveal,
 } from '../utils.js';
-import { postRow, formatPostError } from '../api.js';
+import { postRow, formatPostError, fetchHistoryRows } from '../api.js';
 import {
   getDailyRecords,
   getTripById,
@@ -49,7 +49,15 @@ import {
 } from '../views-trip-detail.js';
 import { buildTripSettlementSummaryText } from '../trip-stats.js';
 import { toggleCollapsible } from '../ui-collapsible.js';
-import { undoOptimisticPush, parseMoneyLike, snapshotPendingHomeBalanceFromAbs, fileToJpegDataUrl } from './shared.js';
+import {
+  undoOptimisticPush,
+  parseMoneyLike,
+  snapshotPendingHomeBalanceFromAbs,
+  fileToJpegDataUrl,
+  snapshotRows,
+  restoreRowsSnapshot,
+  applyOptimisticPayload,
+} from './shared.js';
 
 // ── Edit dialog ──────────────────────────────────────────────────────────────
 const EDIT_PHOTO_STORAGE_KEY_PREFIX = 'ledger_edit_photo_v1';
@@ -107,6 +115,105 @@ function setEditPhotoPreview(dataUrl) {
   }
 }
 
+function renderAmountRevisionHtml(rev) {
+  if (!Array.isArray(rev) || rev.length < 2) return '';
+  const rows = rev
+    .map((s, i) => {
+      const d = esc(String(s.date || '').slice(0, 10));
+      const delta = i > 0 ? s.amount - rev[i - 1].amount : 0;
+      const deltaHtml =
+        i > 0 && delta !== 0
+          ? ` <span class="edit-summary-amt-rev-delta">${delta > 0 ? '+' : ''}${delta}</span>`
+          : '';
+      return `<div class="edit-summary-amt-rev-row">${d}　NT$${s.amount.toLocaleString()}${deltaHtml}</div>`;
+    })
+    .join('');
+  return `<div class="edit-summary-amt-rev" role="group" aria-label="金額修訂紀錄">
+    <div class="edit-summary-amt-rev__label">金額修訂紀錄</div>
+    <div class="edit-summary-amt-rev__rows">${rows}</div>
+  </div>`;
+}
+
+function renderEditSummary(r, amountTrail = null) {
+  const summary = document.getElementById('edit-summary');
+  if (!summary || !r) return;
+
+  const amt = parseFloat(r.amount) || 0;
+  if (r.type === 'tripSettlement') {
+    summary.innerHTML =
+      `<div class="edit-summary-item">出遊還款</div>` +
+      `<div class="edit-summary-meta">${esc(r.date || '')} · ${esc(String(r.from || ''))} → ${esc(String(r.to || ''))} · NT$${Math.round(amt)}</div>`;
+  } else {
+    let payLine = '';
+    if (r.type === 'tripExpense' && Array.isArray(r.payers) && r.payers.length) {
+      const parts = r.payers
+        .filter(p => p && String(p.name || '').trim() && (parseFloat(p.amount) || 0) > 0)
+        .map(p => `${esc(String(p.name).trim())} NT$${Math.round(parseFloat(p.amount) || 0)}`);
+      if (parts.length) payLine = parts.join(' ＋ ');
+    }
+    if (!payLine && r.paidBy) payLine = `${esc(String(r.paidBy))}付`;
+
+    let splitHtml = '';
+    if (r.type === 'tripExpense' && Array.isArray(r.splitAmong) && r.splitAmong.length > 0) {
+      const hasCustomSplit = Array.isArray(r.splitDetails) && r.splitDetails.length > 0;
+      const names = r.splitAmong.map(m => esc(String(m))).join('、');
+      const trip = r.tripId ? getTripById(r.tripId) : null;
+      if (hasCustomSplit) {
+        const lines = computeExpenseShares(r)
+          .map(s => `${esc(String(s.name || ''))} NT$${Math.round(s.amount)}`)
+          .join('、');
+        splitHtml = `<div class="edit-summary-split" role="group" aria-label="分攤說明">
+          <div class="edit-summary-split-row"><span class="edit-summary-split-k">分攤對象</span><span class="edit-summary-split-v">${names}</span></div>
+          <div class="edit-summary-split-row"><span class="edit-summary-split-k">詳細分攤</span><span class="edit-summary-split-v">${lines}</span></div>
+        </div>`;
+      } else {
+        const n = r.splitAmong.length;
+        const sh = computeExpenseShares(r);
+        const per = sh.length ? Math.round(sh[0].amount) : Math.round(amt / n);
+        const tm = trip?.members?.length ?? 0;
+        const fullTrip = tm > 0 && n === tm;
+        splitHtml = `<div class="edit-summary-split" role="group" aria-label="分攤說明">
+          <div class="edit-summary-split-row"><span class="edit-summary-split-k">分攤對象</span><span class="edit-summary-split-v">${names}${fullTrip ? ` <span class="edit-summary-split-tag">全員均分</span>` : ''}</span></div>
+          <div class="edit-summary-split-row"><span class="edit-summary-split-k">每人負擔</span><span class="edit-summary-split-v">NT$${per.toLocaleString()}</span></div>
+        </div>`;
+      }
+    }
+
+    const cnyRaw = parseFloat(r.amountCny);
+    const cnyPart =
+      Number.isFinite(cnyRaw) && cnyRaw > 0
+        ? ` · ¥${cnyRaw.toFixed(2).replace(/\.?0+$/, '')}`
+        : '';
+    summary.innerHTML =
+      `<div class="edit-summary-item">${esc(r.item || '—')}</div>` +
+      `<div class="edit-summary-meta">${esc(r.date || '')}${payLine ? ' · ' + payLine : ''}${amt ? ' · NT$' + Math.round(amt) : ''}${cnyPart}</div>` +
+      renderAmountRevisionHtml(amountTrail) +
+      splitHtml;
+  }
+
+  if (!prefersReducedMotion()) {
+    summary.classList.remove('edit-summary--swap');
+    void summary.offsetWidth;
+    requestAnimationFrame(() => summary.classList.add('edit-summary--swap'));
+  }
+}
+
+async function loadTripExpenseRevisionTrail(expenseId) {
+  const raw = await fetchHistoryRows({ type: 'tripExpense', id: expenseId });
+  const trail = [];
+  for (const row of raw) {
+    if (!row || row.type !== 'tripExpense') continue;
+    if (row.action !== 'add' && row.action !== 'edit') continue;
+    if (row.amount === undefined || row.amount === null || String(row.amount).trim() === '') continue;
+    const amount = Math.round(Math.max(0, parseFloat(row.amount) || 0));
+    if (!amount) continue;
+    const prev = trail[trail.length - 1];
+    if (prev && prev.amount === amount) continue;
+    trail.push({ date: row.date ? String(row.date).slice(0, 10) : '', amount });
+  }
+  return trail;
+}
+
 
 export function openEditRecord(r) {
   if (r._voided) return;
@@ -157,91 +264,7 @@ export function openEditRecord(r) {
     voidBtn.disabled = !canVoid;
   }
 
-  const summary = document.getElementById('edit-summary');
-  if (summary) {
-    const amt = parseFloat(r.amount) || 0;
-    if (isTripSettlement) {
-      summary.innerHTML =
-        `<div class="edit-summary-item">出遊還款</div>` +
-        `<div class="edit-summary-meta">${esc(r.date || '')} · ${esc(String(r.from || ''))} → ${esc(String(r.to || ''))} · NT$${Math.round(amt)}</div>`;
-      if (!prefersReducedMotion()) {
-        summary.classList.remove('edit-summary--swap');
-        void summary.offsetWidth;
-        requestAnimationFrame(() => summary.classList.add('edit-summary--swap'));
-      }
-    } else {
-    let payLine = '';
-    if (r.type === 'tripExpense' && Array.isArray(r.payers) && r.payers.length) {
-      const parts = r.payers
-        .filter(p => p && String(p.name || '').trim() && (parseFloat(p.amount) || 0) > 0)
-        .map(p => `${esc(String(p.name).trim())} NT$${Math.round(parseFloat(p.amount) || 0)}`);
-      if (parts.length) payLine = parts.join(' ＋ ');
-    }
-    if (!payLine && r.paidBy) payLine = `${esc(String(r.paidBy))}付`;
-
-    let splitHtml = '';
-    if (r.type === 'tripExpense' && Array.isArray(r.splitAmong) && r.splitAmong.length > 0) {
-      const hasCustomSplit = Array.isArray(r.splitDetails) && r.splitDetails.length > 0;
-      const names = r.splitAmong.map(m => esc(String(m))).join('、');
-      const trip = r.tripId ? getTripById(r.tripId) : null;
-      if (hasCustomSplit) {
-        const lines = computeExpenseShares(r)
-          .map(s => `${esc(String(s.name || ''))} NT$${Math.round(s.amount)}`)
-          .join('、');
-        splitHtml = `<div class="edit-summary-split" role="group" aria-label="分攤說明">
-          <div class="edit-summary-split-row"><span class="edit-summary-split-k">分攤對象</span><span class="edit-summary-split-v">${names}</span></div>
-          <div class="edit-summary-split-row"><span class="edit-summary-split-k">詳細分攤</span><span class="edit-summary-split-v">${lines}</span></div>
-        </div>`;
-      } else {
-        const n = r.splitAmong.length;
-        const sh = computeExpenseShares(r);
-        const per = sh.length ? Math.round(sh[0].amount) : Math.round(amt / n);
-        const tm = trip?.members?.length ?? 0;
-        const fullTrip = tm > 0 && n === tm;
-        splitHtml = `<div class="edit-summary-split" role="group" aria-label="分攤說明">
-          <div class="edit-summary-split-row"><span class="edit-summary-split-k">分攤對象</span><span class="edit-summary-split-v">${names}${fullTrip ? ` <span class="edit-summary-split-tag">全員均分</span>` : ''}</span></div>
-          <div class="edit-summary-split-row"><span class="edit-summary-split-k">每人負擔</span><span class="edit-summary-split-v">NT$${per.toLocaleString()}</span></div>
-        </div>`;
-      }
-    }
-
-    const cnyRaw = parseFloat(r.amountCny);
-    const cnyPart =
-      Number.isFinite(cnyRaw) && cnyRaw > 0
-        ? ` · ¥${cnyRaw.toFixed(2).replace(/\.?0+$/, '')}`
-        : '';
-    let amountRevHtml = '';
-    if (r.type === 'tripExpense' && r.id) {
-      const rev = getTripExpenseAmountRevisionTrail(r.id, appState.allRows);
-      if (rev.length >= 2) {
-        const rows = rev
-          .map((s, i) => {
-            const d = esc(String(s.date || '').slice(0, 10));
-            const delta = i > 0 ? s.amount - rev[i - 1].amount : 0;
-            const deltaHtml =
-              i > 0 && delta !== 0
-                ? ` <span class="edit-summary-amt-rev-delta">${delta > 0 ? '+' : ''}${delta}</span>`
-                : '';
-            return `<div class="edit-summary-amt-rev-row">${d}　NT$${s.amount.toLocaleString()}${deltaHtml}</div>`;
-          })
-          .join('');
-        amountRevHtml = `<div class="edit-summary-amt-rev" role="group" aria-label="金額修訂紀錄">
-          <div class="edit-summary-amt-rev__label">金額修訂紀錄</div>
-          <div class="edit-summary-amt-rev__rows">${rows}</div>
-        </div>`;
-      }
-    }
-    summary.innerHTML = `<div class="edit-summary-item">${esc(r.item || '—')}</div>`
-      + `<div class="edit-summary-meta">${esc(r.date || '')}${payLine ? ' · ' + payLine : ''}${amt ? ' · NT$' + Math.round(amt) : ''}${cnyPart}</div>`
-      + amountRevHtml
-      + splitHtml;
-    if (!prefersReducedMotion()) {
-      summary.classList.remove('edit-summary--swap');
-      void summary.offsetWidth;
-      requestAnimationFrame(() => summary.classList.add('edit-summary--swap'));
-    }
-    }
-  }
+  renderEditSummary(r, r.type === 'tripExpense' ? getTripExpenseAmountRevisionTrail(r.id, appState.allRows) : null);
 
   document.getElementById('edit-date').value = r.date || todayStr();
   document.getElementById('edit-note').value = r.note || '';
@@ -252,6 +275,15 @@ export function openEditRecord(r) {
   setEditPhotoPreview(r.photoUrl || null);
 
   document.getElementById('edit-overlay').classList.add('open');
+
+  if (r.type === 'tripExpense' && r.id) {
+    void loadTripExpenseRevisionTrail(r.id)
+      .then(trail => {
+        if (!appState._editRecord || appState._editRecord.id !== r.id) return;
+        renderEditSummary(appState._editRecord, trail);
+      })
+      .catch(() => {});
+  }
 }
 
 export function openEditRecordById(id, kind) {
@@ -301,25 +333,33 @@ export async function voidEditingRecord() {
   const amount = parseFloat(r.amount) || 0;
   const ok = await showConfirm(
     '撤回這筆紀錄？',
-    `「${label}」— NT$${Math.round(amount)} 將標記為撤回，${isTripLedger ? '分帳' : '帳面'}隨之更動，紀錄仍保留。`,
+    `「${label}」— NT$${Math.round(amount)} 會保留在歷史紀錄中，但不再列入目前帳務。`,
   );
   if (!ok) return;
 
+  const snapshot = snapshotRows();
   closeEditRecord();
 
   let row;
   if (isTripExp) row = { type: 'tripExpense', action: 'void', id: r.id };
   else if (isTripSettle) row = { type: 'tripSettlement', action: 'void', id: r.id };
-  else row = { type: 'daily', action: 'void', id: r.id };
+  else row = { type: r.type === 'settlement' ? 'settlement' : 'daily', action: 'void', id: r.id };
   if (!isTripLedger) snapshotPendingHomeBalanceFromAbs();
-  appState.allRows.push(row);
+  applyOptimisticPayload(row, { pending: false });
   if (isTripLedger) renderTripDetail();
   else renderHome();
   try {
-    const pr = await postRow(row);
-    toast(pr.status === 'queued' ? '已暫存，連上網路後會自動上傳' : '已撤回');
+    const syncTarget =
+      appState.allRows.find(x => x && x.id === r.id && (
+        x.type === 'tripExpense' ||
+        x.type === 'tripSettlement' ||
+        x.type === 'daily' ||
+        x.type === 'settlement'
+      )) || null;
+    const pr = await postRow(row, { syncTarget });
+    toast(pr.status === 'queued' ? '已暫存，連上網路後會自動同步撤回' : '已撤回');
   } catch (e) {
-    undoOptimisticPush(row);
+    restoreRowsSnapshot(snapshot);
     if (!isTripLedger) cancelHomeBalanceAnim();
     if (isTripLedger) renderTripDetail();
     else renderHome();
@@ -379,16 +419,6 @@ export async function submitEditRecord() {
       ...(amountChanged ? { fxFeeNtd: 0 } : {}),
     };
   }
-  const optimisticRow = {
-    type: appState._editRecord.type,
-    action: 'edit',
-    id: appState._editRecord.id,
-    date,
-    note,
-    category,
-    ...tripAmountPatch,
-    ...(hasPhoto ? { photoUrl: photoUrlToSet, photoFileId: '' } : {}),
-  };
   const postPayload = {
     type: appState._editRecord.type,
     action: 'edit',
@@ -399,15 +429,22 @@ export async function submitEditRecord() {
     ...tripAmountPatch,
     ...(hasPhoto ? { photoDataUrl: photoDataUrlToSend, photoFileId: '' } : {}),
   };
-  appState.allRows.push(optimisticRow);
+  const snapshot = snapshotRows();
+  const targetType = appState._editRecord.type;
+  const targetId = appState._editRecord.id;
+  applyOptimisticPayload({
+    ...postPayload,
+    ...(hasPhoto ? { photoUrl: photoUrlToSet } : {}),
+  });
   doRender();
   closeEditRecord();
   try {
+    const syncTarget = appState.allRows.find(r => r && r.type === targetType && r.id === targetId) || null;
     // 圖片不上離線佇列：避免 localStorage 容量問題 & 離線顯示不一致
-    const pr = await postRow(postPayload, { syncTarget: optimisticRow, allowQueue: !hasPhoto });
+    const pr = await postRow(postPayload, { syncTarget, allowQueue: !hasPhoto });
     toast(pr.status === 'queued' ? '已暫存，連上網路後會自動上傳' : '已更新');
   } catch (e) {
-    undoOptimisticPush(optimisticRow);
+    restoreRowsSnapshot(snapshot);
     doRender();
     toast(formatPostError(e));
   }
@@ -459,4 +496,3 @@ export function removeEditPhoto() {
   const inp = document.getElementById('edit-photo-input');
   if (inp) inp.value = '';
 }
-

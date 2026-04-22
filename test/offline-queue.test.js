@@ -47,12 +47,11 @@ describe('mergeFreshWithOutboxBackedPending', () => {
     expect(merged.find(r => r.id === 'ghost')).toBeUndefined();
   });
 
-  it('drops pending duplicate when server already has same event identity', () => {
-    const pendingVoid = { type: 'daily', action: 'void', id: 'a1', _pendingSync: true };
-    const server = [pendingVoid];
-    const local = [pendingVoid];
-    const merged = mergeFreshWithOutboxBackedPending(local, server, [{ type: 'daily', action: 'void', id: 'a1' }]);
-    expect(merged.filter(r => r.action === 'void')).toHaveLength(1);
+  it('applies queued withdraw to fresh current-state rows by marking the row voided', () => {
+    const server = [{ type: 'daily', action: 'add', id: 'a1', item: 'x', amount: 1 }];
+    const merged = mergeFreshWithOutboxBackedPending(server, server, [{ type: 'daily', action: 'void', id: 'a1' }]);
+    expect(merged.filter(r => r.id === 'a1')).toHaveLength(1);
+    expect(merged.find(r => r.id === 'a1')?.voided).toBe(true);
   });
 });
 

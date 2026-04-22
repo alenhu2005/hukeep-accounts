@@ -3,6 +3,8 @@ import {
   CACHE_DAILY,
   CACHE_TRIP,
   CACHE_LEGACY_KEYS,
+  CLIENT_DATA_SCHEMA_KEY,
+  CLIENT_DATA_SCHEMA_VERSION,
   GET_TIMEOUT_MS,
   POST_TIMEOUT_MS,
   GET_MAX_RETRIES,
@@ -70,6 +72,39 @@ function readSyncTimestampFromStorage() {
     return Number.isNaN(n) ? null : n;
   } catch {
     return null;
+  }
+}
+
+function readClientSchemaVersionFromStorage() {
+  try {
+    const raw = localStorage.getItem(CLIENT_DATA_SCHEMA_KEY);
+    if (raw == null) return 0;
+    const n = parseInt(raw, 10);
+    return Number.isNaN(n) ? 0 : n;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * 一次性前端資料格式遷移：
+ * - 清掉舊快取（日常/出遊/舊版鍵）
+ * - 清掉離線 POST 佇列（避免舊事件語意覆蓋 current-state）
+ */
+export function ensureClientStorageSchema() {
+  try {
+    const current = readClientSchemaVersionFromStorage();
+    if (current >= CLIENT_DATA_SCHEMA_VERSION) return false;
+    clearLedgerLocalStorage();
+    localStorage.removeItem(POST_OUTBOX_KEY);
+    localStorage.removeItem(SYNC_LAST_AT_KEY);
+    localStorage.setItem(CLIENT_DATA_SCHEMA_KEY, String(CLIENT_DATA_SCHEMA_VERSION));
+    appState.allRows = [];
+    appState.lastSyncAt = null;
+    appState.syncStatus = 'idle';
+    return true;
+  } catch {
+    return false;
   }
 }
 
@@ -162,6 +197,18 @@ async function fetchGetWithRetry(url) {
     }
   }
   throw lastErr;
+}
+
+export async function fetchHistoryRows(params = {}) {
+  const search = new URLSearchParams();
+  search.set('mode', 'history');
+  Object.entries(params).forEach(([key, value]) => {
+    if (value == null || value === '') return;
+    search.set(key, String(value));
+  });
+  const res = await fetchGetWithRetry(`${API_URL}?${search.toString()}`);
+  const raw = await res.json();
+  return Array.isArray(raw) ? raw : [];
 }
 
 function ledgerRowSortKey(r) {

@@ -91,12 +91,14 @@ export function isTripRow(r) {
 export function normalizeRow(r) {
   if (!r || !r.type) return r;
   if (r.type === 'daily') {
+    r.action = r.action ?? 'add';
     r.item = r.item ?? '';
     r.paidBy = r.paidBy ?? '';
     r.splitMode = r.splitMode ?? '均分';
     r.date = normalizeDate(r.date);
     r.amount = r.amount ?? 0;
     r.note = r.note || '';
+    r.voided = r.voided === true || String(r.voided || '').trim().toLowerCase() === 'true';
     if (r.action === 'edit') {
       if ('category' in r) {
         const v = r.category;
@@ -112,11 +114,20 @@ export function normalizeRow(r) {
       r.category = typeof r.category === 'string' ? r.category.trim() : '';
     }
   } else if (r.type === 'settlement') {
+    r.action = r.action ?? 'add';
     r.item = '還款';
     r.paidBy = r.paidBy ?? '';
     r.date = normalizeDate(r.date);
     r.amount = r.amount ?? 0;
+    r.voided = r.voided === true || String(r.voided || '').trim().toLowerCase() === 'true';
   } else if (r.type === 'trip') {
+    r.action = r.action ?? 'add';
+    if ('closed' in r) r.closed = r.closed === true || String(r.closed).trim().toLowerCase() === 'true';
+    else r.closed = false;
+    if ('cnyMode' in r) r.cnyMode = r.cnyMode === true || String(r.cnyMode).trim().toLowerCase() === 'true';
+    else r.cnyMode = false;
+    if (typeof r.colorId === 'string') r.colorId = r.colorId.trim();
+    else r.colorId = '';
     if (r.action === 'enableCnyMode') {
       r.id = String(r.id || '').trim();
     } else {
@@ -128,6 +139,7 @@ export function normalizeRow(r) {
     r.tripId = r.tripId ?? (r.id || '');
     r.memberName = r.memberName ?? (r.date || '');
   } else if (r.type === 'tripExpense') {
+    r.action = r.action ?? 'add';
     if (r.tripId == null || r.splitAmong == null) {
       const sm = r.splitMode || '';
       const sep = sm.indexOf('::');
@@ -139,6 +151,7 @@ export function normalizeRow(r) {
     r.amount = r.amount ?? 0;
     r.date = normalizeDate(r.date);
     r.note = r.note || '';
+    r.voided = r.voided === true || String(r.voided || '').trim().toLowerCase() === 'true';
     if (r.action === 'edit') {
       if ('category' in r) {
         const v = r.category;
@@ -182,20 +195,28 @@ export function normalizeRow(r) {
       delete r.fxFeeNtd;
     }
   } else if (r.type === 'tripSettlement') {
+    r.action = r.action ?? 'add';
     r.tripId = r.tripId ?? '';
     r.from = r.from ?? '';
     r.to = r.to ?? '';
     r.amount = r.amount ?? 0;
     r.date = normalizeDate(r.date);
+    r.voided = r.voided === true || String(r.voided || '').trim().toLowerCase() === 'true';
   } else if (r.type === 'memberProfile') {
     r.action = r.action ?? '';
     if (typeof r.memberName === 'string') r.memberName = r.memberName.trim();
     if (typeof r.newName === 'string') r.newName = r.newName.trim();
     if (typeof r.colorId === 'string') r.colorId = r.colorId.trim();
+    if ('deleted' in r) {
+      r.deleted = r.deleted === true || String(r.deleted).trim().toLowerCase() === 'true';
+    } else {
+      r.deleted = false;
+    }
   } else if (r.type === 'avatar') {
     if (typeof r.memberName === 'string') r.memberName = r.memberName.trim();
     if (typeof r.avatarUrl === 'string') r.avatarUrl = r.avatarUrl.trim();
     if (typeof r.avatarScope === 'string') r.avatarScope = r.avatarScope.trim();
+    else r.avatarScope = 'auto';
   }
   return r;
 }
