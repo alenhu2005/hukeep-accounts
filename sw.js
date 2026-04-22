@@ -1,5 +1,5 @@
 // Bump this to force clients to refresh cached assets.
-const CACHE_NAME = 'ledger-v53';
+const CACHE_NAME = 'ledger-v54';
 
 const STATIC_ASSETS = [
   './',
@@ -24,10 +24,16 @@ const STATIC_ASSETS = [
   './js/bootstrap.js',
   './js/config.js',
   './js/state.js',
+  './js/state-accessors.js',
   './js/model.js',
   './js/api.js',
   './js/offline-queue.js',
   './js/data.js',
+  './js/data/shared.js',
+  './js/data/daily-selectors.js',
+  './js/data/history-selectors.js',
+  './js/data/member-selectors.js',
+  './js/data/trip-selectors.js',
   './js/finance.js',
   './js/time.js',
   './js/utils.js',
@@ -66,6 +72,14 @@ const STATIC_ASSETS = [
   './js/sync-pause.js',
   './js/session-ui.js',
   './js/device-info.js',
+  './js/sync/merge.js',
+  './js/sync/pending.js',
+  './js/sync/outbox-storage.js',
+  './js/sync/storage-schema.js',
+  './js/views-trip-detail/records.js',
+  './js/views-trip-detail/settlement.js',
+  './js/views-trip-detail/history.js',
+  './js/views-trip-detail/orchestration.js',
 ];
 
 self.addEventListener('install', event => {

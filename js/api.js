@@ -12,6 +12,7 @@ import {
   POST_MAX_RETRIES,
   POST_RETRY_BASE_MS,
   SYNC_LAST_AT_KEY,
+  POST_OUTBOX_KEY,
   APPEND_DEVICE_INFO_TO_POST,
   APPEND_POSTED_AT_TO_POST,
   TIMEZONE,
@@ -32,6 +33,7 @@ import {
   clearPendingSyncForPayload,
   pruneStalePendingSyncFlags,
 } from './offline-queue.js';
+import { upgradeClientStorageSchema } from './sync/storage-schema.js';
 
 function sleep(ms) {
   return new Promise(r => setTimeout(r, ms));
@@ -75,37 +77,23 @@ function readSyncTimestampFromStorage() {
   }
 }
 
-function readClientSchemaVersionFromStorage() {
-  try {
-    const raw = localStorage.getItem(CLIENT_DATA_SCHEMA_KEY);
-    if (raw == null) return 0;
-    const n = parseInt(raw, 10);
-    return Number.isNaN(n) ? 0 : n;
-  } catch {
-    return 0;
-  }
-}
-
 /**
  * 一次性前端資料格式遷移：
  * - 清掉舊快取（日常/出遊/舊版鍵）
  * - 清掉離線 POST 佇列（避免舊事件語意覆蓋 current-state）
  */
 export function ensureClientStorageSchema() {
-  try {
-    const current = readClientSchemaVersionFromStorage();
-    if (current >= CLIENT_DATA_SCHEMA_VERSION) return false;
-    clearLedgerLocalStorage();
-    localStorage.removeItem(POST_OUTBOX_KEY);
-    localStorage.removeItem(SYNC_LAST_AT_KEY);
-    localStorage.setItem(CLIENT_DATA_SCHEMA_KEY, String(CLIENT_DATA_SCHEMA_VERSION));
-    appState.allRows = [];
-    appState.lastSyncAt = null;
-    appState.syncStatus = 'idle';
-    return true;
-  } catch {
-    return false;
-  }
+  return upgradeClientStorageSchema({
+    schemaKey: CLIENT_DATA_SCHEMA_KEY,
+    targetVersion: CLIENT_DATA_SCHEMA_VERSION,
+    clearLedgerLocalStorage,
+    resetKeys: [POST_OUTBOX_KEY, SYNC_LAST_AT_KEY],
+    onReset: () => {
+      appState.allRows = [];
+      appState.lastSyncAt = null;
+      appState.syncStatus = 'idle';
+    },
+  });
 }
 
 function persistSyncTimestamp(ms) {
@@ -124,7 +112,7 @@ export function loadCache() {
       ...(daily ? JSON.parse(daily) : []),
       ...(trip ? JSON.parse(trip) : []),
     ].map(normalizeRow);
-    pruneStalePendingSyncFlags(appState.allRows);
+    pruneStalePendingSyncFlags(appState.allRows, readPostOutbox());
     const ts = readSyncTimestampFromStorage();
     appState.lastSyncAt = ts;
     appState.syncStatus = appState.allRows.length ? 'cache_only' : 'idle';

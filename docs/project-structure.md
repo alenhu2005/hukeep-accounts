@@ -19,15 +19,27 @@
 - `router.js`：路由分派。
 - `navigation.js`：頁面切換（含導覽按鈕）。
 - `state.js`：執行期狀態。
+- `state-accessors.js`：狀態切面 helper；新程式碼優先透過此處讀寫 `home` / `tripDetail` / `analysis` / `sync` 相關狀態。
 - `render-registry.js`：集中 render 委派，避免循環依賴。
 
 ### B. 資料層與同步
 
-- `api.js`：GAS 通訊、重試、快取、同步狀態。
-- `offline-queue.js`：離線 outbox 佇列與合併邏輯。
-- `data.js`：事件列轉 UI 資料模型。
+- `api.js`：GAS 通訊、重試、快取、同步狀態；保留對外 entrypoint。
+- `offline-queue.js`：離線 outbox 相容入口（facade）；實作在 `sync/`。
+- `data.js`：資料層相容入口（facade）；實作在 `data/`。
 - `model.js`：列結構與 normalize。
 - `config.js`：環境參數、快取鍵、逾時與重試設定。
+- `data/`：依領域拆分 selector。
+  - `daily-selectors.js`：日常與日常還款顯示資料。
+  - `trip-selectors.js`：行程、出遊消費、出遊還款、色盤。
+  - `member-selectors.js`：成員顏色、頭像、成員名稱集合。
+  - `history-selectors.js`：出遊金額修訂歷史。
+  - `shared.js`：rename / dedupe 等共用 helper。
+- `sync/`：同步純邏輯。
+  - `storage-schema.js`：前端 localStorage schema migration。
+  - `merge.js`：伺服端 current-state 與本機 outbox 合併。
+  - `pending.js`：pending identity 與 cleanup。
+  - `outbox-storage.js`：POST outbox 存取。
 
 ### C. 商業邏輯
 
@@ -40,7 +52,12 @@
 
 - `views-home.js`：日常頁渲染。
 - `views-trips.js`：行程列表頁渲染。
-- `views-trip-detail.js`：行程明細頁渲染。
+- `views-trip-detail.js`：行程明細頁對外入口（facade）。
+- `views-trip-detail/`：行程明細頁內部模組。
+  - `records.js`：成員 chips、分攤表單、紀錄 HTML。
+  - `settlement.js`：結算卡與動畫。
+  - `history.js`：日期條、歷史列表、日期範圍推導。
+  - `orchestration.js`：頁面協調、header / form / history / settlement 串接。
 - `views-analysis.js`：分析頁渲染。
 - `views-shared.js`：共用 UI 片段。
 - `pie-chart.js`：圓餅圖 SVG。
@@ -67,8 +84,10 @@
 - `finance.test.js`：金流計算測試。
 - `data.test.js`：資料轉換與推導測試。
 - `offline-queue.test.js`：離線佇列與 pending 合併測試。
+- `refactor-regression.test.js`：fixture / golden 回歸測試（`voided`、`closed`、rename、settlement、outbox merge）。
 - `trip-stats.test.js`：統計摘要測試。
 - `utils.test.js`：工具函式測試。
+- `fixtures/`：回歸測試樣本資料。
 
 ## 4) 文件（`docs/`）
 
@@ -84,6 +103,11 @@
 ## 快速定位建議
 
 - 想改「同步流程」：先看 `js/bootstrap.js` + `js/api.js` + `js/offline-queue.js`
-- 想改「某頁 UI」：先看對應 `views-*.js`，再回頭查 `actions.js`
+- 想改「某頁 UI」：先看對應 `views-*.js`；若是行程明細，再進 `js/views-trip-detail/`
 - 想改「結算邏輯」：`js/finance.js`
 - 想改「PWA/快取」：`sw.js` + `manifest.json`
+
+## 邊界原則
+
+- `data.js`、`offline-queue.js`、`views-trip-detail.js` 保留穩定入口；新增內部模組優先往子資料夾放，不要再把大型邏輯堆回 facade。
+- 重構 PR 不混做新功能：先抽純函式，再搬模組，最後才改呼叫點。

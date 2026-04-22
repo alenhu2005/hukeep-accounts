@@ -1,3 +1,4 @@
+// === Sheet schema ===========================================================
 var ACTIVE_SHEETS = {
   daily: '日常消費',
   settlement: '日常還款',
@@ -29,6 +30,7 @@ var ACTIVE_HEADERS = {
   '封存_人物事件': ['type', 'action', 'id', 'memberName', 'newName', 'colorId', 'deleted', 'avatarScope', 'avatarUrl', 'avatarFileId', '_archivedAt'],
 };
 
+// === Row / sheet utils ======================================================
 function getSheet_(name) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName(name);
@@ -164,6 +166,7 @@ function rowMatchesKey_(row, key, value) {
   return trim_(row[key]) === trim_(value);
 }
 
+// === Active current-state mutations ========================================
 function upsertActiveRow_(sheetName, key, value, patch) {
   var rows = sheetRowsToObjects_(sheetName);
   var idx = -1;
@@ -555,6 +558,7 @@ function historyRows_(type, id) {
   });
 }
 
+// === Migration from legacy append-only events ===============================
 function copyLegacyRowsToArchive_() {
   if (sheetRowsToObjects_(ARCHIVE_SHEETS.daily).length > 0) return;
   LEGACY_SHEETS.forEach(function (legacyName) {
@@ -815,6 +819,7 @@ function getGeminiCategory(item) {
   }
 }
 
+// === Media upload ===========================================================
 var LEDGER_PHOTO_FOLDER_NAME = 'ledger-app-uploads';
 var LEDGER_PHOTO_SUBFOLDERS_BY_KEY = {
   photo: 'photos',
@@ -884,6 +889,7 @@ function processAllImageDataUrls_(data) {
   });
 }
 
+// === HTTP handlers ==========================================================
 function doPost(e) {
   try {
     var data = JSON.parse(e.postData.contents);

@@ -108,13 +108,19 @@ flowchart TB
 | 區塊 | 代表檔案 |
 |------|----------|
 | 啟動／路由 | `main.js`、`bootstrap.js`、`router.js`、`navigation.js` |
-| 狀態 | `state.js`、`render-registry.js` |
-| API／快取／離線 | `api.js`、`offline-queue.js`、`config.js` |
-| 資料與模型 | `data.js`、`model.js` |
+| 狀態 | `state.js`、`state-accessors.js`、`render-registry.js` |
+| API／快取／離線 | `api.js`、`offline-queue.js`、`js/sync/*.js`、`config.js` |
+| 資料與模型 | `data.js`、`js/data/*.js`、`model.js` |
 | 商業邏輯 | `finance.js`、`trip-stats.js`、`category.js`、`time.js` |
-| 畫面 | `views-home.js`、`views-trips.js`、`views-trip-detail.js`、`views-analysis.js`、`views-shared.js` |
+| 畫面 | `views-home.js`、`views-trips.js`、`views-trip-detail.js`、`js/views-trip-detail/*.js`、`views-analysis.js`、`views-shared.js` |
 | 互動 | `actions.js`、`dialog.js`、`globals.js`（掛載 `window` 供 inline 呼叫） |
 | 其他 | `pie-chart.js`、`sync-ui.js`、`sync-pause.js`、`session-ui.js`、`device-info.js`、`utils.js` |
+
+模組邊界補充：
+
+- `data.js`、`offline-queue.js`、`views-trip-detail.js` 是對外穩定入口；內部實作分別放在 `js/data/`、`js/sync/`、`js/views-trip-detail/`
+- `api.js` 保留流程控制與 I/O；schema migration、outbox merge、pending cleanup 抽到 `js/sync/`
+- `gas/current-state.gs` 仍維持單檔部署，但檔內章節固定為：sheet schema、row utils、active mutations、migration、media upload、HTTP handlers
 
 **更細的檔案地圖**請見 [docs/project-structure.md](docs/project-structure.md)。
 
@@ -287,18 +293,11 @@ npm test
 | `test/finance.test.js` | 結餘、分攤、賭博情境等 |
 | `test/data.test.js` | 事件列轉顯示資料 |
 | `test/offline-queue.test.js` | 離線佇列與合併 |
+| `test/refactor-regression.test.js` | fixture / golden 回歸，鎖住 `voided`、`closed`、rename、settlement、outbox merge |
 | `test/trip-stats.test.js` | 行程統計摘要 |
 | `test/utils.test.js` | 工具函式 |
 
 設定檔：[vitest.config.js](vitest.config.js)。
-
----
-
-## 效能與擴充規劃
-
-試算表列數持續增加時，全量 GET 與前端重複掃描可能變慢。規劃稿（待體感需要再實作）：
-
-- [docs/大量資料效能改善.md](docs/大量資料效能改善.md)
 
 ---
 
@@ -323,13 +322,12 @@ npm test
 | [docs/workflow.md](docs/workflow.md) | 開發順序與同步重點 |
 | [docs/operations-checklist.md](docs/operations-checklist.md) | 部署、驗收、排錯 |
 | [docs/gas程式碼.md](docs/gas程式碼.md) | GAS 與試算表邏輯參考 |
-| [docs/大量資料效能改善.md](docs/大量資料效能改善.md) | 大量資料時效能改善規劃 |
 
 修改建議對照：
 
 - 同步流程：`js/bootstrap.js`、`js/api.js`、`js/offline-queue.js`
-- 畫面：`js/views-*.js` → `js/actions.js`（`js/actions/` 子模組）、`css/*.css`
-- 結算與規則：`js/finance.js`、`js/data.js`、`js/model.js`
+- 畫面：`js/views-*.js`、`js/views-trip-detail/*.js` → `js/actions.js`（`js/actions/` 子模組）、`css/*.css`
+- 結算與規則：`js/finance.js`、`js/data.js`、`js/data/*.js`、`js/model.js`
 - PWA／離線資源：`sw.js`、`manifest.json`
 
 ---
