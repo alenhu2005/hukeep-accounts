@@ -197,14 +197,18 @@ export function updateCnyRateInlineDisplay() {
 
   if (!isTripCnyModeEnabled(appState.currentTripId)) {
     inline.textContent = '';
+    delete inline.dataset.mode;
+    delete inline.dataset.currency;
     return;
   }
 
   const rate = parseMoneyLike(rateEl.value);
   const amountEl = document.getElementById('d-amount');
   const v = amountEl ? parseMoneyLike(amountEl.value) : 0;
+  inline.dataset.currency = appState.detailAmountCurrency === 'CNY' ? 'CNY' : 'TWD';
 
   if (rate > 0 && v > 0 && amountEl) {
+    inline.dataset.mode = 'convert';
     if (appState.detailAmountCurrency === 'CNY') {
       const nt = Math.round(v * rate);
       inline.textContent = `${formatCnyHintLabel(v)} ≈ NT$${nt.toLocaleString()} 新台幣`;
@@ -216,9 +220,11 @@ export function updateCnyRateInlineDisplay() {
   }
 
   if (rate > 0) {
+    inline.dataset.mode = 'reference';
     inline.textContent = `1 人民幣 ≈ ${rate.toFixed(4)} 新台幣`;
     return;
   }
+  inline.dataset.mode = 'empty';
   inline.textContent = '';
 }
 
@@ -322,6 +328,7 @@ export function syncDetailAmountCurrencyToggleUi() {
   const btn = document.getElementById('d-currency-toggle');
   if (!btn) return;
   const isCny = appState.detailAmountCurrency === 'CNY';
+  btn.dataset.currencyMode = isCny ? 'CNY' : 'TWD';
   btn.textContent = isCny ? '¥' : 'NT$';
   btn.title = isCny ? '目前為人民幣，點一下改為新台幣' : '目前為新台幣，點一下改為人民幣';
   btn.setAttribute('aria-label', isCny ? '幣別：人民幣，點擊改為新台幣' : '幣別：新台幣，點擊改為人民幣');

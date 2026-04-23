@@ -282,13 +282,13 @@
           <div class="balance-icon" id="balance-icon-wrap">
             <svg id="balance-svg" viewBox="0 0 24 24"></svg>
           </div>
-          <div>
+          <div class="balance-copy">
             <div class="balance-label">目前結算</div>
             <div class="balance-main" id="balance-main">帳目已清</div>
             <div class="balance-who" id="balance-who"></div>
             <div class="balance-sub" id="balance-sub"></div>
-            <button class="settle-btn" id="settle-btn" onclick="recordSettlement()">✓ 還款</button>
           </div>
+          <button class="settle-btn" id="settle-btn" onclick="recordSettlement()">✓ 還款</button>
         </div>
       </div>
 
@@ -440,11 +440,12 @@
       <!-- Trips list -->
       <div class="card" id="trips-list"></div>
     </div>
-    <!-- FAB: member directory -->
-    <button type="button" class="member-dir-fab" id="member-dir-fab" onclick="toggleMemberDirectory()" title="成員管理" aria-label="成員管理">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
-    </button>
   </div>
+
+  <!-- FAB: member directory -->
+  <button type="button" class="member-dir-fab" id="member-dir-fab" onclick="toggleMemberDirectory()" title="成員管理" aria-label="成員管理" hidden>
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+  </button>
 
   <!-- Member directory panel (shared overlay) -->
   <div class="member-dir-overlay" id="member-dir-overlay" onclick="closeMemberDirectory()"></div>
@@ -488,6 +489,23 @@
         </button>
       </div>
       <div class="member-preview-body" id="trip-stats-modal-body"></div>
+    </div>
+  </div>
+
+  <!-- 出遊結案報告 -->
+  <div class="member-preview-overlay" id="trip-closure-report-modal-overlay" onclick="if(event.target===this)closeTripClosureReportModal()">
+    <div class="member-preview-panel" role="dialog" aria-modal="true" aria-labelledby="trip-closure-report-modal-title" onclick="event.stopPropagation()">
+      <div class="member-preview-header">
+        <h3 id="trip-closure-report-modal-title">結案報告</h3>
+        <div class="trip-closure-report-modal-actions">
+          <button type="button" class="btn btn-outline btn-sm" onclick="copyTripClosureReportText()">複製文字</button>
+          <button type="button" class="btn btn-primary btn-sm" onclick="downloadTripClosureReportImage()">下載圖片</button>
+          <button type="button" class="member-dir-close" onclick="closeTripClosureReportModal()" aria-label="關閉">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="member-preview-body" id="trip-closure-report-modal-body"></div>
     </div>
   </div>
 

@@ -113,15 +113,13 @@ function tripExpenseCnyHtml(e) {
     if (!(c > 0)) return '';
   }
   const t = c.toFixed(2).replace(/\.?0+$/, '');
-  const mute = e._voided ? '' : 'color:var(--text-muted);';
-  return `<div style="font-size:13px;font-weight:600;margin-top:2px;${mute}">¥${t}</div>`;
+  return `<div class="record-amount-meta record-amount-meta--cny${e._voided ? ' record-amount-meta--voided' : ''}">¥${t}</div>`;
 }
 
 function tripExpenseFxFeeHtml(e) {
   const fee = tripExpenseFxFeeNtd(e);
   if (fee <= 0) return '';
-  const mute = e._voided ? '' : 'color:var(--text-muted);';
-  return `<div style="font-size:12px;font-weight:600;margin-top:2px;${mute}">手續／匯差 NT$${Math.round(fee)}</div>`;
+  return `<div class="record-amount-meta record-amount-meta--fx${e._voided ? ' record-amount-meta--voided' : ''}">手續／匯差 NT$${Math.round(fee)}</div>`;
 }
 
 export function tripExpenseHTML(e, totalMembers, recordIndex = 0) {
@@ -155,7 +153,7 @@ export function tripExpenseHTML(e, totalMembers, recordIndex = 0) {
         ${noteEl}
       </div>
       ${photoEl}
-      <div class="record-amount" style="${e._voided ? 'color:#9ca3af;text-decoration:line-through' : ''}"><div>NT$${Math.round(e.amount)}</div>${tripExpenseFxFeeHtml(e)}${tripExpenseCnyHtml(e)}</div>
+      <div class="record-amount" style="${e._voided ? 'color:#9ca3af;text-decoration:line-through' : ''}"><div class="record-amount-main">NT$${Math.round(e.amount)}</div>${tripExpenseFxFeeHtml(e)}${tripExpenseCnyHtml(e)}</div>
     </div>`;
   }
 
@@ -171,7 +169,7 @@ export function tripExpenseHTML(e, totalMembers, recordIndex = 0) {
       ${noteEl}
     </div>
     ${photoEl}
-    <div class="record-amount" style="${e._voided ? 'color:#9ca3af;text-decoration:line-through' : ''}"><div>NT$${Math.round(e.amount)}</div>${tripExpenseFxFeeHtml(e)}${tripExpenseCnyHtml(e)}</div>
+    <div class="record-amount" style="${e._voided ? 'color:#9ca3af;text-decoration:line-through' : ''}"><div class="record-amount-main">NT$${Math.round(e.amount)}</div>${tripExpenseFxFeeHtml(e)}${tripExpenseCnyHtml(e)}</div>
   </div>`;
 }
 

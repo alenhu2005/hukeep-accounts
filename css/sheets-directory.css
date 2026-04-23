@@ -200,6 +200,13 @@ html.dark .edit-summary {
 #trip-stats-modal-overlay.open.closing .member-preview-panel {
   animation: tripStatsModalSheetDown 0.38s var(--ease-out) both;
 }
+#trip-closure-report-modal-overlay.open.closing {
+  pointer-events: none;
+  animation: tripStatsModalBackdropBrighten 0.38s var(--ease-out) both;
+}
+#trip-closure-report-modal-overlay.open.closing .member-preview-panel {
+  animation: tripStatsModalSheetDown 0.38s var(--ease-out) both;
+}
 .member-preview-panel {
   width: 100%;
   max-width: 480px;
@@ -485,4 +492,63 @@ html.dark .accent-menu-btn {
 }
 html.dark .accent-menu-btn.is-current {
   background: var(--surface);
+}
+
+/* UI refresh: floating member access and smoother sheets */
+.member-dir-fab {
+  position: fixed;
+  top: auto;
+  left: auto;
+  right: max(18px, calc(50vw - (var(--shell-max) / 2) + 18px));
+  bottom: calc(env(safe-area-inset-bottom) + 106px);
+  width: 54px;
+  height: 54px;
+  border-radius: 18px;
+  background: linear-gradient(
+    135deg,
+    var(--primary) 0%,
+    color-mix(in srgb, var(--primary-dark) 82%, black 8%) 100%
+  );
+  box-shadow: 0 20px 34px color-mix(in srgb, var(--primary) 22%, transparent);
+  z-index: 120;
+}
+
+.member-dir-fab:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 24px 38px color-mix(in srgb, var(--primary) 26%, transparent);
+}
+
+.member-dir-fab[hidden] {
+  display: none !important;
+}
+
+.member-dir-overlay,
+.member-preview-overlay {
+  backdrop-filter: blur(2px);
+}
+
+.member-dir-panel,
+.member-preview-panel {
+  border-radius: 26px 26px 0 0;
+  border: 1px solid var(--border-strong);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(247, 250, 255, 0.9) 100%);
+  box-shadow: 0 -18px 40px rgba(15, 23, 42, 0.18);
+  backdrop-filter: blur(16px);
+}
+
+.member-dir-header,
+.member-preview-header {
+  padding: 18px 20px 14px;
+}
+
+.member-dir-header h2,
+.member-preview-header h3 {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.member-dir-body,
+.member-preview-body {
+  padding: 14px 20px 20px;
 }

@@ -197,6 +197,10 @@ export async function initApp() {
     closeFn: closeAccentMenu,
     panelSelector: '.accent-menu',
   });
+  registerOverlayFocusTrap('trip-closure-report-modal-overlay', {
+    closeFn: () => actions.closeTripClosureReportModal(),
+    panelSelector: '.member-preview-panel',
+  });
 
   initAmountInputs();
 

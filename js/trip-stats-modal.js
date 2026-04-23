@@ -60,7 +60,9 @@ export function openTripStatsModal() {
   overlay.classList.remove('closing');
   if (body._scrollRevealCleanup) body._scrollRevealCleanup();
   body.innerHTML = renderTripStatsCard(trip.members, expenses, { idSuffix: '-modal' });
-  bindScrollReveal(body, '.trip-stats-section, .payer-stats-row', { enabled: true });
+  bindScrollReveal(body, '.trip-stats-section, .trip-stats-summary-card, .trip-stats-net-card, .payer-stats-row', {
+    enabled: true,
+  });
   overlay.classList.add('open');
 }
 

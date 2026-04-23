@@ -707,3 +707,255 @@ html.dark .analysis-legend-swatch {
   to { transform: translateY(-4px); }
 }
 .analysis-empty-text { font-size: 14px; }
+
+.trip-closure-report-modal-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.trip-closure-report-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.trip-closure-report-hero,
+.trip-closure-report-section {
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--bg-card);
+}
+
+.trip-closure-report-hero {
+  padding: 18px;
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--primary) 14%, transparent), transparent 42%),
+    linear-gradient(180deg, color-mix(in srgb, var(--primary) 7%, var(--bg-card)), var(--bg-card));
+}
+
+.trip-closure-report-kicker {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  color: var(--primary-dark);
+  margin-bottom: 6px;
+}
+
+.trip-closure-report-title {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.15;
+  font-weight: 900;
+  color: var(--text);
+}
+
+.trip-closure-report-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.trip-closure-report-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.trip-closure-report-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 72%, white);
+}
+
+.trip-closure-report-metric-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.trip-closure-report-metric strong {
+  font-size: 22px;
+  line-height: 1.1;
+  color: var(--text);
+}
+
+.trip-closure-report-metric small {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.trip-closure-report-note {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.trip-closure-report-section {
+  padding: 16px;
+}
+
+.trip-closure-report-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 10px;
+  margin-bottom: 12px;
+}
+
+.trip-closure-report-section-head h5 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--text);
+}
+
+.trip-closure-report-section-head span {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.trip-closure-report-person-head,
+.trip-closure-report-person-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(90px, .9fr) minmax(90px, .9fr) minmax(108px, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.trip-closure-report-person-head {
+  padding: 0 4px 8px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-muted);
+}
+
+.trip-closure-report-person-row {
+  padding: 12px 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.trip-closure-report-person-row:last-child {
+  border-bottom: none;
+  padding-bottom: 4px;
+}
+
+.trip-closure-report-person-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.trip-closure-report-person-num {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.trip-closure-report-person-outstanding {
+  justify-self: end;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-muted);
+}
+
+.trip-closure-report-person-outstanding.is-positive {
+  color: #0f766e;
+}
+
+.trip-closure-report-person-outstanding.is-negative {
+  color: #c2410c;
+}
+
+.trip-closure-report-transfer-list,
+.trip-closure-report-mini-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.trip-closure-report-transfer-row,
+.trip-closure-report-mini-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 2px;
+  border-bottom: 1px solid var(--border);
+}
+
+.trip-closure-report-transfer-row:last-child,
+.trip-closure-report-mini-row:last-child {
+  border-bottom: none;
+}
+
+.trip-closure-report-transfer-flow {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.trip-closure-report-transfer-amt {
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--primary-dark);
+  font-variant-numeric: tabular-nums;
+}
+
+.trip-closure-report-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.trip-closure-report-section--mini {
+  padding-bottom: 8px;
+}
+
+.trip-closure-report-empty {
+  padding: 6px 2px 2px;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.trip-closure-report-empty--mini {
+  font-size: 13px;
+}
+
+@media (max-width: 640px) {
+  .trip-closure-report-modal-actions {
+    width: 100%;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+  .trip-closure-report-metrics,
+  .trip-closure-report-grid {
+    grid-template-columns: 1fr;
+  }
+  .trip-closure-report-person-head,
+  .trip-closure-report-person-row {
+    grid-template-columns: minmax(0, 1fr) minmax(82px, .85fr) minmax(82px, .85fr);
+  }
+  .trip-closure-report-person-head span:last-child,
+  .trip-closure-report-person-row > :last-child {
+    grid-column: 1 / -1;
+    justify-self: start;
+    text-align: left;
+  }
+}

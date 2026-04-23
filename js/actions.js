@@ -16,5 +16,11 @@ export {
   openTripStatsModal,
   closeTripStatsModal,
 } from './trip-stats-modal.js';
+export {
+  openTripClosureReportModal,
+  closeTripClosureReportModal,
+  copyTripClosureReportText,
+  downloadTripClosureReportImage,
+} from './trip-closure-report-modal.js';
 export { exportBackupCSV, copyBackupText, exportTechnicalCSV } from './backup.js';
 export { updateMultiPayTotal, updatePerPerson } from './views-trip-detail.js';

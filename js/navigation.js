@@ -4,6 +4,41 @@ import { persistSessionSnapshot } from './session-ui.js';
 import { cancelHomeBalanceAnim, closeHomeCalendarModal } from './views-home.js';
 import { cancelAnalysisCountAnim } from './views-analysis.js';
 import { cancelTripSettlementAnim, resetTripDetailAmountDraft } from './views-trip-detail.js';
+import { closeMemberDirectory } from './actions/trips-members.js';
+
+function syncMemberDirFabVisibility(page = appState.currentPage, tripId = appState.currentTripId) {
+  const fab = document.getElementById('member-dir-fab');
+  if (!fab) return;
+  const shouldShow = page === 'trips' && !tripId;
+  fab.hidden = !shouldShow;
+  fab.setAttribute('aria-hidden', shouldShow ? 'false' : 'true');
+  fab.style.display = shouldShow ? 'flex' : 'none';
+  if (!shouldShow) {
+    fab.style.top = '';
+    fab.style.bottom = '';
+    closeMemberDirectory();
+    return;
+  }
+  requestAnimationFrame(positionMemberDirFab);
+}
+
+function positionMemberDirFab() {
+  const fab = document.getElementById('member-dir-fab');
+  if (!fab || fab.hidden || fab.style.display === 'none') return;
+  const bottomNav = document.getElementById('bottom-nav');
+  const syncBar = document.getElementById('sync-status-bar');
+  const navTop = bottomNav?.getBoundingClientRect?.().top ?? window.innerHeight;
+  const syncTop = syncBar?.getBoundingClientRect?.().top ?? window.innerHeight;
+  const anchorTop = Math.min(navTop, syncTop);
+  const fabHeight = fab.offsetHeight || 54;
+  const top = Math.max(16, Math.round(anchorTop - fabHeight - 18));
+  fab.style.top = `${top}px`;
+  fab.style.bottom = 'auto';
+}
+
+window.addEventListener('resize', () => {
+  requestAnimationFrame(positionMemberDirFab);
+});
 
 /**
  * @param {string} page
@@ -77,6 +112,7 @@ export function navigate(page, tripId = null, opts = {}) {
         ? 'nav-analysis'
         : 'nav-home';
   document.getElementById(navId).classList.add('active');
+  syncMemberDirFabVisibility(page, tripId);
   if (page !== 'tripDetail') {
     const ha = document.getElementById('trip-header-actions');
     if (ha) ha.innerHTML = '';
@@ -84,10 +120,12 @@ export function navigate(page, tripId = null, opts = {}) {
   render();
   if (typeof restoreScrollY === 'number' && Number.isFinite(restoreScrollY)) {
     requestAnimationFrame(() => {
+      syncMemberDirFabVisibility(page, tripId);
       window.scrollTo(0, Math.max(0, restoreScrollY));
       persistSessionSnapshot();
     });
   } else {
+    requestAnimationFrame(() => syncMemberDirFabVisibility(page, tripId));
     window.scrollTo(0, 0);
     persistSessionSnapshot();
   }

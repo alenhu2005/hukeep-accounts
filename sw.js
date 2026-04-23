@@ -1,5 +1,5 @@
 // Bump this to force clients to refresh cached assets.
-const CACHE_NAME = 'ledger-v54';
+const CACHE_NAME = 'ledger-v56';
 
 const STATIC_ASSETS = [
   './',
@@ -68,6 +68,7 @@ const STATIC_ASSETS = [
   './js/dialog-a11y.js',
   './js/amount-input.js',
   './js/backup.js',
+  './js/trip-closure-report-modal.js',
   './js/sync-ui.js',
   './js/sync-pause.js',
   './js/session-ui.js',

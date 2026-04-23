@@ -260,3 +260,100 @@ html.dark .settlement-compare-grad {
   border-radius: 0 99px 99px 0;
   transition: width 0.92s var(--ease-out);
 }
+
+/* UI refresh: stronger hero card */
+#balance-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.99) 0%, rgba(242, 247, 255, 0.92) 100%);
+}
+
+.balance-bar {
+  height: 6px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--primary) 78%, white 12%), var(--primary-dark));
+}
+
+.balance-content {
+  position: relative;
+  padding: 12px 14px 10px;
+  align-items: center;
+  gap: 10px;
+}
+
+.balance-content::after {
+  content: "";
+  position: absolute;
+  width: 84px;
+  height: 84px;
+  top: -34px;
+  right: -18px;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--primary) 14%, transparent) 0%, transparent 72%);
+  pointer-events: none;
+}
+
+.balance-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 13px;
+  box-shadow: 0 12px 24px color-mix(in srgb, var(--primary) 16%, transparent);
+}
+
+.balance-icon svg {
+  width: 19px;
+  height: 19px;
+}
+
+.balance-copy {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.balance-label {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  letter-spacing: 0.03em;
+  font-size: 10px;
+}
+
+.balance-main {
+  font-size: 23px;
+  line-height: 1.02;
+  margin: 3px 0 1px;
+}
+
+.balance-who,
+.balance-sub {
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+#balance-card .settle-btn {
+  margin-top: 0;
+  margin-left: auto;
+  align-self: center;
+  min-height: 30px;
+  padding: 0 10px;
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+.settlement-list {
+  padding: 16px 18px 18px;
+}
+
+.settlement-list--visual .settlement-row--visual {
+  border-radius: 18px;
+  padding: 14px 15px 12px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.86) 0%, rgba(248, 250, 252, 0.68) 100%);
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.06);
+}
+
+.settlement-collapse-trigger {
+  padding: 15px 18px;
+  border-radius: 18px;
+}

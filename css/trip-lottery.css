@@ -1,5 +1,49 @@
 /* Trip header lottery overlay */
 /* ── 出遊：長按頂欄行程名開啟人民幣模式 ── */
+#page-trip-detail > .header {
+  gap: 10px;
+}
+#page-trip-detail #detail-name {
+  flex: 1 1 0;
+  min-width: 0;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+  margin-right: 10px;
+}
+#page-trip-detail #detail-count,
+#page-trip-detail .trip-header-stats-btn,
+#page-trip-detail .trip-lottery-trigger,
+#page-trip-detail #trip-header-actions {
+  flex-shrink: 0;
+}
+#page-trip-detail #detail-count {
+  min-height: 28px;
+  padding: 0 10px;
+  font-size: 10px;
+}
+#page-trip-detail #detail-count[data-compact="true"] {
+  min-height: 26px;
+  padding: 0 8px;
+  font-size: 9px;
+  letter-spacing: 0;
+}
+#page-trip-detail .back-btn,
+#page-trip-detail .trip-header-stats-btn,
+#page-trip-detail .trip-lottery-trigger {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+}
+#page-trip-detail .trip-header-stats-btn svg,
+#page-trip-detail .trip-lottery-trigger svg,
+#page-trip-detail .back-btn svg {
+  width: 18px;
+  height: 18px;
+}
 #page-trip-detail #detail-name.detail-name--cny-longpress {
   user-select: none;
   -webkit-user-select: none;
@@ -12,14 +56,73 @@
   flex-wrap: wrap;
   gap: 8px;
 }
+#page-trip-detail.trip-detail--cny-mode .detail-amount-row {
+  padding: 10px;
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(244, 248, 255, 0.64)),
+    color-mix(in srgb, var(--primary-light) 38%, white);
+  border: 1px solid color-mix(in srgb, var(--primary) 18%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72), 0 12px 28px rgba(110, 132, 189, 0.12);
+}
+html.dark #page-trip-detail.trip-detail--cny-mode .detail-amount-row {
+  background:
+    linear-gradient(180deg, rgba(19, 27, 42, 0.92), rgba(12, 18, 31, 0.86)),
+    color-mix(in srgb, var(--primary) 14%, rgba(255, 255, 255, 0.03));
+  border-color: color-mix(in srgb, var(--primary) 26%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 16px 32px rgba(0, 0, 0, 0.28);
+}
 #page-trip-detail .detail-cny-rate-inline {
   flex: 1 1 140px;
   min-width: 0;
   align-self: center;
-  font-size: 13px;
-  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid color-mix(in srgb, var(--primary) 14%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  font-size: 12px;
+  font-weight: 700;
   color: var(--text-muted);
-  line-height: 1.3;
+  line-height: 1.4;
+}
+#page-trip-detail .detail-cny-rate-inline::before {
+  content: "匯率";
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 42px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary) 14%, white);
+  color: var(--primary-dark);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+#page-trip-detail .detail-cny-rate-inline[data-mode="convert"][data-currency="CNY"]::before {
+  content: "¥→NT$";
+}
+#page-trip-detail .detail-cny-rate-inline[data-mode="convert"][data-currency="TWD"]::before {
+  content: "NT$→¥";
+}
+#page-trip-detail .detail-cny-rate-inline[data-mode="empty"] {
+  display: none !important;
+}
+html.dark #page-trip-detail .detail-cny-rate-inline {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: color-mix(in srgb, var(--primary) 22%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+html.dark #page-trip-detail .detail-cny-rate-inline::before {
+  background: color-mix(in srgb, var(--primary) 18%, rgba(255, 255, 255, 0.04));
+  color: #dbe7ff;
 }
 #page-trip-detail .detail-amount-input {
   flex: 1;
@@ -36,25 +139,51 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 52px;
-  height: 36px;
-  padding: 0 14px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--primary);
-  color: #fff;
+  min-width: 64px;
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid color-mix(in srgb, var(--primary) 16%, transparent);
+  border-radius: 14px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(241, 246, 255, 0.78)),
+    color-mix(in srgb, var(--primary-light) 26%, white);
+  color: var(--text);
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 800;
   line-height: 1;
   cursor: pointer;
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 12px 24px rgba(113, 135, 190, 0.16);
 }
 #page-trip-detail .detail-currency-toggle:hover {
-  filter: brightness(1.05);
+  transform: translateY(-1px);
+  box-shadow: 0 16px 28px rgba(113, 135, 190, 0.2);
 }
 #page-trip-detail .detail-currency-toggle:active {
-  filter: brightness(0.95);
+  transform: translateY(0);
+  box-shadow: 0 8px 18px rgba(113, 135, 190, 0.16);
+}
+#page-trip-detail .detail-currency-toggle[data-currency-mode="CNY"] {
+  background:
+    linear-gradient(135deg, #2563eb 0%, #3b82f6 100%),
+    var(--primary);
+  border-color: color-mix(in srgb, #2563eb 48%, transparent);
+  color: #fff;
+}
+html.dark #page-trip-detail .detail-currency-toggle {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(148, 163, 184, 0.04)),
+    rgba(255, 255, 255, 0.04);
+  border-color: color-mix(in srgb, var(--primary) 18%, transparent);
+  color: var(--text);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.24);
+}
+html.dark #page-trip-detail .detail-currency-toggle[data-currency-mode="CNY"] {
+  background:
+    linear-gradient(135deg, color-mix(in srgb, #2563eb 82%, white 6%), color-mix(in srgb, #1d4ed8 88%, black 10%)),
+    var(--primary);
+  color: #fff;
 }
 /* ── 出遊：抽籤（頂欄圖示 + 浮層） ── */
 #page-trip-detail .trip-header-stats-btn {
@@ -109,6 +238,43 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.record-amount-main {
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.15;
+}
+.record-amount-meta {
+  margin-top: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+.record-amount-meta--cny {
+  background: color-mix(in srgb, #2563eb 12%, white);
+  color: #2563eb;
+}
+.record-amount-meta--fx {
+  background: color-mix(in srgb, var(--warning) 16%, white);
+  color: #b45309;
+}
+.record-amount-meta--voided {
+  opacity: 0.78;
+}
+html.dark .record-amount-meta--cny {
+  background: color-mix(in srgb, #2563eb 16%, rgba(255, 255, 255, 0.04));
+  color: #93c5fd;
+}
+html.dark .record-amount-meta--fx {
+  background: color-mix(in srgb, var(--warning) 16%, rgba(255, 255, 255, 0.04));
+  color: #fcd34d;
 }
 /* 收合歷史紀錄時不顯示行程區間（標題列仍保留「歷史紀錄」與箭頭） */
 #detail-expenses-card:has(#detail-expenses-panel:not(.is-open)) .trip-history-header-meta {

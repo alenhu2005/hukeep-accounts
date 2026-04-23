@@ -76,3 +76,106 @@
   background: var(--primary-light); color: var(--primary-dark);
 }
 .sync-status-text { flex: 1; min-width: 0; }
+
+/* UI refresh: floating dock and status pill */
+.empty-state {
+  padding: 72px 16px 60px;
+  gap: 12px;
+}
+
+.empty-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, color-mix(in srgb, var(--primary) 10%, white 86%) 100%);
+  box-shadow: 0 18px 32px rgba(15, 23, 42, 0.08);
+}
+
+.empty-icon svg {
+  width: 32px;
+  height: 32px;
+}
+
+.empty-title {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.empty-sub {
+  max-width: 240px;
+  line-height: 1.6;
+}
+
+#bottom-nav {
+  bottom: max(14px, env(safe-area-inset-bottom));
+  width: calc(100% - 20px);
+  max-width: var(--shell-max);
+  padding: 4px;
+  gap: 4px;
+  border: 1px solid var(--border-strong);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.76);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.nav-btn {
+  position: relative;
+  padding: 10px 0 11px;
+  gap: 4px;
+  border-radius: 22px;
+  font-size: 11px;
+  font-weight: 700;
+  isolation: isolate;
+}
+
+.nav-btn::before {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 18px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--primary) 16%, white 76%) 0%,
+    rgba(255, 255, 255, 0.82) 100%
+  );
+  opacity: 0;
+  transform: scale(0.92);
+  transition: transform 0.22s var(--ease-soft), opacity 0.22s ease;
+  z-index: -1;
+}
+
+.nav-btn.active::before {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.nav-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.nav-btn.active {
+  color: var(--primary-dark);
+}
+
+.nav-btn.active svg {
+  transform: translateY(-2px) scale(1.06);
+}
+
+#sync-status-bar {
+  bottom: calc(max(14px, env(safe-area-inset-bottom)) + 78px);
+  width: calc(100% - 28px);
+  max-width: calc(var(--shell-max) - 8px);
+  padding: 10px 14px;
+  border-radius: 18px;
+  border: 1px solid var(--border-strong);
+  background: rgba(255, 255, 255, 0.74);
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
+}
+
+.sync-status-badge {
+  min-width: 44px;
+  text-align: center;
+  border-radius: 999px;
+}

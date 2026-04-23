@@ -22,6 +22,67 @@ import {
 import { renderSettlement } from './settlement.js';
 import { renderTripHistory } from './history.js';
 
+const DETAIL_NAME_MAX_FONT_PX = 16;
+const DETAIL_NAME_MIN_FONT_PX = 11;
+const DETAIL_NAME_SAFE_GAP_PX = 28;
+let detailHeaderNameFitBound = false;
+
+function syncTripDetailHeaderCountText() {
+  const nameEl = document.getElementById('detail-name');
+  const countEl = document.getElementById('detail-count');
+  if (!nameEl || !countEl) return;
+  const activeTotal = Math.max(0, parseInt(countEl.dataset.activeCount || '0', 10) || 0);
+  const tripName = String(nameEl.dataset.fullName || nameEl.textContent || '').trim();
+  const compact = window.innerWidth <= 460 || tripName.length >= 6;
+  countEl.dataset.compact = compact ? 'true' : 'false';
+  countEl.textContent = compact ? `${activeTotal}筆` : `有效 ${activeTotal} 筆`;
+  if (compact) countEl.title = `有效 ${activeTotal} 筆`;
+  else countEl.removeAttribute('title');
+}
+
+function fitTripDetailHeaderName() {
+  const header = document.querySelector('#page-trip-detail > .header');
+  const nameEl = document.getElementById('detail-name');
+  if (!header || !nameEl) return;
+  syncTripDetailHeaderCountText();
+
+  const headerStyle = window.getComputedStyle(header);
+  const gap = parseFloat(headerStyle.columnGap || headerStyle.gap || '0') || 0;
+  const visibleChildren = Array.from(header.children).filter(el => window.getComputedStyle(el).display !== 'none');
+  const otherWidth = visibleChildren
+    .filter(el => el !== nameEl)
+    .reduce((sum, el) => sum + el.getBoundingClientRect().width, 0);
+  const totalGap = Math.max(0, visibleChildren.length - 1) * gap;
+  const availableWidth = Math.max(
+    56,
+    Math.floor(header.clientWidth - otherWidth - totalGap - DETAIL_NAME_SAFE_GAP_PX),
+  );
+
+  nameEl.style.width = `${availableWidth}px`;
+  nameEl.style.maxWidth = `${availableWidth}px`;
+  nameEl.style.flexBasis = `${availableWidth}px`;
+  nameEl.style.fontSize = `${DETAIL_NAME_MAX_FONT_PX}px`;
+
+  let fontSize = DETAIL_NAME_MAX_FONT_PX;
+  while (nameEl.scrollWidth > availableWidth && fontSize > DETAIL_NAME_MIN_FONT_PX) {
+    fontSize -= 0.5;
+    nameEl.style.fontSize = `${fontSize}px`;
+  }
+}
+
+function scheduleFitTripDetailHeaderName() {
+  if (tripDetailState().currentPage !== 'tripDetail') return;
+  requestAnimationFrame(() => {
+    requestAnimationFrame(fitTripDetailHeaderName);
+  });
+}
+
+function ensureTripDetailHeaderNameFitBinding() {
+  if (detailHeaderNameFitBound) return;
+  detailHeaderNameFitBound = true;
+  window.addEventListener('resize', scheduleFitTripDetailHeaderName);
+}
+
 /**
  * Reset trip-detail "add expense" amount draft.
  * Keeps item/note intact; clears total, payer amounts, and custom split amounts/state.
@@ -123,6 +184,7 @@ function bindTripDetailNameCnyModeLongPress(nameEl, trip) {
 }
 
 export function renderTripDetail() {
+  ensureTripDetailHeaderNameFitBinding();
   const state = tripDetailState();
   const trip = getTripById(state.currentTripId);
   if (!trip) {
@@ -142,12 +204,14 @@ export function renderTripDetail() {
   const nameEl = document.getElementById('detail-name');
   if (nameEl) {
     nameEl.textContent = trip.name;
+    nameEl.dataset.fullName = trip.name;
     bindTripDetailNameCnyModeLongPress(nameEl, trip);
     if (isTripCnyModeEnabled(trip.id)) nameEl.removeAttribute('title');
     else if (!trip._closed) nameEl.title = '長按行程名稱可開啟人民幣模式（開啟後無法關閉）';
     else nameEl.removeAttribute('title');
   }
   const cnyOn = isTripCnyModeEnabled(trip.id);
+  document.getElementById('page-trip-detail')?.classList.toggle('trip-detail--cny-mode', cnyOn);
   if (!cnyOn) state.detailAmountCurrency = 'TWD';
   const ccyWrap = document.getElementById('d-amount-currency-wrap');
   const rateInline = document.getElementById('d-cny-rate-inline');
@@ -167,7 +231,8 @@ export function renderTripDetail() {
   }
 
   const activeTotal = expenses.filter(e => !e._voided).length;
-  document.getElementById('detail-count').textContent = `有效 ${activeTotal} 筆`;
+  const detailCountEl = document.getElementById('detail-count');
+  if (detailCountEl) detailCountEl.dataset.activeCount = String(activeTotal);
 
   renderDetailMemberChips(trip.members);
   renderDetailKnownMembers(trip);
@@ -217,7 +282,7 @@ export function renderTripDetail() {
         此行程已結束，僅供瀏覽
       </div>
       <div class="trip-closed-bar-actions">
-        <button type="button" class="btn btn-primary btn-sm" onclick='copyTripSettlementSummary(${jq(trip.id)})'>複製結算懶人包</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick='openTripClosureReportModal(${jq(trip.id)})'>查看結案報告</button>
         <button type="button" class="btn btn-outline btn-sm" onclick='reopenTripAction(${jq(trip.id)})'>重新開啟</button>
       </div>
     </div>`;
@@ -242,6 +307,7 @@ export function renderTripDetail() {
   if (kmRoot) bindScrollReveal(kmRoot, '.known-member-bar-btn', { enabled: doReveal });
 
   syncDetailTripFormLabels();
+  scheduleFitTripDetailHeaderName();
 }
 
 export function syncDetailTripFormLabels() {
