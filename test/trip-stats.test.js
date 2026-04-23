@@ -126,4 +126,44 @@ describe('renderTripStatsCard', () => {
       vi.unstubAllGlobals();
     }
   });
+
+  it('已記錄還款後會反映已結清，並移除多餘說明文案', () => {
+    vi.stubGlobal('document', {
+      documentElement: {
+        classList: {
+          contains: () => false,
+        },
+      },
+    });
+    try {
+      const html = renderTripStatsCard(
+        ['胡', '詹'],
+        [
+          {
+            type: 'tripExpense',
+            amount: 100,
+            paidBy: '胡',
+            splitAmong: ['胡', '詹'],
+            _voided: false,
+            category: '賭博',
+            date: '2024-01-15',
+          },
+        ],
+        {
+          tripId: 't1',
+          allRows: [
+            { type: 'tripSettlement', action: 'add', id: 'ts1', tripId: 't1', from: '詹', to: '胡', amount: 50 },
+          ],
+        },
+      );
+      expect(html).toContain('結算狀態');
+      expect(html).toContain('目前已全部結清');
+      expect(html).toContain('先付加總 NT$0');
+      expect(html).toContain('加上賭博淨額後');
+      expect(html).not.toContain('一般應付扣掉賭博淨額後最高');
+      expect(html).not.toContain('看看錢大多花在哪些分類');
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
 });

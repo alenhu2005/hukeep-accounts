@@ -83,6 +83,8 @@ function walletEffectiveBurden(name, shareExclGambleMap, gamblePlMap) {
  */
 export function renderTripStatsCard(members, expenses, opts = {}) {
   const idSuffix = opts.idSuffix ?? '';
+  const tripId = String(opts.tripId ?? appState.currentTripId ?? '').trim();
+  const allRows = Array.isArray(opts.allRows) ? opts.allRows : appState.allRows;
   const pieToggleClick = idSuffix ? 'toggleTripStatsPieCollapseModal()' : 'toggleTripStatsPieCollapse()';
   const voidCount = expenses.filter(e => e._voided).length;
   const { active, generalOnly, hasGambling } = tripStatsExpenseSplit(expenses);
@@ -105,6 +107,12 @@ export function renderTripStatsCard(members, expenses, opts = {}) {
   const payers = computePayerTotals(generalOnly);
   const share = computeMemberShareTotals(members, generalOnly);
   const prepaidSumAll = Object.values(payers).reduce((s, v) => s + v, 0);
+  const recordedSettlements = tripId
+    ? getTripSettlementAdjustmentsFromRows(tripId, allRows).filter(s => Math.round(parseFloat(s.amount) || 0) > 0)
+    : [];
+  const remainingSettlements = computeSettlements(members, active, recordedSettlements);
+  const outstandingByMember = computeOutstandingByMember(members, remainingSettlements);
+  const allSettled = remainingSettlements.length === 0;
 
   const payersAll = hasGambling ? computePayerTotals(active) : payers;
   const shareAll = hasGambling ? computeMemberShareTotals(members, active) : share;
@@ -115,7 +123,13 @@ export function renderTripStatsCard(members, expenses, opts = {}) {
     netExcl[m] = Math.round((payers[m] || 0) - (share[m] || 0));
     netIncl[m] = Math.round((payersAll[m] || 0) - (shareAll[m] || 0));
   });
-  const netRows = members.slice().sort((a, b) => Math.abs(netIncl[b]) - Math.abs(netIncl[a]));
+  const netRows = members
+    .slice()
+    .sort(
+      (a, b) =>
+        Math.abs(outstandingByMember[b] || 0) - Math.abs(outstandingByMember[a] || 0) ||
+        Math.abs(netIncl[b] || 0) - Math.abs(netIncl[a] || 0),
+    );
 
   const prepaidRows = members.slice().sort((a, b) => (payers[b] || 0) - (payers[a] || 0));
   const pct = amt => (prepaidSumAll > 0.01 ? Math.round((amt / prepaidSumAll) * 100) : 0);
@@ -212,14 +226,14 @@ export function renderTripStatsCard(members, expenses, opts = {}) {
     : 0;
   const topCreditorName = members
     .slice()
-    .sort((a, b) => (netIncl[b] || 0) - (netIncl[a] || 0))
-    .find(name => (netIncl[name] || 0) > 0);
+    .sort((a, b) => (outstandingByMember[b] || 0) - (outstandingByMember[a] || 0))
+    .find(name => (outstandingByMember[name] || 0) > 0);
   const topDebtorName = members
     .slice()
-    .sort((a, b) => (netIncl[a] || 0) - (netIncl[b] || 0))
-    .find(name => (netIncl[name] || 0) < 0);
-  const topCreditorAmount = topCreditorName ? Math.round(netIncl[topCreditorName] || 0) : 0;
-  const topDebtorAmount = topDebtorName ? Math.abs(Math.round(netIncl[topDebtorName] || 0)) : 0;
+    .sort((a, b) => (outstandingByMember[a] || 0) - (outstandingByMember[b] || 0))
+    .find(name => (outstandingByMember[name] || 0) < 0);
+  const topCreditorAmount = topCreditorName ? Math.round(outstandingByMember[topCreditorName] || 0) : 0;
+  const topDebtorAmount = topDebtorName ? Math.abs(Math.round(outstandingByMember[topDebtorName] || 0)) : 0;
 
   let statI = 0;
   let rowI = 0;
@@ -258,7 +272,6 @@ export function renderTripStatsCard(members, expenses, opts = {}) {
           <div class="trip-stats-summary-label">${hasGambling ? '實際負擔最多' : '分攤最多'}</div>
           <div class="trip-stats-summary-name">${esc(topShareName || '尚無資料')}</div>
           <div class="trip-stats-summary-value">${topShareName ? formatCurrency(topShareAmount) : 'NT$0'}</div>
-          <div class="trip-stats-summary-note">${hasGambling ? '一般應付扣掉賭博淨額後最高' : '應付金額最高'}</div>
         </div>
         <div class="trip-stats-summary-card trip-stats-summary-card--status">
           <div class="trip-stats-summary-label">${topCreditorName ? '最多待收' : '待收 / 待付'}</div>
@@ -267,9 +280,9 @@ export function renderTripStatsCard(members, expenses, opts = {}) {
               ? `<div class="trip-stats-summary-name">${esc(topCreditorName)}</div>
           <div class="trip-stats-summary-value">${formatCurrency(topCreditorAmount)}</div>
           <div class="trip-stats-summary-note">${topDebtorName ? `如果現在結算，${esc(topDebtorName)} 還要再付 ${formatCurrency(topDebtorAmount)}` : '其餘成員已接近平衡'}</div>`
-              : `<div class="trip-stats-summary-name">目前接近平衡</div>
-          <div class="trip-stats-summary-value">已結清</div>
-          <div class="trip-stats-summary-note">沒有明顯待收待付差額</div>`
+              : `<div class="trip-stats-summary-name">${allSettled ? '目前已結清' : '目前接近平衡'}</div>
+          <div class="trip-stats-summary-value">${allSettled ? '不用再還' : '已結清'}</div>
+          <div class="trip-stats-summary-note">${allSettled ? '已記錄的出遊還款都已反映' : '沒有明顯待收待付差額'}</div>`
           }
         </div>
       </div>
@@ -283,7 +296,6 @@ export function renderTripStatsCard(members, expenses, opts = {}) {
       <div class="trip-stats-section-head trip-pie-toolbar">
         <div>
           <span class="trip-stats-label trip-stats-label--pie-toolbar">分類支出</span>
-          <p class="trip-stats-section-desc">看看錢大多花在哪些分類</p>
         </div>
         <button type="button" id="trip-stats-pie-fold-btn${idSuffix}" class="trip-pie-fold-btn" onclick="${pieToggleClick}" aria-expanded="${pieExpanded ? 'true' : 'false'}" aria-controls="trip-stats-pie-panel${idSuffix}" title="收合／展開圓餅圖" aria-label="收合或展開圓餅圖">
           <span class="trip-pie-fold-label">圓餅圖</span>
@@ -308,9 +320,7 @@ export function renderTripStatsCard(members, expenses, opts = {}) {
       : '';
 
   const prepaidTitle = hasGambling ? '先付排行（未含賭博，佔合計比例）' : '先付排行（佔先付合計比例）';
-  const prepaidFoot = hasGambling
-    ? `先付加總 NT$${Math.round(prepaidSumAll).toLocaleString()}（未含賭博） · 一般支出 NT$${Math.round(generalSpend).toLocaleString()} · 賭博 NT$${gambleSpendSum.toLocaleString()} · 有效消費合計 NT$${Math.round(totalSpend).toLocaleString()}`
-    : `先付加總 NT$${Math.round(prepaidSumAll).toLocaleString()} · 有效消費 NT$${Math.round(totalSpend).toLocaleString()}${Math.abs(prepaidSumAll - totalSpend) < 0.5 ? ' ✓' : ''}`;
+  const prepaidFoot = `先付加總 ${formatCurrency(prepaidSumAll)}`;
 
   const prepaidBlock = `<div class="trip-stats-section trip-stats-section--card" style="--stat-i:${statI++}">
       <div class="trip-stats-section-head">
@@ -357,8 +367,8 @@ export function renderTripStatsCard(members, expenses, opts = {}) {
   const netBlock = `<div class="trip-stats-section trip-stats-section--card" style="--stat-i:${statI++}">
       <div class="trip-stats-section-head">
         <div>
-          <div class="trip-stats-label">目前差額</div>
-          <p class="trip-stats-section-desc">看誰目前該收、誰目前該付</p>
+          <div class="trip-stats-label">${allSettled ? '結算狀態' : '目前差額'}</div>
+          <p class="trip-stats-section-desc">${allSettled ? '這趟目前已全部結清' : recordedSettlements.length > 0 ? '已扣除記錄的出遊還款' : '看誰目前該收、誰目前該付'}</p>
         </div>
       </div>
       <div class="trip-stats-net-list">
@@ -366,7 +376,8 @@ export function renderTripStatsCard(members, expenses, opts = {}) {
           .map(name => {
             const ve = netExcl[name];
             const vi = netIncl[name];
-            const statusValue = hasGambling ? vi : ve;
+            const settledValue = Math.round(outstandingByMember[name] || 0);
+            const statusValue = settledValue;
             const statusCls =
               statusValue > 0 ? 'trip-stats-net-card--creditor' : statusValue < 0 ? 'trip-stats-net-card--debtor' : 'trip-stats-net-card--balanced';
             const statusLabel = formatOutstandingLabel(statusValue);
@@ -376,7 +387,12 @@ export function renderTripStatsCard(members, expenses, opts = {}) {
                 <span class="trip-stats-net-card-status">${esc(statusLabel)}</span>
               </div>
               ${
-                hasGambling
+                recordedSettlements.length > 0
+                  ? `<div class="trip-stats-net-card-compare">
+                <span>理論差額 <strong class="${(hasGambling ? vi : ve) > 0 ? 'net-pos' : (hasGambling ? vi : ve) < 0 ? 'net-neg' : ''}">${formatNetSigned(hasGambling ? vi : ve)}</strong></span>
+                <span>扣除還款 <strong class="${settledValue > 0 ? 'net-pos' : settledValue < 0 ? 'net-neg' : ''}">${formatNetSigned(settledValue)}</strong></span>
+              </div>`
+                  : hasGambling
                   ? `<div class="trip-stats-net-card-compare">
                 <span>未含賭博 <strong class="${ve > 0 ? 'net-pos' : ve < 0 ? 'net-neg' : ''}">${formatNetSigned(ve)}</strong></span>
                 <span>含賭博 <strong class="${vi > 0 ? 'net-pos' : vi < 0 ? 'net-neg' : ''}">${formatNetSigned(vi)}</strong></span>
@@ -396,7 +412,7 @@ export function renderTripStatsCard(members, expenses, opts = {}) {
       <div class="trip-stats-section-head">
         <div>
           <div class="trip-stats-label">實際負擔</div>
-          <p class="trip-stats-section-desc">${hasGambling ? '一般應付扣掉賭博淨額後，每個人最後真正承擔多少' : '每個人最後真正承擔多少'}</p>
+          <p class="trip-stats-section-desc">${hasGambling ? '加上賭博淨額後，每個人最後真正承擔多少' : '每個人最後真正承擔多少'}</p>
         </div>
       </div>
       <div class="trip-stats-wallet-out-list">

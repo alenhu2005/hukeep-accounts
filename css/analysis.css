@@ -416,7 +416,7 @@ button.home-cal-cell.analysis-period-dir--neutral.home-cal-cell--today {
 .analysis-gamble-pl-grid {
   display: grid;
   /* 列用 subgrid 對齊父欄寬；min-width 極窄時由卡片橫向捲動，避免欄位被擠壞 */
-  grid-template-columns: minmax(0, 1fr) minmax(5.25em, max-content) minmax(5.25em, max-content) minmax(5.25em, max-content);
+  grid-template-columns: minmax(5.5em, 1.25fr) minmax(5.25em, max-content) minmax(5.25em, max-content) minmax(5.25em, max-content);
   column-gap: 12px;
   row-gap: 8px;
   align-items: stretch;
@@ -453,7 +453,10 @@ button.home-cal-cell.analysis-period-dir--neutral.home-cal-cell--today {
 }
 .analysis-gamble-pl-cell--name {
   min-width: 0;
-  word-break: break-word;
+  white-space: nowrap;
+  word-break: keep-all;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-weight: 700;
   color: var(--text);
   line-height: 1.3;
