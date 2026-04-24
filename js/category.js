@@ -21,8 +21,10 @@ const CATEGORY_STYLE_LIGHT = {
   住宿: 'background:#ccfbf1;color:#115e59',
   購物: 'background:#ede9fe;color:#5b21b6',
   娛樂: 'background:#fce7f3;color:#9d174d',
-  生活: 'background:#d1fae5;color:#065f46',
-  賭博: 'background:#ede9fe;color:#5b21b6',
+  // Make "生活" clearly distinct from "餐飲" (both were warm before).
+  生活: 'background:#dcfce7;color:#166534',
+  // Distinct from "購物" (avoid same violet).
+  賭博: 'background:#fae8ff;color:#86198f',
   其他: 'background:#f3f4f6;color:#4b5563',
 };
 const CATEGORY_STYLE_DARK = {
@@ -31,8 +33,8 @@ const CATEGORY_STYLE_DARK = {
   住宿: 'background:#134e4a;color:#5eead4',
   購物: 'background:#2e1065;color:#c4b5fd',
   娛樂: 'background:#831843;color:#f9a8d4',
-  生活: 'background:#064e3b;color:#6ee7b7',
-  賭博: 'background:#2e1065;color:#c4b5fd',
+  生活: 'background:#052e16;color:#86efac',
+  賭博: 'background:#4a044e;color:#f5d0fe',
   其他: 'background:#334155;color:#94a3b8',
 };
 export const CATEGORY_STYLE = new Proxy({}, {
@@ -41,6 +43,21 @@ export const CATEGORY_STYLE = new Proxy({}, {
     return (dark ? CATEGORY_STYLE_DARK : CATEGORY_STYLE_LIGHT)[key];
   }
 });
+
+function parseStylePair(styleStr) {
+  const s = String(styleStr || '');
+  const bg = (s.match(/background:\s*([^;]+)/i) || [])[1] || '';
+  const fg = (s.match(/color:\s*([^;]+)/i) || [])[1] || '';
+  return { bg: bg.trim(), fg: fg.trim() };
+}
+
+/** Returns current-theme badge colors for a category. */
+export function getCategoryBadgeColors(cat) {
+  const key = cat == null ? '' : String(cat).trim();
+  if (!key) return { bg: '', fg: '' };
+  const st = CATEGORY_STYLE[key] || '';
+  return parseStylePair(st);
+}
 
 export const CATEGORY_KEYWORDS = {
   // 須在「餐飲」之前：避免「飯店」先被「飯」判成餐飲

@@ -997,15 +997,15 @@ html.dark #page-trip-detail #detail-expenses .trip-day-label {
   margin-left: 6px;
   padding: 0 8px;
   border-radius: 999px;
-  background: color-mix(in srgb, #2563eb 12%, white);
-  color: #2563eb;
+  background: color-mix(in srgb, var(--primary) 12%, white);
+  color: var(--primary);
   font-weight: 700;
   font-size: 11px;
   letter-spacing: 0;
 }
 html.dark .trip-day-sub-cny {
-  background: color-mix(in srgb, #2563eb 18%, rgba(255, 255, 255, 0.04));
-  color: #93c5fd;
+  background: color-mix(in srgb, var(--primary) 18%, rgba(255, 255, 255, 0.04));
+  color: color-mix(in srgb, var(--primary) 55%, #ffffff);
 }
 .trip-day-items .record-item:first-child { border-radius: var(--radius) var(--radius) 0 0; }
 .trip-day-items .record-item:last-child { border-radius: 0 0 var(--radius) var(--radius); }

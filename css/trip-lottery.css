@@ -52,7 +52,7 @@
 /* 出遊新增消費：總金額單欄 + 右側幣別切換 */
 #page-trip-detail .detail-amount-row {
   display: flex;
-  align-items: stretch;
+  align-items: center;
   flex-wrap: wrap;
   gap: 8px;
 }
@@ -80,7 +80,8 @@ html.dark #page-trip-detail.trip-detail--cny-mode .detail-amount-row {
   align-items: center;
   gap: 8px;
   min-height: 40px;
-  padding: 8px 12px;
+  box-sizing: border-box;
+  padding: 6px 12px;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.78);
   border: 1px solid color-mix(in srgb, var(--primary) 14%, transparent);
@@ -128,21 +129,38 @@ html.dark #page-trip-detail .detail-cny-rate-inline::before {
   flex: 1;
   min-width: 0;
 }
+/* Note: forms-controls.css is loaded AFTER this file, so we need higher priority here. */
+#page-trip-detail.trip-detail--cny-mode input.detail-amount-input.form-input {
+  height: 40px !important;
+  line-height: 40px !important;
+  box-sizing: border-box !important;
+  border-radius: 14px !important;
+  padding: 0 12px !important;
+  background: rgba(255, 255, 255, 0.78) !important;
+  border: 1px solid color-mix(in srgb, var(--primary) 14%, transparent) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+}
+html.dark #page-trip-detail.trip-detail--cny-mode input.detail-amount-input.form-input {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: color-mix(in srgb, var(--primary) 22%, transparent) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+}
 #page-trip-detail .detail-amount-currency-wrap {
   display: flex;
   flex-shrink: 0;
-  align-self: stretch;
+  align-self: center;
+  align-items: center;
 }
 #page-trip-detail .detail-currency-toggle {
   margin: 0;
-  align-self: stretch;
+  align-self: center;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-width: 64px;
   height: 40px;
   padding: 0 16px;
-  border: 1px solid color-mix(in srgb, var(--primary) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary) 14%, transparent);
   border-radius: 14px;
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(241, 246, 255, 0.78)),
@@ -154,7 +172,7 @@ html.dark #page-trip-detail .detail-cny-rate-inline::before {
   cursor: pointer;
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
-  box-shadow: 0 12px 24px rgba(113, 135, 190, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 12px 24px rgba(113, 135, 190, 0.16);
 }
 #page-trip-detail .detail-currency-toggle:hover {
   transform: translateY(-1px);
@@ -177,7 +195,7 @@ html.dark #page-trip-detail .detail-currency-toggle {
     rgba(255, 255, 255, 0.04);
   border-color: color-mix(in srgb, var(--primary) 18%, transparent);
   color: var(--text);
-  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.24);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 14px 28px rgba(0, 0, 0, 0.24);
 }
 html.dark #page-trip-detail .detail-currency-toggle[data-currency-mode="CNY"] {
   background:
@@ -258,8 +276,8 @@ html.dark #page-trip-detail .detail-currency-toggle[data-currency-mode="CNY"] {
   white-space: nowrap;
 }
 .record-amount-meta--cny {
-  background: color-mix(in srgb, #2563eb 12%, white);
-  color: #2563eb;
+  background: color-mix(in srgb, var(--primary) 12%, white);
+  color: var(--primary);
 }
 .record-amount-meta--fx {
   background: color-mix(in srgb, var(--warning) 16%, white);
@@ -269,8 +287,8 @@ html.dark #page-trip-detail .detail-currency-toggle[data-currency-mode="CNY"] {
   opacity: 0.78;
 }
 html.dark .record-amount-meta--cny {
-  background: color-mix(in srgb, #2563eb 16%, rgba(255, 255, 255, 0.04));
-  color: #93c5fd;
+  background: color-mix(in srgb, var(--primary) 16%, rgba(255, 255, 255, 0.04));
+  color: color-mix(in srgb, var(--primary) 55%, #ffffff);
 }
 html.dark .record-amount-meta--fx {
   background: color-mix(in srgb, var(--warning) 16%, rgba(255, 255, 255, 0.04));

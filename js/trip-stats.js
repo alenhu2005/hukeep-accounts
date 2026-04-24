@@ -8,7 +8,7 @@ import {
   computeTripGamblingWinLoseByMember,
 } from './finance.js';
 import { esc } from './utils.js';
-import { makePieChartSVG, CAT_PIE_COLORS } from './pie-chart.js';
+import { makePieChartSVG, getCatPieColor } from './pie-chart.js';
 import { appState } from './state.js';
 import { getTripSettlementAdjustmentsFromRows } from './data.js';
 import { gamblingSplitFromCatTotals, GAMBLING_CATEGORY } from './category.js';
@@ -153,7 +153,7 @@ export function renderTripStatsCard(members, expenses, opts = {}) {
   const pieSlices = nonGamblingSlices.map(([cat, amt]) => ({
     cat,
     amount: amt,
-    color: CAT_PIE_COLORS[cat] || '#94a3b8',
+    color: getCatPieColor(cat),
   }));
   const pieLabelOpts = { cat: true, pct: true, amt: false };
 

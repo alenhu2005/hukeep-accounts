@@ -13,7 +13,7 @@ import {
   todayStr,
 } from './time.js';
 import { esc, jq, prefersReducedMotion } from './utils.js';
-import { makePieChartSVG, CAT_PIE_COLORS } from './pie-chart.js';
+import { makePieChartSVG, getCatPieColor } from './pie-chart.js';
 import { gamblingSplitFromCatTotals } from './category.js';
 import { accumulateDailyGamblingWinLose } from './finance.js';
 
@@ -563,7 +563,7 @@ export function renderAnalysis() {
   const pieSlices = nonGamblingSlices.map(([cat, amt]) => ({
     cat,
     amount: amt,
-    color: CAT_PIE_COLORS[cat] || '#94a3b8',
+    color: getCatPieColor(cat),
   }));
 
   let legendIdx = 0;

@@ -1,16 +1,110 @@
 import { esc } from './utils.js';
+import { getCategoryBadgeColors } from './category.js';
 
-export const CAT_PIE_COLORS = {
-  餐飲: '#ea580c',
-  交通: '#2563eb',
-  住宿: '#0d9488',
-  購物: '#7c3aed',
-  娛樂: '#db2777',
-  生活: '#059669',
-  賭博: '#a855f7',
-  其他: '#64748b',
-  未分類: '#94a3b8',
-};
+/** Category-bound pie color (matches badge colors). */
+function parseHexColor(s) {
+  const raw = String(s || '').trim();
+  const m = raw.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+  if (!m) return null;
+  let hex = m[1].toLowerCase();
+  if (hex.length === 3) hex = hex.split('').map(ch => ch + ch).join('');
+  const r = parseInt(hex.slice(0, 2), 16);
+  const g = parseInt(hex.slice(2, 4), 16);
+  const b = parseInt(hex.slice(4, 6), 16);
+  return { r, g, b };
+}
+
+function toHexColor(rgb) {
+  const clamp = x => Math.max(0, Math.min(255, Math.round(x)));
+  const h2 = x => clamp(x).toString(16).padStart(2, '0');
+  return `#${h2(rgb.r)}${h2(rgb.g)}${h2(rgb.b)}`;
+}
+
+function rgbToHsl(rgb) {
+  const r = (rgb.r || 0) / 255;
+  const g = (rgb.g || 0) / 255;
+  const b = (rgb.b || 0) / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const d = max - min;
+  let h = 0;
+  let s = 0;
+  const l = (max + min) / 2;
+  if (d !== 0) {
+    s = d / (1 - Math.abs(2 * l - 1));
+    if (max === r) h = ((g - b) / d) % 6;
+    else if (max === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+    h *= 60;
+    if (h < 0) h += 360;
+  }
+  return { h, s, l };
+}
+
+function hslToRgb(hsl) {
+  const h = ((hsl.h || 0) % 360 + 360) % 360;
+  const s = Math.max(0, Math.min(1, hsl.s ?? 0));
+  const l = Math.max(0, Math.min(1, hsl.l ?? 0));
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const hp = h / 60;
+  const x = c * (1 - Math.abs((hp % 2) - 1));
+  let r1 = 0;
+  let g1 = 0;
+  let b1 = 0;
+  if (hp >= 0 && hp < 1) [r1, g1, b1] = [c, x, 0];
+  else if (hp >= 1 && hp < 2) [r1, g1, b1] = [x, c, 0];
+  else if (hp >= 2 && hp < 3) [r1, g1, b1] = [0, c, x];
+  else if (hp >= 3 && hp < 4) [r1, g1, b1] = [0, x, c];
+  else if (hp >= 4 && hp < 5) [r1, g1, b1] = [x, 0, c];
+  else [r1, g1, b1] = [c, 0, x];
+  const m = l - c / 2;
+  return { r: (r1 + m) * 255, g: (g1 + m) * 255, b: (b1 + m) * 255 };
+}
+
+function clamp01(x) {
+  const n = Number(x);
+  if (!Number.isFinite(n)) return 0;
+  return Math.max(0, Math.min(1, n));
+}
+
+function clamp(x, lo, hi) {
+  const n = Number(x);
+  if (!Number.isFinite(n)) return lo;
+  return Math.max(lo, Math.min(hi, n));
+}
+
+function tunePieColorFromHex(hex, isDark) {
+  const rgb = parseHexColor(hex);
+  if (!rgb) return '';
+  const hsl = rgbToHsl(rgb);
+  // Pie chart wants "solid, vivid" slices (like app dashboards), not pastel badge fills.
+  // Keep the hue, but normalize saturation/lightness into a consistent, comfortable band.
+  const sBoost = isDark ? 1.08 : 1.18;
+  const sFloor = isDark ? 0.62 : 0.72;
+  const sCeil = isDark ? 0.96 : 0.94;
+  const lTarget = isDark ? 0.38 : 0.44;
+  const lMin = isDark ? 0.28 : 0.36;
+  const lMax = isDark ? 0.46 : 0.52;
+  const tuned = {
+    h: hsl.h,
+    s: clamp(clamp01(hsl.s * sBoost), sFloor, sCeil),
+    // Blend towards a mid lightness to avoid "too bright" / "too dull" variance.
+    l: clamp(hsl.l + (lTarget - hsl.l) * 0.75, lMin, lMax),
+  };
+  return toHexColor(hslToRgb(tuned));
+}
+
+export function getCatPieColor(cat) {
+  const c = getCategoryBadgeColors(cat);
+  const isDark = document.documentElement.classList.contains('dark');
+  const base = c.fg || c.bg;
+  if (base) {
+    const tuned = tunePieColorFromHex(base, isDark);
+    if (tuned) return tuned;
+    return base;
+  }
+  return '#94a3b8';
+}
 
 let pieSvgSerial = 0;
 
