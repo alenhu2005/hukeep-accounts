@@ -14,6 +14,7 @@ import {
   bindScrollReveal,
 } from '../utils.js';
 import { postRow, formatPostError } from '../api.js';
+import { APPEND_POSTED_AT_TO_POST } from '../config.js';
 import {
   getDailyRecords,
   getTripById,
@@ -142,7 +143,15 @@ export async function recordSettlement() {
   const ok = await showConfirm('記錄還款', `${debtor} 還給 ${creditor} NT$${amount}，記錄後餘額歸零。`);
   if (!ok) return;
 
-  const row = { type: 'settlement', action: 'add', id: uid(), date: todayStr(), amount, paidBy: debtor };
+  const row = {
+    type: 'settlement',
+    action: 'add',
+    id: uid(),
+    date: todayStr(),
+    amount,
+    paidBy: debtor,
+    ...(APPEND_POSTED_AT_TO_POST ? { _clientPostedAt: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }) } : {}),
+  };
   const snapshot = snapshotRows();
   snapshotPendingHomeBalanceFromAbs();
   applyOptimisticPayload(row);
@@ -198,6 +207,7 @@ export async function submitDailyRecord() {
     action: 'add',
     id: uid(),
     date: todayStr(),
+    ...(APPEND_POSTED_AT_TO_POST ? { _clientPostedAt: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }) } : {}),
     item,
     amount,
     paidBy,

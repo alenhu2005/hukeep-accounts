@@ -14,6 +14,57 @@ export function normalizeDate(d) {
   return s;
 }
 
+/**
+ * Normalize a "time-only" value to `HH:MM:SS`.
+ * Google Sheets may serialize time cells as ISO strings on 1899-12-30 (e.g. `1899-12-30T06:17:09.000Z`).
+ * @param {unknown} t
+ * @returns {string}
+ */
+export function normalizeTimeOnly(t) {
+  if (!t) return '';
+  const s = String(t).trim();
+  if (!s) return '';
+  if (/^\d{2}:\d{2}:\d{2}$/.test(s)) return s;
+  if (/^\d{2}:\d{2}$/.test(s)) return s + ':00';
+  if (s.length > 10 && s.includes('T')) {
+    // Google Sheets may serialize time cells as ISO on 1899-12-30 (e.g. `1899-12-30T06:17:09.000Z`).
+    // In that case we MUST apply timezone conversion (Z → Taipei) to match what Sheets shows (e.g. 14:17:09).
+    const d = new Date(s);
+    if (!Number.isNaN(d.getTime())) {
+      return d.toLocaleTimeString('en-GB', {
+        timeZone: TIMEZONE,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+      });
+    }
+    // Fallback: just extract the time part if Date parsing fails.
+    const m = s.match(/T(\d{2}):(\d{2})(?::(\d{2}))?/);
+    if (m) return `${m[1]}:${m[2]}:${m[3] || '00'}`;
+  }
+  return s;
+}
+
+/**
+ * Format a `HH:MM:SS` (or `HH:MM`) time string to 12-hour display (zh-TW: 上午/下午).
+ * @param {unknown} t
+ * @returns {string}
+ */
+export function formatTime12h(t) {
+  const raw = normalizeTimeOnly(t);
+  if (!raw) return '';
+  const m = raw.match(/^(\d{2}):(\d{2})(?::(\d{2}))?$/);
+  if (!m) return raw;
+  const hh = Math.max(0, Math.min(23, parseInt(m[1], 10) || 0));
+  const mm = Math.max(0, Math.min(59, parseInt(m[2], 10) || 0));
+  const ss = Math.max(0, Math.min(59, parseInt(m[3] || '0', 10) || 0));
+  const isPm = hh >= 12;
+  const h12 = ((hh + 11) % 12) + 1;
+  const prefix = isPm ? '下午' : '上午';
+  return `${prefix}${h12}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
+}
+
 export function pad2(n) {
   return String(n).padStart(2, '0');
 }

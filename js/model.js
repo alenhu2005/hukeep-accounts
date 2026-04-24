@@ -1,4 +1,4 @@
-import { normalizeDate } from './time.js';
+import { normalizeDate, normalizeTimeOnly } from './time.js';
 
 /**
  * GAS Web App 回傳 `JSON.parse` 後為陣列；每筆應有 `type`，再經 `normalizeRow` 補預設值。
@@ -96,6 +96,7 @@ export function normalizeRow(r) {
     r.paidBy = r.paidBy ?? '';
     r.splitMode = r.splitMode ?? '均分';
     r.date = normalizeDate(r.date);
+    if ('_clientPostedAt' in r) r._clientPostedAt = normalizeTimeOnly(r._clientPostedAt);
     r.amount = r.amount ?? 0;
     r.note = r.note || '';
     r.voided = r.voided === true || String(r.voided || '').trim().toLowerCase() === 'true';
@@ -118,6 +119,7 @@ export function normalizeRow(r) {
     r.item = '還款';
     r.paidBy = r.paidBy ?? '';
     r.date = normalizeDate(r.date);
+    if ('_clientPostedAt' in r) r._clientPostedAt = normalizeTimeOnly(r._clientPostedAt);
     r.amount = r.amount ?? 0;
     r.voided = r.voided === true || String(r.voided || '').trim().toLowerCase() === 'true';
   } else if (r.type === 'trip') {
@@ -150,6 +152,7 @@ export function normalizeRow(r) {
     r.paidBy = r.paidBy ?? '';
     r.amount = r.amount ?? 0;
     r.date = normalizeDate(r.date);
+    if ('_clientPostedAt' in r) r._clientPostedAt = normalizeTimeOnly(r._clientPostedAt);
     r.note = r.note || '';
     r.voided = r.voided === true || String(r.voided || '').trim().toLowerCase() === 'true';
     if (r.action === 'edit') {
@@ -201,6 +204,7 @@ export function normalizeRow(r) {
     r.to = r.to ?? '';
     r.amount = r.amount ?? 0;
     r.date = normalizeDate(r.date);
+    if ('_clientPostedAt' in r) r._clientPostedAt = normalizeTimeOnly(r._clientPostedAt);
     r.voided = r.voided === true || String(r.voided || '').trim().toLowerCase() === 'true';
   } else if (r.type === 'memberProfile') {
     r.action = r.action ?? '';

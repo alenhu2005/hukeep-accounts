@@ -1,6 +1,7 @@
 import { USER_A, USER_B } from '../config.js';
 import { appState } from '../state.js';
 import { todayStr } from '../time.js';
+import { formatTime12h } from '../time.js';
 import {
   uid,
   toast,
@@ -138,11 +139,16 @@ function renderEditSummary(r, amountTrail = null) {
   const summary = document.getElementById('edit-summary');
   if (!summary || !r) return;
 
+  const datePartRaw = r.date || '';
+  const timePartRaw = r._clientPostedAt || '';
+  const timePartDisplay = timePartRaw ? formatTime12h(timePartRaw) : '';
+  const dateTimePart = `${datePartRaw}${timePartDisplay ? ' ' + timePartDisplay : ''}`;
+
   const amt = parseFloat(r.amount) || 0;
   if (r.type === 'tripSettlement') {
     summary.innerHTML =
       `<div class="edit-summary-item">出遊還款</div>` +
-      `<div class="edit-summary-meta">${esc(r.date || '')} · ${esc(String(r.from || ''))} → ${esc(String(r.to || ''))} · NT$${Math.round(amt)}</div>`;
+      `<div class="edit-summary-meta">${esc(dateTimePart)} · ${esc(String(r.from || ''))} → ${esc(String(r.to || ''))} · NT$${Math.round(amt)}</div>`;
   } else {
     let payLine = '';
     if (r.type === 'tripExpense' && Array.isArray(r.payers) && r.payers.length) {
@@ -186,7 +192,7 @@ function renderEditSummary(r, amountTrail = null) {
         : '';
     summary.innerHTML =
       `<div class="edit-summary-item">${esc(r.item || '—')}</div>` +
-      `<div class="edit-summary-meta">${esc(r.date || '')}${payLine ? ' · ' + payLine : ''}${amt ? ' · NT$' + Math.round(amt) : ''}${cnyPart}</div>` +
+      `<div class="edit-summary-meta">${esc(dateTimePart)}${payLine ? ' · ' + payLine : ''}${amt ? ' · NT$' + Math.round(amt) : ''}${cnyPart}</div>` +
       renderAmountRevisionHtml(amountTrail) +
       splitHtml;
   }
