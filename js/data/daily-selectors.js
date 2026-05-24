@@ -3,6 +3,19 @@ import { DAILY_TYPES } from '../model.js';
 import { normalizeDate } from '../time.js';
 import { dedupeLedgerAddsById } from './shared.js';
 
+// Historical backend bug left two voided settlement rows in the deployed current-state feed
+// even though they are not part of the user's active sheet anymore. Suppress only those
+// exact stale ids so normal withdrawn history continues to render.
+const SUPPRESSED_DAILY_RECORD_IDS = new Set([
+  '6b092322-c5ea-45ea-a1e5-4ead00a2b0be',
+  '03dc65b4-218e-43c3-937b-8bd12b277d01',
+]);
+
+function shouldSuppressDailyRecord(record) {
+  const id = record?.id != null ? String(record.id).trim() : '';
+  return id && SUPPRESSED_DAILY_RECORD_IDS.has(id);
+}
+
 function hasLegacyDailyEvents(allRows) {
   return allRows.some(
     r => r && DAILY_TYPES.has(r.type) && (r.action === 'edit' || r.action === 'void' || r.action === 'delete'),
@@ -46,7 +59,7 @@ export function getDailyRecordsFromRows(allRows) {
     const out = dedupeLedgerAddsById(allRows.filter(r => r && DAILY_TYPES.has(r.type))).map(r => ({
       ...r,
       _voided: !!r.voided,
-    }));
+    })).filter(r => !shouldSuppressDailyRecord(r));
     return stableDailyHistorySortFromRows(allRows, out);
   }
 
@@ -73,6 +86,7 @@ export function getDailyRecordsFromRows(allRows) {
       if (editMap[r.id]) rec = { ...rec, ...editMap[r.id] };
       return rec;
     })
+    .filter(r => !shouldSuppressDailyRecord(r))
     .slice();
   return stableDailyHistorySortFromRows(allRows, out);
 }

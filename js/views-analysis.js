@@ -441,8 +441,11 @@ function buildAnalysisHistorySection(selectedDate, recordsForDay) {
       <div>
         <div class="analysis-history-kicker">當日明細</div>
         <div class="analysis-history-title">${esc(selectedDate)}</div>
+        <div class="analysis-history-sub">點卡片可直接檢視或編輯原始紀錄</div>
       </div>
-      <div class="analysis-history-count">${recordsForDay.length} 筆</div>
+      <div class="analysis-history-count-wrap">
+        <div class="analysis-history-count">${recordsForDay.length} 筆</div>
+      </div>
     </div>
     <div class="analysis-history-list">${body}</div>
   </section>`;

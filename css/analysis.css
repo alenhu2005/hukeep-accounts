@@ -689,12 +689,13 @@ html.dark .analysis-legend-swatch {
 }
 .analysis-legend-amt--total { font-weight: 700; }
 .analysis-history-section {
-  margin-top: 22px;
-  padding: 16px;
-  border-radius: 18px;
+  margin-top: 18px;
+  padding: 14px;
+  border-radius: 20px;
   border: 1px solid var(--border);
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--primary) 4%, var(--bg-card)), var(--bg-card)),
+    radial-gradient(circle at top right, color-mix(in srgb, var(--primary) 10%, transparent), transparent 34%),
+    linear-gradient(180deg, color-mix(in srgb, var(--primary) 3%, var(--bg-card)), var(--bg-card)),
     var(--bg-card);
   animation: analysisLegendIn 0.5s var(--ease-out) 0.14s both;
 }
@@ -713,14 +714,25 @@ html.dark .analysis-legend-swatch {
   margin-bottom: 4px;
 }
 .analysis-history-title {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 800;
   color: var(--text);
   line-height: 1.2;
 }
+.analysis-history-sub {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.analysis-history-count-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
 .analysis-history-count {
   flex-shrink: 0;
-  padding: 6px 10px;
+  padding: 6px 11px;
   border-radius: 999px;
   background: var(--bg-secondary);
   border: 1px solid var(--border);
@@ -735,6 +747,12 @@ html.dark .analysis-legend-swatch {
 }
 .analysis-history-list .empty-state {
   padding: 28px 10px 16px;
+}
+.analysis-history-list .record-item {
+  border-radius: 14px;
+}
+.analysis-history-list .record-item + .record-item {
+  margin-top: 2px;
 }
 .analysis-empty {
   text-align: center;

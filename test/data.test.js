@@ -37,6 +37,16 @@ describe('getDailyRecordsFromRows', () => {
     ];
     expect(getDailyRecordsFromRows(rows)).toHaveLength(0);
   });
+
+  it('suppresses known stale withdrawn settlement ghosts from current-state feed', () => {
+    const rows = [
+      { type: 'settlement', action: 'add', id: '6b092322-c5ea-45ea-a1e5-4ead00a2b0be', date: '2026-05-24', amount: 1, paidBy: '胡', voided: true },
+      { type: 'settlement', action: 'add', id: 'ok-settlement', date: '2026-05-24', amount: 50, paidBy: '詹', voided: true },
+    ];
+    const recs = getDailyRecordsFromRows(rows);
+    expect(recs.map(r => r.id)).toEqual(['ok-settlement']);
+    expect(recs[0]._voided).toBe(true);
+  });
 });
 
 describe('buildTripFromRows', () => {
