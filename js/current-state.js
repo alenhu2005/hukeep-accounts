@@ -136,6 +136,14 @@ function removeById(rows, type, id) {
   return removeAt(rows, idx);
 }
 
+export function removeCurrentStateEntity(rows, type, id) {
+  const kind = trimString(type);
+  if (kind === 'daily' || kind === 'settlement') {
+    return removeAt(rows, findDailyLikeIndex(rows, id));
+  }
+  return removeById(rows, kind, id);
+}
+
 function setDailyLikeVoided(rows, id, voided, { pending = false } = {}) {
   const idx = findDailyLikeIndex(rows, id);
   if (idx === -1) return;

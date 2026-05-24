@@ -67,10 +67,15 @@ export function clearPendingSyncForPayload(allRows, payload) {
  */
 export function pruneStalePendingSyncFlags(allRows, outboxPayloads = []) {
   const outboxKeys = new Set(outboxPayloads.map(pendingEventIdentity));
-  for (const r of allRows) {
+  for (let i = allRows.length - 1; i >= 0; i--) {
+    const r = allRows[i];
     if (!r._pendingSync) continue;
     const key = pendingEventIdentity(r);
     if (!key || outboxKeys.has(key)) continue;
+    if (r.voided === true) {
+      allRows.splice(i, 1);
+      continue;
+    }
     delete r._pendingSync;
   }
 }

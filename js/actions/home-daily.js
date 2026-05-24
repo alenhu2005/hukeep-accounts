@@ -13,7 +13,7 @@ import {
   prefersReducedMotion,
   bindScrollReveal,
 } from '../utils.js';
-import { postRow, formatPostError } from '../api.js';
+import { postRow, formatPostError, saveCache } from '../api.js';
 import { APPEND_POSTED_AT_TO_POST } from '../config.js';
 import {
   getDailyRecords,
@@ -57,6 +57,8 @@ import {
   snapshotRows,
   restoreRowsSnapshot,
   applyOptimisticPayload,
+  hasQueuedAddForEntity,
+  discardUnsyncedLocalEntity,
 } from './shared.js';
 
 // ── Home form ────────────────────────────────────────────────────────────────
@@ -244,16 +246,27 @@ export async function submitDailyRecord() {
 export async function voidDailyRecord(id) {
   const r = appState._dailyRecordsCache.find(x => x.id === id);
   if (!r) return;
+  const type = r.type === 'settlement' ? 'settlement' : 'daily';
+  const isUnsyncedLocal = hasQueuedAddForEntity(type, id);
   const label = r.type === 'settlement' ? '還款' : (r.item || '消費');
   const amount = parseFloat(r.amount) || 0;
   const ok = await showConfirm(
     '撤回這筆紀錄？',
-    `「${label}」— NT$${Math.round(amount)} 會保留在歷史紀錄中，但不再列入目前帳務。`,
+    isUnsyncedLocal
+      ? `「${label}」— NT$${Math.round(amount)} 尚未同步，撤回後會直接移除。`
+      : `「${label}」— NT$${Math.round(amount)} 會保留在歷史紀錄中，但不再列入目前帳務。`,
   );
   if (!ok) return;
-  const row = { type: r.type === 'settlement' ? 'settlement' : 'daily', action: 'void', id };
-  const snapshot = snapshotRows();
   snapshotPendingHomeBalanceFromAbs();
+  if (isUnsyncedLocal) {
+    discardUnsyncedLocalEntity(type, id);
+    saveCache();
+    renderHome();
+    toast('已移除尚未同步的紀錄');
+    return;
+  }
+  const row = { type, action: 'void', id };
+  const snapshot = snapshotRows();
   applyOptimisticPayload(row, { pending: false });
   renderHome();
   try {

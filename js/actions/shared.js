@@ -1,8 +1,12 @@
 import { appState } from '../state.js';
 import { getDailyRecords } from '../data.js';
 import { computeBalance } from '../finance.js';
-import { applyCurrentStatePayload, cloneRowsSnapshot } from '../current-state.js';
+import { applyCurrentStatePayload, cloneRowsSnapshot, removeCurrentStateEntity } from '../current-state.js';
+import { readPostOutbox, removePostOutboxMatching } from '../offline-queue.js';
 
+function sameEntityPayload(payload, type, id) {
+  return payload && String(payload.type || '') === String(type || '') && String(payload.id || '') === String(id || '');
+}
 
 export function undoOptimisticPush(row) {
   const idx = appState.allRows.lastIndexOf(row);
@@ -19,6 +23,18 @@ export function restoreRowsSnapshot(snapshot) {
 
 export function applyOptimisticPayload(payload, { pending = true } = {}) {
   applyCurrentStatePayload(appState.allRows, payload, { pending });
+}
+
+export function hasQueuedAddForEntity(type, id, outbox = readPostOutbox()) {
+  return outbox.some(payload => sameEntityPayload(payload, type, id) && String(payload.action || 'add') === 'add');
+}
+
+export function discardUnsyncedLocalEntity(type, id) {
+  const outbox = readPostOutbox();
+  if (!hasQueuedAddForEntity(type, id, outbox)) return false;
+  removeCurrentStateEntity(appState.allRows, type, id);
+  removePostOutboxMatching(payload => sameEntityPayload(payload, type, id));
+  return true;
 }
 
 export function parseMoneyLike(v) {

@@ -14,7 +14,7 @@ import {
   prefersReducedMotion,
   bindScrollReveal,
 } from '../utils.js';
-import { postRow, formatPostError, fetchHistoryRows } from '../api.js';
+import { postRow, formatPostError, fetchHistoryRows, saveCache } from '../api.js';
 import {
   getDailyRecords,
   getTripById,
@@ -58,6 +58,8 @@ import {
   snapshotRows,
   restoreRowsSnapshot,
   applyOptimisticPayload,
+  hasQueuedAddForEntity,
+  discardUnsyncedLocalEntity,
 } from './shared.js';
 
 // ── Edit dialog ──────────────────────────────────────────────────────────────
@@ -332,6 +334,14 @@ export async function voidEditingRecord() {
   const isTripExp = r.type === 'tripExpense';
   const isTripSettle = r.type === 'tripSettlement';
   const isTripLedger = isTripExp || isTripSettle;
+  const recordType = isTripExp
+    ? 'tripExpense'
+    : isTripSettle
+      ? 'tripSettlement'
+      : r.type === 'settlement'
+        ? 'settlement'
+        : 'daily';
+  const isUnsyncedLocal = hasQueuedAddForEntity(recordType, r.id);
   const label =
     r.type === 'settlement' || r.type === 'tripSettlement'
       ? '還款'
@@ -339,12 +349,24 @@ export async function voidEditingRecord() {
   const amount = parseFloat(r.amount) || 0;
   const ok = await showConfirm(
     '撤回這筆紀錄？',
-    `「${label}」— NT$${Math.round(amount)} 會保留在歷史紀錄中，但不再列入目前帳務。`,
+    isUnsyncedLocal
+      ? `「${label}」— NT$${Math.round(amount)} 尚未同步，撤回後會直接移除。`
+      : `「${label}」— NT$${Math.round(amount)} 會保留在歷史紀錄中，但不再列入目前帳務。`,
   );
   if (!ok) return;
 
-  const snapshot = snapshotRows();
   closeEditRecord();
+  if (isUnsyncedLocal) {
+    if (!isTripLedger) snapshotPendingHomeBalanceFromAbs();
+    discardUnsyncedLocalEntity(recordType, r.id);
+    saveCache();
+    if (isTripLedger) renderTripDetail();
+    else renderHome();
+    toast('已移除尚未同步的紀錄');
+    return;
+  }
+
+  const snapshot = snapshotRows();
 
   let row;
   if (isTripExp) row = { type: 'tripExpense', action: 'void', id: r.id };

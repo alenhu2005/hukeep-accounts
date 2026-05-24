@@ -88,6 +88,17 @@ describe('pruneStalePendingSyncFlags', () => {
     pruneStalePendingSyncFlags(rows);
     expect(rows[0]._pendingSync).toBe(true);
   });
+
+  it('drops orphan withdrawn rows when queued add+void was compacted away', () => {
+    writePostOutbox([
+      { type: 'settlement', action: 'add', id: 'ghost' },
+      { type: 'settlement', action: 'void', id: 'ghost' },
+    ]);
+    const rows = [{ type: 'settlement', action: 'add', id: 'ghost', voided: true, _pendingSync: true }];
+    pruneStalePendingSyncFlags(rows);
+    expect(rows).toEqual([]);
+    expect(readPostOutbox()).toEqual([]);
+  });
 });
 
 describe('enqueuePostOutbox (coalesce)', () => {
@@ -117,5 +128,11 @@ describe('enqueuePostOutbox (coalesce)', () => {
     const q = readPostOutbox();
     expect(q).toHaveLength(1);
     expect(q[0].colorId).toBe('rose');
+  });
+
+  it('compacts queued add+void for the same unsynced entity', () => {
+    enqueuePostOutbox({ type: 'settlement', action: 'add', id: 's1', amount: 1 });
+    enqueuePostOutbox({ type: 'settlement', action: 'void', id: 's1' });
+    expect(readPostOutbox()).toEqual([]);
   });
 });

@@ -8,6 +8,7 @@ export {
   enqueuePostOutbox,
   dequeuePostOutboxHead,
   peekPostOutboxHead,
+  removePostOutboxMatching,
 } from './sync/outbox-storage.js';
 
 import { pruneStalePendingSyncFlags as pruneStalePendingSyncFlagsBase } from './sync/pending.js';
