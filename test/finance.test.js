@@ -48,10 +48,18 @@ describe('computeBalance', () => {
     expect(net).toBeCloseTo(50.5);
   });
 
-  it('還款列代表當下清帳，不再用金額相減留尾差', () => {
+  it('還款列扣當下精確欠款，不以紀錄金額（進位）相減', () => {
     const net = computeBalance([
       { type: 'settlement', _voided: false, paidBy: '詹', amount: 51 },
       { type: 'daily', _voided: false, paidBy: '胡', splitMode: '均分', amount: 101 },
+    ]);
+    expect(net).toBe(0);
+  });
+
+  it('進位還款只扣精確尾差，不因多付產生反向欠款', () => {
+    const net = computeBalance([
+      { type: 'settlement', _voided: false, paidBy: '詹', amount: 3 },
+      { type: 'daily', _voided: false, paidBy: '胡', splitMode: '均分', amount: 5 },
     ]);
     expect(net).toBe(0);
   });

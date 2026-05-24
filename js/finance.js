@@ -66,7 +66,13 @@ export function dailyExpenseBalanceDeltaForUserA(r) {
 
 export function nextDailyLedgerBalance(running, r) {
   if (!r || r._voided) return running;
-  if (r.type === 'settlement') return 0;
+  if (r.type === 'settlement') {
+    const applied = Math.abs(running);
+    if (applied < 1e-9) return running;
+    if (r.paidBy === USER_B) return running - applied;
+    if (r.paidBy === USER_A) return running + applied;
+    return running;
+  }
   return running + dailyExpenseBalanceDeltaForUserA(r);
 }
 
