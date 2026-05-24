@@ -12,6 +12,7 @@
 - [本機開發](#本機開發)
 - [設定與覆寫](#設定與覆寫)
 - [資料模型與同步](#資料模型與同步)
+- [運算邏輯](#運算邏輯)
 - [後端（GAS）與試算表](#後端gas與試算表)
 - [PWA 與 Service Worker](#pwa-與-service-worker)
 - [部署](#部署)
@@ -64,7 +65,7 @@ flowchart TB
 
 - 新增消費：均分、僅單方、兩人各付等分攤模式。
 - 歷史紀錄：編輯分類、備註、照片、日期；支援作廢。
-- **還款**：結算型紀錄，便於帳目歸零。
+- **還款**：記錄清帳事件；介面以無條件進位顯示整數還款額，餘額計算則扣精確欠款（見 [運算邏輯](#運算邏輯)）。
 - 分類：可搭配 GAS 端 **Gemini** 自動建議類別（見 [docs/gas程式碼.md](docs/gas程式碼.md)）。
 
 ### 出遊分帳
@@ -87,7 +88,7 @@ flowchart TB
 ### 同步、備份與無障礙
 
 - 同步狀態列：同步中／已同步／僅快取；背景輪詢發現資料變更可提示「資料已更新」。
-- **備份與匯出**：CSV／文字備份（`js/backup.js`）；可清除本機快取（不刪試算表）。
+- **備份與匯出**：CSV／文字備份（`js/backup.js`）；選單標題下顯示**日常帳精確欠款**（浮點）與進位還款額供對帳；可清除本機快取（不刪試算表）。
 - 對話框焦點陷阱、深色模式（`js/theme.js`）等。
 
 ---
@@ -114,7 +115,7 @@ flowchart TB
 | 資料與模型 | `data.js`、`js/data/*.js`、`model.js` |
 | 商業邏輯 | `finance.js`、`trip-stats.js`、`category.js`、`time.js` |
 | 畫面 | `views-home.js`、`views-trips.js`、`views-trip-detail.js`、`js/views-trip-detail/*.js`、`views-analysis.js`、`views-shared.js` |
-| 互動 | `actions.js`、`dialog.js`、`globals.js`（掛載 `window` 供 inline 呼叫） |
+| 互動 | `actions.js`、`js/actions/*.js`、`dialog.js`、`globals.js`（掛載 `window` 供 inline 呼叫） |
 | 其他 | `pie-chart.js`、`sync-ui.js`、`sync-pause.js`、`session-ui.js`、`device-info.js`、`utils.js` |
 
 模組邊界補充：
@@ -239,12 +240,89 @@ npx serve
 
 ---
 
+## 運算邏輯
+
+核心實作位於 [`js/finance.js`](js/finance.js)。日常帳與出遊分帳採**不同結算模型**，請勿混用。
+
+### 日常帳結餘（`computeBalance`）
+
+**語意：** 以「胡」為基準的淨欠款。
+
+| `computeBalance` 結果 | 意義 |
+|----------------------|------|
+| 正數 | `USER_B` 欠 `USER_A` |
+| 負數 | `USER_A` 欠 `USER_B` |
+| 0 | 帳目已清 |
+
+**走帳順序：** 紀錄先依日期／時間排序（`getDailyRecords` → 新到舊），計算時**反轉為由舊到新**，逐筆更新 running balance（`nextDailyLedgerBalance`）。歷史列表旁的 running 小計、分析頁日／月變化皆共用同一函式。
+
+#### 單筆消費增量（`dailyExpenseBalanceDeltaForUserA`）
+
+僅 `type === 'daily'` 且未撤回者計入。
+
+| 分攤模式 | 規則 |
+|---------|------|
+| **均分** | 各負擔 `amount / 2`（保留浮點，如 101 → 50.5） |
+| **只有胡／只有詹** | 全額算在指定一方 |
+| **兩人付** | `(paidHu - paidZhan) / 2` |
+
+付款方為「胡」時，增量 = 詹的分攤額；付款方為「詹」時，增量 = −胡的分攤額。
+
+#### 日常還款（`type === 'settlement'`）
+
+- **介面／試算表紀錄：** 還款金額為 `Math.ceil(|精確欠款|)`（整數元，方便轉帳）。
+- **餘額計算：** 遇到還款列時，扣（或加回）**當下精確欠款** `Math.abs(running)`，**不以紀錄列上的進位金額相減**，也不將餘額整段歸零重算。
+
+範例：均分 5 元、胡付 → 精確欠款 2.5；首頁顯示還 **3** 元，寫入試算表 **3** 元，餘額扣 **2.5** → 0。多付的 0.5 元**不**轉成反向欠款。
+
+還款後若有新消費，自該筆起繼續累加；還款列與其**之前**（時間上較舊）的消費仍保留在帳上，不會被「切斷遺忘」。
+
+撤回還款列（`voided`）則不影響 running balance。
+
+#### 顯示 vs 計算
+
+| 用途 | 規則 | 位置 |
+|------|------|------|
+| 首頁大數字、還款確認 | `Math.ceil` 整數 | `views-home.js`、`actions/home-daily.js` |
+| 精確欠款對帳 | 浮點原文 | 備份選單、`backup.js` → `describeDailyBalanceExact` |
+| 文字備份開頭 | 同上 | `allRowsToBackupText` |
+
+### 出遊分帳（`computeSettlements`）
+
+多人行程與日常帳獨立：
+
+1. 每筆消費依 `computeExpenseShares` 分攤（含匯差手續費 `fxFeeNtd`、自訂 `splitDetails`、多人 `payers` 出款）。
+2. 累計每人「先付 − 應分攤」淨額。
+3. 已記錄的 **出遊還款**（`tripSettlement`）作為 `adjustments` 自淨額抵銷。
+4. 以 greedy 配對產生「誰該付誰」建議；單筆建議金額為浮點，**記錄還款時**同樣 `Math.ceil`。
+
+出遊頁的「還款」按鈕寫入 `tripSettlement`；試算表工作表為 **`出遊還款`**（與日常 **`日常還款`** 分開）。
+
+### 賭博統計
+
+- **日常：** `accumulateDailyGamblingWinLose` — 僅 `category === 賭博` 之 daily 列，依結餘增量拆贏／輸。
+- **出遊：** `computeTripGamblingWinLoseByMember` — 每人「代收／先付 − 分攤負擔」。
+
+分析頁圓餅與說明文案另見 `views-analysis.js`、`category.js`。
+
+### 測試對照
+
+| 檔案 | 相關案例 |
+|------|---------|
+| `test/finance.test.js` | 均分浮點、還款扣精確值、出遊分攤／匯差、賭博 |
+| `test/trip-stats.test.js` | 行程摘要、已記錄還款抵銷 |
+| `test/refactor-regression.test.js` | settlement、voided、outbox 合併 golden |
+
+---
+
 ## 後端（GAS）與試算表
 
 專案內 **GAS 範例與說明**見 [docs/gas程式碼.md](docs/gas程式碼.md)（需自行建立 Apps Script 專案並綁定試算表）。
 
 重點摘要：
 
+- **Active 工作表**（current-state）：`日常消費`、`日常還款`、`行程`、`出遊消費`、`出遊還款`、`成員`、`頭像`。日常消費與日常還款為**不同分頁**；新增還款請在 `日常還款` 查看，勿與舊版 append-only 的 `日常` 分頁混淆。
+- **Archive 工作表**：`封存_日常事件`、`封存_出遊事件`、`封存_人物事件`。
 - 工作表分成 **active current-state** 與 **archive 封存事件** 兩層，細節見 [docs/gas程式碼.md](docs/gas程式碼.md)。
 - **doGet**：預設只回傳 active current-state；`?mode=history` 可查單筆歷史，也可只帶 `type` 查該類 archive。
 - **doPost**：新增寫入 active 並同步封存；編輯直接覆寫 active；歷史紀錄內的帳務資料只會「撤回」不會真刪除。
@@ -263,7 +341,7 @@ npx serve
 ## PWA 與 Service Worker
 
 - 安裝至主畫面後以 `standalone` 顯示（見 `manifest.json`）。
-- `sw.js` 快取靜態資源清單；**變更 `CACHE_NAME`**（例如 `ledger-v49` → `ledger-v50`）可讓既有使用者取得新 JS/CSS。
+- `sw.js` 快取靜態資源清單；**變更 `CACHE_NAME`**（例如 `ledger-v78` → `ledger-v79`）可讓既有使用者取得新 JS/CSS。
 - 新增 `js/` 檔案且需離線可用時，記得把路徑加入 `STATIC_ASSETS`。
 
 ---
@@ -291,14 +369,16 @@ npm test
 
 | 檔案 | 涵蓋方向 |
 |------|----------|
-| `test/finance.test.js` | 結餘、分攤、賭博情境等 |
-| `test/data.test.js` | 事件列轉顯示資料 |
-| `test/offline-queue.test.js` | 離線佇列與合併 |
-| `test/refactor-regression.test.js` | fixture / golden 回歸，鎖住 `voided`、`closed`、rename、settlement、outbox merge |
+| `test/finance.test.js` | 日常結餘、還款扣精確值、出遊分攤／匯差、賭博 |
+| `test/data.test.js` | 事件列轉顯示資料、stale settlement 過濾 |
+| `test/offline-queue.test.js` | 離線佇列與 pending 合併 |
+| `test/refactor-regression.test.js` | fixture / golden 回歸（`voided`、`closed`、rename、settlement、outbox merge） |
 | `test/trip-stats.test.js` | 行程統計摘要 |
+| `test/time.test.js` | 台北時區、分析週期 |
 | `test/utils.test.js` | 工具函式 |
+| `test/actions-shared.test.js` | 未同步還款列丟棄等 actions 共用邏輯 |
 
-設定檔：[vitest.config.js](vitest.config.js)。
+目前共 **79** 項測試。設定檔：[vitest.config.js](vitest.config.js)。
 
 ---
 
@@ -308,6 +388,7 @@ npm test
 |------|------|
 | 線上版仍是舊 UI | 強制重新整理（`Cmd+Shift+R` / `Ctrl+Shift+R`）；或關閉分頁重開；檢查 `sw.js` 快取版本是否已更新 |
 | 長期「僅快取」或同步失敗 | 確認 `API_URL`、GAS 部署權限、試算表連結是否正常 |
+| 日常記帳有更新、還款在試算表看不到 | 確認是否開啟 **`日常還款`** 分頁（非 `日常消費`、非舊版 `日常`） |
 | 行程狀態或已撤回資料看起來被加回來 | 先強制重新整理一次；current-state 版前端會清掉舊快取 / 舊 outbox，避免舊事件模型覆蓋新資料 |
 | 新增後對方看不到 | 確認對方也完成同步；背景輪詢或手動重新整理 |
 | 儲存空間／Quota | 快取含大量資料或照片 metadata 時可能觸頂；備份後使用「清除本地快取」再同步 |
@@ -326,9 +407,10 @@ npm test
 
 修改建議對照：
 
-- 同步流程：`js/bootstrap.js`、`js/api.js`、`js/offline-queue.js`
+- 同步流程：`js/bootstrap.js`、`js/api.js`、`js/offline-queue.js`、`js/sync/*.js`
 - 畫面：`js/views-*.js`、`js/views-trip-detail/*.js` → `js/actions.js`（`js/actions/` 子模組）、`css/*.css`
-- 結算與規則：`js/finance.js`、`js/data.js`、`js/data/*.js`、`js/model.js`
+- 結算與規則：`js/finance.js`、`js/data.js`、`js/data/*.js`、`js/model.js`（運算邏輯詳見上文 [運算邏輯](#運算邏輯)）
+- 備份／精確欠款顯示：`js/backup.js`
 - PWA／離線資源：`sw.js`、`manifest.json`
 
 ---
