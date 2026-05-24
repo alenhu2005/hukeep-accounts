@@ -16,6 +16,12 @@ function shouldSuppressDailyRecord(record) {
   return id && SUPPRESSED_DAILY_RECORD_IDS.has(id);
 }
 
+function isRowVoided(r, voidIds) {
+  if (!r) return false;
+  if (voidIds && voidIds.has(r.id)) return true;
+  return r.voided === true || String(r.voided || '').trim().toLowerCase() === 'true';
+}
+
 function hasLegacyDailyEvents(allRows) {
   return allRows.some(
     r => r && DAILY_TYPES.has(r.type) && (r.action === 'edit' || r.action === 'void' || r.action === 'delete'),
@@ -58,7 +64,7 @@ export function getDailyRecordsFromRows(allRows) {
   if (!hasLegacyDailyEvents(allRows)) {
     const out = dedupeLedgerAddsById(allRows.filter(r => r && DAILY_TYPES.has(r.type))).map(r => ({
       ...r,
-      _voided: !!r.voided,
+      _voided: isRowVoided(r),
     })).filter(r => !shouldSuppressDailyRecord(r));
     return stableDailyHistorySortFromRows(allRows, out);
   }
@@ -82,7 +88,7 @@ export function getDailyRecordsFromRows(allRows) {
   );
   const out = adds
     .map(r => {
-      let rec = voidIds.has(r.id) ? { ...r, _voided: true } : r;
+      let rec = isRowVoided(r, voidIds) ? { ...r, _voided: true } : r;
       if (editMap[r.id]) rec = { ...rec, ...editMap[r.id] };
       return rec;
     })

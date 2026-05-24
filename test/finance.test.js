@@ -10,6 +10,7 @@ import {
   accumulateDailyGamblingWinLose,
   computeTripGamblingWinLoseByMember,
 } from '../js/finance.js';
+import { getDailyRecordsFromRows } from '../js/data.js';
 import { GAMBLING_CATEGORY } from '../js/category.js';
 
 describe('computeBalance', () => {
@@ -71,6 +72,32 @@ describe('computeBalance', () => {
       { type: 'daily', _voided: false, paidBy: '胡', splitMode: '均分', amount: 101 },
     ]);
     expect(net).toBeCloseTo(10);
+  });
+
+  it('先前消費撤回後，還款列改為可追回的多繳（記錄金額）', () => {
+    const net = computeBalance([
+      { type: 'settlement', _voided: false, paidBy: '詹', amount: 51 },
+      { type: 'daily', _voided: true, paidBy: '胡', splitMode: '均分', amount: 101 },
+    ]);
+    expect(net).toBe(-51);
+  });
+
+  it('撤回舊消費後多繳與後續新消費合併計算', () => {
+    const net = computeBalance([
+      { type: 'daily', _voided: false, paidBy: '胡', splitMode: '均分', amount: 20 },
+      { type: 'settlement', _voided: false, paidBy: '詹', amount: 51 },
+      { type: 'daily', _voided: true, paidBy: '胡', splitMode: '均分', amount: 101 },
+    ]);
+    expect(net).toBeCloseTo(-41);
+  });
+
+  it('legacy 路徑下 voided 旗標仍讓還款變可追回', () => {
+    const rows = [
+      { type: 'daily', action: 'add', id: 'd1', date: '2026-05-20', amount: 101, paidBy: '胡', splitMode: '均分', voided: true },
+      { type: 'settlement', action: 'add', id: 's1', date: '2026-05-21', amount: 51, paidBy: '詹' },
+      { type: 'daily', action: 'edit', id: 'd2', date: '2026-05-19', note: 'x' },
+    ];
+    expect(computeBalance(getDailyRecordsFromRows(rows))).toBe(-51);
   });
 });
 

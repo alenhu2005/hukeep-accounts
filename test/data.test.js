@@ -47,6 +47,16 @@ describe('getDailyRecordsFromRows', () => {
     expect(recs.map(r => r.id)).toEqual(['ok-settlement']);
     expect(recs[0]._voided).toBe(true);
   });
+
+  it('legacy 路徑仍尊重 current-state 列上的 voided 旗標', () => {
+    const rows = [
+      { type: 'daily', action: 'add', id: 'd1', date: '2026-05-20', amount: 101, paidBy: '胡', splitMode: '均分', voided: true },
+      { type: 'settlement', action: 'add', id: 's1', date: '2026-05-21', amount: 51, paidBy: '詹' },
+      { type: 'daily', action: 'edit', id: 'd2', date: '2026-05-19', note: '觸發 legacy 路徑' },
+    ];
+    const recs = getDailyRecordsFromRows(rows);
+    expect(recs.find(r => r.id === 'd1')._voided).toBe(true);
+  });
 });
 
 describe('buildTripFromRows', () => {

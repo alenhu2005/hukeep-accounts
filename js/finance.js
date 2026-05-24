@@ -64,13 +64,27 @@ export function dailyExpenseBalanceDeltaForUserA(r) {
   return -shareHu;
 }
 
+function isLedgerRecordVoided(r) {
+  if (!r) return true;
+  if (r._voided) return true;
+  return r.voided === true || String(r.voided || '').trim().toLowerCase() === 'true';
+}
+
 export function nextDailyLedgerBalance(running, r) {
-  if (!r || r._voided) return running;
+  if (isLedgerRecordVoided(r)) return running;
   if (r.type === 'settlement') {
     const applied = Math.abs(running);
-    if (applied < 1e-9) return running;
-    if (r.paidBy === USER_B) return running - applied;
-    if (r.paidBy === USER_A) return running + applied;
+    const recorded = parseFloat(r.amount) || 0;
+    if (r.paidBy === USER_B) {
+      if (applied >= 1e-9) return running - applied;
+      if (recorded >= 1e-9) return running - recorded;
+      return running;
+    }
+    if (r.paidBy === USER_A) {
+      if (applied >= 1e-9) return running + applied;
+      if (recorded >= 1e-9) return running + recorded;
+      return running;
+    }
     return running;
   }
   return running + dailyExpenseBalanceDeltaForUserA(r);
