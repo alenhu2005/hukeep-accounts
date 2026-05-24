@@ -14,6 +14,7 @@ import {
   bindScrollReveal,
 } from '../utils.js';
 import { postRow, formatPostError } from '../api.js';
+import { renderBackupBalancePanel } from '../backup.js';
 import {
   getDailyRecords,
   getTripById,
@@ -155,6 +156,7 @@ export async function handleAvatarSelected(ev) {
   }
 }
 export function openBackupMenu() {
+  renderBackupBalancePanel();
   document.getElementById('backup-overlay')?.classList.add('open');
 }
 

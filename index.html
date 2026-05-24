@@ -245,7 +245,7 @@
   <div id="backup-overlay" onclick="if(event.target===this)closeBackupMenu()">
     <div class="edit-dialog backup-dialog" role="dialog" aria-modal="true" aria-labelledby="backup-dialog-title" onclick="event.stopPropagation()">
       <h3 id="backup-dialog-title">備份與匯出</h3>
-      <p class="backup-hint">可讀版含中文欄與摘要；還原試算表或與後端對接請用原始格式。</p>
+      <p id="backup-balance-debug" class="backup-hint" aria-live="polite"></p>
       <div class="backup-sheet-actions">
         <button type="button" class="btn btn-primary btn-full" onclick="exportBackupCSV(); closeBackupMenu()">下載可讀版 CSV</button>
         <button type="button" class="btn btn-outline btn-full" onclick="copyBackupText().then(() => closeBackupMenu())">複製文字備份</button>

@@ -1,7 +1,57 @@
+import { USER_A, USER_B } from './config.js';
 import { appState } from './state.js';
+import { getDailyRecords, getDailyRecordsFromRows } from './data.js';
+import { computeBalance } from './finance.js';
 import { parseArr, toast } from './utils.js';
 
 const TZ = 'Asia/Taipei';
+
+function fmtExactAmount(n) {
+  const abs = Math.abs(Number(n));
+  if (!Number.isFinite(abs) || abs < 1e-9) return '0';
+  return String(Number(abs.toFixed(6)));
+}
+
+/** @param {number} balance computeBalance 回傳值：正＝USER_B 欠 USER_A */
+export function describeDailyBalanceExact(balance) {
+  if (!Number.isFinite(balance) || Math.abs(balance) < 1e-9) {
+    return {
+      exact: 0,
+      exactText: '0',
+      whoText: '帳目已清',
+      ceilText: '0',
+    };
+  }
+  const exactText = fmtExactAmount(balance);
+  const ceilAmt = Math.ceil(Math.abs(balance));
+  if (balance > 0) {
+    return {
+      exact: balance,
+      exactText,
+      whoText: `${USER_B}欠${USER_A}`,
+      ceilText: String(ceilAmt),
+    };
+  }
+  return {
+    exact: balance,
+    exactText,
+    whoText: `${USER_A}欠${USER_B}`,
+    ceilText: String(ceilAmt),
+  };
+}
+
+export function renderBackupBalancePanel() {
+  const el = document.getElementById('backup-balance-debug');
+  if (!el) return;
+
+  const info = describeDailyBalanceExact(computeBalance(getDailyRecords()));
+  if (info.exact === 0) {
+    el.textContent = `日常帳精確欠款 NT$ 0（${info.whoText}）`;
+    return;
+  }
+
+  el.textContent = `日常帳精確欠款 NT$ ${info.exactText}（${info.whoText} · 進位 ${info.ceilText}）`;
+}
 
 function csvEscape(s) {
   const t = String(s ?? '');
@@ -293,12 +343,17 @@ export function allRowsToBackupText() {
   const tripSet = rows.filter(r => r.type === 'tripSettlement');
   const tripMem = rows.filter(r => r.type === 'tripMember');
 
+  const balanceInfo = describeDailyBalanceExact(computeBalance(getDailyRecordsFromRows(rows)));
+
   const head = [
     '╔════════════════════════════════════════════════════════════╗',
     '║  記帳本 · 可讀備份（純文字）                              ║',
     '╚════════════════════════════════════════════════════════════╝',
     '',
     `匯出時間（台北）：${now}`,
+    balanceInfo.exact === 0
+      ? '日常帳精確欠款：NT$ 0（帳目已清）'
+      : `日常帳精確欠款：NT$ ${balanceInfo.exactText}（${balanceInfo.whoText}；進位還款 NT$ ${balanceInfo.ceilText}）`,
     `事件總筆數：${rows.length}（日常／還款相關 ${dailyLike.length} · 行程 ${tripOnly.length} · 出遊消費 ${tripExp.length} · 出遊結清 ${tripSet.length} · 成員異動 ${tripMem.length}）`,
     '',
     '以下依「日期」排序；同一日多筆時維持原本順序。',
