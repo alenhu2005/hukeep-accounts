@@ -30,7 +30,7 @@ export function parseMoneyLike(v) {
 
 export function snapshotPendingHomeBalanceFromAbs() {
   const b = computeBalance(getDailyRecords());
-  appState.pendingHomeBalanceFromAbs = b === 0 ? 0 : Math.round(Math.abs(b));
+  appState.pendingHomeBalanceFromAbs = b === 0 ? 0 : Math.ceil(Math.abs(b));
 }
 
 export async function fileToJpegDataUrl(file, { maxDim = 1024, quality = 0.78 } = {}) {

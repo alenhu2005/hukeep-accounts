@@ -42,35 +42,39 @@ export function computeExpenseShares(expense) {
   return splitAmong.map(name => ({ name, amount: share }));
 }
 
+export function dailyExpenseBalanceDeltaForUserA(r) {
+  if (!r || r._voided || r.type !== 'daily') return 0;
+  const a = parseFloat(r.amount) || 0;
+  if (r.splitMode === '兩人付') {
+    const hu = parseFloat(r.paidHu) || 0;
+    const zhan = parseFloat(r.paidZhan) || 0;
+    return (hu - zhan) / 2;
+  }
+  let shareHu = 0;
+  let shareZhan = 0;
+  if (r.splitMode === '均分') {
+    shareHu = a / 2;
+    shareZhan = a / 2;
+  } else if (r.splitMode === '只有胡') {
+    shareHu = a;
+  } else {
+    shareZhan = a;
+  }
+  if (r.paidBy === USER_A) return shareZhan;
+  return -shareHu;
+}
+
+export function nextDailyLedgerBalance(running, r) {
+  if (!r || r._voided) return running;
+  if (r.type === 'settlement') return 0;
+  return running + dailyExpenseBalanceDeltaForUserA(r);
+}
+
 /** Daily ledger balance: positive = USER_B owes USER_A, negative = USER_A owes USER_B. */
 export function computeBalance(records) {
   let net = 0;
-  for (const r of records) {
-    if (r._voided) continue;
-    const a = parseFloat(r.amount) || 0;
-    if (r.type === 'settlement') {
-      if (r.paidBy === USER_A) net += a;
-      else net -= a;
-      continue;
-    }
-    if (r.splitMode === '兩人付') {
-      const hu = parseFloat(r.paidHu) || 0;
-      const zhan = parseFloat(r.paidZhan) || 0;
-      net += (hu - zhan) / 2;
-      continue;
-    }
-    let shareHu = 0;
-    let shareZhan = 0;
-    if (r.splitMode === '均分') {
-      shareHu = a / 2;
-      shareZhan = a / 2;
-    } else if (r.splitMode === '只有胡') {
-      shareHu = a;
-    } else {
-      shareZhan = a;
-    }
-    if (r.paidBy === USER_A) net += shareZhan;
-    else net -= shareHu;
+  for (const r of [...records].reverse()) {
+    net = nextDailyLedgerBalance(net, r);
   }
   return net;
 }
@@ -122,22 +126,23 @@ export function computeSettlements(members, expenses, adjustments = []) {
     if (bal[adj.from] !== undefined) bal[adj.from] += x;
     if (bal[adj.to] !== undefined) bal[adj.to] -= x;
   }
+  const settlementThreshold = adjustments.length > 0 ? 1 : 0.01;
   const pos = Object.entries(bal)
-    .filter(([, v]) => v > 0.01)
+    .filter(([, v]) => v >= settlementThreshold)
     .map(([n, a]) => ({ n, a }));
   const neg = Object.entries(bal)
-    .filter(([, v]) => v < -0.01)
+    .filter(([, v]) => v <= -settlementThreshold)
     .map(([n, a]) => ({ n, a: -a }));
   const out = [];
   let i = 0;
   let j = 0;
   while (i < neg.length && j < pos.length) {
     const pay = Math.min(neg[i].a, pos[j].a);
-    if (pay > 0.01) out.push({ from: neg[i].n, to: pos[j].n, amount: pay });
+    if (pay >= settlementThreshold) out.push({ from: neg[i].n, to: pos[j].n, amount: pay });
     neg[i].a -= pay;
     pos[j].a -= pay;
-    if (neg[i].a < 0.01) i++;
-    if (pos[j].a < 0.01) j++;
+    if (neg[i].a < settlementThreshold) i++;
+    if (pos[j].a < settlementThreshold) j++;
   }
   return out;
 }
@@ -197,32 +202,6 @@ export function computeTripDaySubtotals(expenses) {
     byDay[d] += (parseFloat(e.amount) || 0) + tripExpenseFxFeeNtd(e);
   }
   return byDay;
-}
-
-/**
- * 單筆日常支出對結算餘額的增量（與 {@link computeBalance} 內日常邏輯一致；正＝詹欠胡）。
- * 不含 settlement。
- */
-export function dailyExpenseBalanceDeltaForUserA(r) {
-  if (!r || r._voided || r.type !== 'daily') return 0;
-  const a = parseFloat(r.amount) || 0;
-  if (r.splitMode === '兩人付') {
-    const hu = parseFloat(r.paidHu) || 0;
-    const zhan = parseFloat(r.paidZhan) || 0;
-    return (hu - zhan) / 2;
-  }
-  let shareHu = 0;
-  let shareZhan = 0;
-  if (r.splitMode === '均分') {
-    shareHu = a / 2;
-    shareZhan = a / 2;
-  } else if (r.splitMode === '只有胡') {
-    shareHu = a;
-  } else {
-    shareZhan = a;
-  }
-  if (r.paidBy === USER_A) return shareZhan;
-  return -shareHu;
 }
 
 /**

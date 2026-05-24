@@ -82,7 +82,7 @@ export function buildSettlementViewModel(members, expenses, trip, allRows) {
   const voidCount = expenses.length - active.length;
   const adjustments = trip ? getTripSettlementAdjustmentsFromRows(trip.id, allRows) : [];
   const settlements = computeSettlements(members, active, adjustments);
-  const dueSettlements = settlements.filter(s => Math.round(parseFloat(s.amount) || 0) > 0);
+  const dueSettlements = settlements.filter(s => Math.ceil(parseFloat(s.amount) || 0) > 0);
   const total = active.reduce((s, e) => s + tripExpenseBillNtd(e), 0);
   return { active, voidCount, adjustments, dueSettlements, total };
 }
@@ -146,7 +146,7 @@ export function renderSettlement(members, expenses, trip, allRows = tripDetailSt
   const canSettle = trip && !trip._closed;
   const rowsHtml = dueSettlements
     .map(s => {
-      const amt = Math.round(s.amount);
+      const amt = Math.ceil(s.amount);
       const barPct = Math.round((s.amount / maxPay) * 100);
       const coverW = prefersReducedMotion() ? 100 - barPct : 100;
       const repayBtn = canSettle

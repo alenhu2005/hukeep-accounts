@@ -15,7 +15,7 @@ import {
 import { esc, jq, prefersReducedMotion } from './utils.js';
 import { makePieChartSVG, getCatPieColor } from './pie-chart.js';
 import { gamblingSplitFromCatTotals } from './category.js';
-import { accumulateDailyGamblingWinLose } from './finance.js';
+import { accumulateDailyGamblingWinLose, nextDailyLedgerBalance } from './finance.js';
 
 let analysisCountGen = 0;
 
@@ -199,30 +199,7 @@ function computeYearMonthRunningDelta(displayYear, recordsNewestFirst) {
         monthStart[mm] = running;
       }
     }
-    if (!r._voided) {
-      const a = parseFloat(r.amount) || 0;
-      if (r.type === 'settlement') {
-        if (r.paidBy === USER_A) running += a;
-        else running -= a;
-      } else if (r.splitMode === '兩人付') {
-        const hu = parseFloat(r.paidHu) || 0;
-        const zhan = parseFloat(r.paidZhan) || 0;
-        running += (hu - zhan) / 2;
-      } else {
-        let shareZhan = 0;
-        let shareHu = 0;
-        if (r.splitMode === '均分') {
-          shareHu = a / 2;
-          shareZhan = a / 2;
-        } else if (r.splitMode === '只有胡') {
-          shareHu = a;
-        } else {
-          shareZhan = a;
-        }
-        if (r.paidBy === USER_A) running += shareZhan;
-        else running -= shareHu;
-      }
-    }
+    running = nextDailyLedgerBalance(running, r);
     if (d && d.startsWith(prefix)) {
       const mm = parseInt(d.slice(5, 7), 10);
       if (mm >= 1 && mm <= 12) {
@@ -262,30 +239,7 @@ export function computeDateRunningDeltas(recordsNewestFirst, dateStrs) {
     if (d && dateSet.has(d) && !started.has(d)) {
       started.set(d, running);
     }
-    if (!r._voided) {
-      const a = parseFloat(r.amount) || 0;
-      if (r.type === 'settlement') {
-        if (r.paidBy === USER_A) running += a;
-        else running -= a;
-      } else if (r.splitMode === '兩人付') {
-        const hu = parseFloat(r.paidHu) || 0;
-        const zhan = parseFloat(r.paidZhan) || 0;
-        running += (hu - zhan) / 2;
-      } else {
-        let shareZhan = 0;
-        let shareHu = 0;
-        if (r.splitMode === '均分') {
-          shareHu = a / 2;
-          shareZhan = a / 2;
-        } else if (r.splitMode === '只有胡') {
-          shareHu = a;
-        } else {
-          shareZhan = a;
-        }
-        if (r.paidBy === USER_A) running += shareZhan;
-        else running -= shareHu;
-      }
-    }
+    running = nextDailyLedgerBalance(running, r);
     if (d && dateSet.has(d)) {
       ended.set(d, running);
     }

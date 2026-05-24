@@ -40,6 +40,30 @@ describe('computeBalance', () => {
     ]);
     expect(net).toBeCloseTo(0);
   });
+
+  it('奇數均分可保留浮點，供顯示端無條件進位', () => {
+    const net = computeBalance([
+      { type: 'daily', _voided: false, paidBy: '胡', splitMode: '均分', amount: 101 },
+    ]);
+    expect(net).toBeCloseTo(50.5);
+  });
+
+  it('還款列代表當下清帳，不再用金額相減留尾差', () => {
+    const net = computeBalance([
+      { type: 'settlement', _voided: false, paidBy: '詹', amount: 51 },
+      { type: 'daily', _voided: false, paidBy: '胡', splitMode: '均分', amount: 101 },
+    ]);
+    expect(net).toBe(0);
+  });
+
+  it('清帳後若有新消費，只計算清帳之後的欠款', () => {
+    const net = computeBalance([
+      { type: 'daily', _voided: false, paidBy: '胡', splitMode: '均分', amount: 20 },
+      { type: 'settlement', _voided: false, paidBy: '詹', amount: 51 },
+      { type: 'daily', _voided: false, paidBy: '胡', splitMode: '均分', amount: 101 },
+    ]);
+    expect(net).toBeCloseTo(10);
+  });
 });
 
 describe('computeSettlements', () => {
@@ -93,6 +117,22 @@ describe('computeSettlements', () => {
         },
       ],
       [{ from: '詹', to: '胡', amount: 50 }],
+    );
+    expect(out).toHaveLength(0);
+  });
+
+  it('奇數均分時，無條件進位還款後不再殘留 0.5', () => {
+    const out = computeSettlements(
+      ['胡', '詹'],
+      [
+        {
+          amount: 101,
+          paidBy: '胡',
+          splitAmong: ['胡', '詹'],
+          _voided: false,
+        },
+      ],
+      [{ from: '詹', to: '胡', amount: 51 }],
     );
     expect(out).toHaveLength(0);
   });

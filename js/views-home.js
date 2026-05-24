@@ -1,7 +1,7 @@
 import { USER_A, USER_B } from './config.js';
 import { appState } from './state.js';
 import { getDailyRecords, getAvatarUrlByMemberName, getMemberColor, isHiddenMemberColorId, getHiddenMemberStyleKey } from './data.js';
-import { computeBalance } from './finance.js';
+import { computeBalance, nextDailyLedgerBalance } from './finance.js';
 import { categoryBadgeHTML } from './category.js';
 import { esc, jq, jqAttr, prefersReducedMotion, bindScrollReveal } from './utils.js';
 import { emptyHTML } from './views-shared.js';
@@ -36,30 +36,7 @@ function buildRunningBalanceMap(orderedOldestFirst) {
   let running = 0;
   const balanceMap = {};
   for (const r of orderedOldestFirst) {
-    if (!r._voided) {
-      const a = parseFloat(r.amount) || 0;
-      if (r.type === 'settlement') {
-        if (r.paidBy === USER_A) running += a;
-        else running -= a;
-      } else if (r.splitMode === '兩人付') {
-        const hu = parseFloat(r.paidHu) || 0;
-        const zhan = parseFloat(r.paidZhan) || 0;
-        running += (hu - zhan) / 2;
-      } else {
-        let shareZhan = 0;
-        let shareHu = 0;
-        if (r.splitMode === '均分') {
-          shareHu = a / 2;
-          shareZhan = a / 2;
-        } else if (r.splitMode === '只有胡') {
-          shareHu = a;
-        } else {
-          shareZhan = a;
-        }
-        if (r.paidBy === USER_A) running += shareZhan;
-        else running -= shareHu;
-      }
-    }
+    running = nextDailyLedgerBalance(running, r);
     balanceMap[r.id] = running;
   }
   return balanceMap;
@@ -190,7 +167,7 @@ export function renderHome() {
   appState.pendingHomeBalanceFromAbs = null;
   if (wantBalanceAnim) deltaFromAbs = null;
 
-  const absAmt = balance === 0 ? 0 : Math.round(Math.abs(balance));
+  const absAmt = balance === 0 ? 0 : Math.ceil(Math.abs(balance));
 
   function applyBalanceAmount() {
     settleBtn.style.display = 'inline-block';

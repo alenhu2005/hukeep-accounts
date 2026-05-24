@@ -101,7 +101,7 @@ export async function recordTripSettlementOneAction(el) {
     return;
   }
 
-  const amount = Math.round(match.amount);
+  const amount = Math.ceil(match.amount);
   const ok = await showConfirm('記錄還款', `${from} 付給 ${to} NT$${amount}`);
   if (!ok) return;
 
@@ -138,7 +138,7 @@ export async function recordSettlement() {
 
   const debtor = balance > 0 ? USER_B : USER_A;
   const creditor = balance > 0 ? USER_A : USER_B;
-  const amount = Math.round(Math.abs(balance));
+  const amount = Math.ceil(Math.abs(balance));
 
   const ok = await showConfirm('記錄還款', `${debtor} 還給 ${creditor} NT$${amount}，記錄後餘額歸零。`);
   if (!ok) return;
