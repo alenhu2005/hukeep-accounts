@@ -688,6 +688,54 @@ html.dark .analysis-legend-swatch {
   font-variant-numeric: tabular-nums;
 }
 .analysis-legend-amt--total { font-weight: 700; }
+.analysis-history-section {
+  margin-top: 22px;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--primary) 4%, var(--bg-card)), var(--bg-card)),
+    var(--bg-card);
+  animation: analysisLegendIn 0.5s var(--ease-out) 0.14s both;
+}
+.analysis-history-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.analysis-history-kicker {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--primary-dark);
+  margin-bottom: 4px;
+}
+.analysis-history-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.2;
+}
+.analysis-history-count {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+.analysis-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.analysis-history-list .empty-state {
+  padding: 28px 10px 16px;
+}
 .analysis-empty {
   text-align: center;
   padding: 60px 0;

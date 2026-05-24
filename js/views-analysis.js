@@ -12,10 +12,12 @@ import {
   currentYm,
   todayStr,
 } from './time.js';
-import { esc, jq, prefersReducedMotion } from './utils.js';
+import { esc, jq, prefersReducedMotion, bindScrollReveal } from './utils.js';
 import { makePieChartSVG, getCatPieColor } from './pie-chart.js';
 import { gamblingSplitFromCatTotals } from './category.js';
 import { accumulateDailyGamblingWinLose, nextDailyLedgerBalance } from './finance.js';
+import { emptyHTML } from './views-shared.js';
+import { buildRunningBalanceMap, dailyRecordHTML } from './views-daily-records.js';
 
 let analysisCountGen = 0;
 
@@ -427,6 +429,25 @@ function buildAnalysisPeriodNav(period, allDaily, filterDate) {
   return analysisYearNavHtml(displayYear, allDaily);
 }
 
+function buildAnalysisHistorySection(selectedDate, recordsForDay) {
+  const orderedOldestFirst = [...recordsForDay].reverse();
+  const balanceMap = buildRunningBalanceMap(orderedOldestFirst);
+  const body =
+    recordsForDay.length > 0
+      ? recordsForDay.map((r, i) => dailyRecordHTML(r, balanceMap[r.id], i)).join('')
+      : emptyHTML('這天沒有紀錄', '再點同一天可回到整段分析');
+  return `<section class="analysis-history-section">
+    <div class="analysis-history-head">
+      <div>
+        <div class="analysis-history-kicker">當日明細</div>
+        <div class="analysis-history-title">${esc(selectedDate)}</div>
+      </div>
+      <div class="analysis-history-count">${recordsForDay.length} 筆</div>
+    </div>
+    <div class="analysis-history-list">${body}</div>
+  </section>`;
+}
+
 export function renderAnalysis() {
   const el = document.getElementById('analysis-content');
   if (!el) return;
@@ -452,7 +473,8 @@ export function renderAnalysis() {
     }
   }
 
-  const allDaily = getDailyRecords().filter(r => !r._voided && r.type === 'daily');
+  const allRecords = getDailyRecords();
+  const allDaily = allRecords.filter(r => !r._voided && r.type === 'daily');
   const periodNav = buildAnalysisPeriodNav(
     appState.analysisPeriod,
     allDaily,
@@ -463,6 +485,14 @@ export function renderAnalysis() {
     : '';
 
   const records = allDaily.filter(r => r.date >= fromStr && r.date <= toStr);
+  const selectedDayHistory =
+    appState.analysisFilterDate && fromStr === toStr
+      ? allRecords.filter(r => r.date === appState.analysisFilterDate)
+      : [];
+  const historySectionHtml =
+    appState.analysisFilterDate && fromStr === toStr
+      ? buildAnalysisHistorySection(appState.analysisFilterDate, selectedDayHistory)
+      : '';
 
   let total = 0;
   let huTotal = 0;
@@ -503,7 +533,11 @@ export function renderAnalysis() {
       <div class="analysis-empty">
         <div class="analysis-empty-icon" aria-hidden="true">📊</div>
         <div class="analysis-empty-text">${esc(periodLabel)} 尚無支出紀錄</div>
-      </div>`;
+      </div>
+      ${historySectionHtml}`;
+    if (appState.analysisFilterDate && el.querySelector('.analysis-history-list')) {
+      bindScrollReveal(el, '.analysis-history-section, .record-item', { enabled: true });
+    }
     return;
   }
 
@@ -629,7 +663,11 @@ export function renderAnalysis() {
         <div class="analysis-legend-pct" data-analysis-count="100" data-analysis-mode="pct">${totalPctStart}</div>
         <div class="analysis-legend-amt analysis-legend-amt--total" data-analysis-count="${nonGamR}" data-analysis-mode="currency">${pieLegendAmtStart}</div>
       </div>
-    </div>`;
+    </div>
+    ${historySectionHtml}`;
 
   playAnalysisCountUps(el);
+  if (appState.analysisFilterDate && el.querySelector('.analysis-history-list')) {
+    bindScrollReveal(el, '.analysis-history-section, .record-item', { enabled: true });
+  }
 }
