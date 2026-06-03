@@ -249,21 +249,20 @@
       <div class="backup-sheet-actions">
         <button type="button" class="btn btn-primary btn-full" onclick="exportBackupCSV(); closeBackupMenu()">下載可讀版 CSV</button>
         <button type="button" class="btn btn-outline btn-full" onclick="copyBackupText().then(() => closeBackupMenu())">複製文字備份</button>
-        <button type="button" class="btn btn-ghost btn-full backup-tech-btn" onclick="exportTechnicalCSV(); closeBackupMenu()">下載原始格式 CSV（技術用）</button>
       </div>
-      <div id="backup-health-panel" class="backup-panel" aria-live="polite"></div>
-      <div class="backup-tool-grid">
-        <button type="button" class="btn btn-outline btn-full" onclick="refreshLedgerHealthPanel()">重新檢查資料</button>
-        <button type="button" class="btn btn-outline btn-full" onclick="copyLedgerHealthReport()">複製健康報告</button>
-        <button type="button" class="btn btn-ghost btn-full backup-tech-btn" onclick="downloadLedgerHealthCard()">下載健康卡片</button>
-      </div>
-      <div id="backup-operation-panel" class="backup-panel"></div>
-      <div class="backup-tool-grid">
-        <button type="button" class="btn btn-outline btn-full" onclick="copyOperationTimelineText()">複製最近操作</button>
-        <button type="button" class="btn btn-outline btn-full" onclick="clearLocalCache()">清快取並重新載入</button>
-      </div>
+      <div id="backup-health-panel" class="backup-health-summary" aria-live="polite"></div>
+      <details class="backup-advanced">
+        <summary>進階工具</summary>
+        <div class="backup-tool-grid">
+          <button type="button" class="btn btn-outline btn-full" onclick="refreshLedgerHealthPanel()">重新檢查資料</button>
+          <button type="button" class="btn btn-outline btn-full" onclick="copyLedgerHealthReport()">複製健康報告</button>
+          <button type="button" class="btn btn-outline btn-full" onclick="copyOperationTimelineText()">複製最近操作</button>
+          <button type="button" class="btn btn-ghost btn-full backup-tech-btn" onclick="downloadLedgerHealthCard()">下載健康卡片</button>
+          <button type="button" class="btn btn-ghost btn-full backup-tech-btn" onclick="exportTechnicalCSV(); closeBackupMenu()">下載原始格式 CSV（技術用）</button>
+          <button type="button" class="btn btn-ghost btn-full backup-tech-btn" onclick="clearLocalCache()">清快取並重新載入</button>
+        </div>
+      </details>
       <button type="button" class="btn btn-outline btn-full backup-close-btn" onclick="closeBackupMenu()">關閉</button>
-      <button type="button" class="clear-cache-link" onclick="clearLocalCache()">清除本地快取</button>
     </div>
   </div>
 

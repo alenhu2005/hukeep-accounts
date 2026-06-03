@@ -200,60 +200,20 @@ export function formatLedgerHealthReportText(result = runLedgerHealthCheck()) {
   return lines.join('\n');
 }
 
-function issueClass(level) {
-  if (level === 'error') return 'backup-health-issue--error';
-  if (level === 'warning') return 'backup-health-issue--warning';
-  return 'backup-health-issue--info';
-}
-
 export function renderLedgerHealthPanel(result = runLedgerHealthCheck()) {
   const el = document.getElementById('backup-health-panel');
   if (!el) return result;
-  const statusText = result.status === 'ok' ? '資料看起來正常' : result.status === 'warning' ? '有項目需要確認' : '有資料風險';
-  const topTrips = result.tripChecks.slice(0, 4);
+  const statusText = result.status === 'ok' ? '資料正常' : result.status === 'warning' ? '需要確認' : '有資料風險';
+  const statusMeta = `${result.metrics.totalRows} 列 · ${result.metrics.tripCount} 行程 · ${result.metrics.pendingCount} 待同步`;
+  const issueText = result.issues.length > 0 ? result.issues[0].title : '可安心匯出';
   el.innerHTML = `
-    <div class="backup-panel-head">
+    <div class="backup-health-summary-main">
+      <span class="backup-health-dot backup-health-dot--${esc(result.status)}" aria-hidden="true"></span>
       <div>
-        <div class="backup-panel-kicker">資料健康檢查</div>
-        <div class="backup-panel-title">${esc(statusText)}</div>
+        <div class="backup-health-summary-title">${esc(statusText)}</div>
+        <div class="backup-health-summary-meta">${esc(statusMeta)} · ${esc(issueText)}</div>
       </div>
-      <span class="backup-health-badge backup-health-badge--${esc(result.status)}">${esc(result.status === 'ok' ? '正常' : result.status === 'warning' ? '注意' : '風險')}</span>
     </div>
-    <div class="backup-metric-row" aria-label="資料摘要">
-      <span>${result.metrics.totalRows} 列</span>
-      <span>${result.metrics.tripCount} 行程</span>
-      <span>${result.metrics.pendingCount} 待同步</span>
-    </div>
-    ${
-      result.issues.length
-        ? `<div class="backup-health-issues">${result.issues
-            .slice(0, 3)
-            .map(
-              issue => `
-                <div class="backup-health-issue ${issueClass(issue.level)}">
-                  <strong>${esc(issue.title)}</strong>
-                  <span>${esc(issue.detail)}</span>
-                </div>
-              `,
-            )
-            .join('')}</div>`
-        : '<div class="backup-health-empty">沒有發現明顯問題，可以安心匯出。</div>'
-    }
-    ${
-      topTrips.length
-        ? `<div class="backup-trip-health-list">${topTrips
-            .map(trip => {
-              const settled = trip.remainingTotal < 1;
-              return `
-                <div class="backup-trip-health-row">
-                  <span>${esc(trip.name)}</span>
-                  <strong class="${settled ? 'is-ok' : 'is-warn'}">${settled ? '已結清' : fmtMoney(trip.remainingTotal)}</strong>
-                </div>
-              `;
-            })
-            .join('')}</div>`
-        : ''
-    }
   `;
   return result;
 }

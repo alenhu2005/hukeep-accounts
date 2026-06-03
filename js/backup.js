@@ -81,6 +81,22 @@ function tripName(tripNames, tripId) {
   return tripNames[tripId] || `行程 ${String(tripId).slice(0, 8)}…`;
 }
 
+function parseListField(value) {
+  if (Array.isArray(value)) return value.map(v => String(v || '').trim()).filter(Boolean);
+  return parseArr(value).map(v => String(v || '').trim()).filter(Boolean);
+}
+
+function parseObjectListField(value) {
+  if (Array.isArray(value)) return value;
+  if (typeof value !== 'string' || !value.trim()) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 function splitModeHuman(r) {
   if (r.splitMode === '兩人付') {
     const hu = parseFloat(r.paidHu) || 0;
@@ -145,7 +161,7 @@ function humanSummaryForRow(r, tripNames, opts = {}) {
   }
 
   if (r.type === 'trip' && r.action === 'add') {
-    const mem = parseArr(r.members);
+    const mem = parseListField(r.members);
     return `建立行程「${r.name}」· 成員：${mem.length ? mem.join('、') : '（無）'}`;
   }
 
@@ -175,11 +191,12 @@ function humanSummaryForRow(r, tripNames, opts = {}) {
 
   if (r.type === 'tripExpense' && r.action === 'add') {
     const amt = fmtMoney(r.amount);
-    const among = parseArr(r.splitAmong);
+    const among = parseListField(r.splitAmong);
     const splitLabel = among.length ? among.join('、') : '—';
+    const payers = parseObjectListField(r.payers);
     let pay = `${r.paidBy}付`;
-    if (r.payers && Array.isArray(r.payers)) {
-      pay = r.payers.map(p => `${p.name} NT$${fmtMoney(p.amount)}`).join(' ＋ ');
+    if (payers.length > 0) {
+      pay = payers.map(p => `${p.name} NT$${fmtMoney(p.amount)}`).join(' ＋ ');
     }
     const cat = r.category ? ` · ${r.category}` : '';
     const nb = !forCsv && r.note ? ` · 備註：${r.note}` : '';
@@ -219,6 +236,99 @@ function rowAmountForDisplay(r) {
     const a = r.amount;
     if (a == null || a === '') return '';
     return fmtMoney(a);
+  }
+  return '';
+}
+
+function rowAnyAmountForDisplay(r) {
+  if (r.amount == null || r.amount === '') return '';
+  return fmtMoney(r.amount);
+}
+
+function rowCnyForDisplay(r) {
+  const cny = parseFloat(r.amountCny);
+  if (!Number.isFinite(cny) || cny <= 0) return '';
+  return String(cny.toFixed(2).replace(/\.?0+$/, ''));
+}
+
+function rowFxFeeForDisplay(r) {
+  const fx = parseFloat(r.fxFeeNtd);
+  if (!Number.isFinite(fx) || fx <= 0) return '';
+  return fmtMoney(fx);
+}
+
+function rowBookLabel(r) {
+  if (r.type === 'daily' || r.type === 'settlement') return '日常';
+  if (r.type === 'trip' || r.type === 'tripMember' || r.type === 'tripExpense' || r.type === 'tripSettlement') return '出遊';
+  return '其他';
+}
+
+function rowTripLabel(r, tripNames) {
+  if (r.type === 'trip') return r.name || tripName(tripNames, r.id);
+  if (r.tripId) return tripName(tripNames, r.tripId);
+  return '';
+}
+
+function rowStatusLabel(r) {
+  if (r.action === 'void') return '撤回事件';
+  if (r.action === 'delete') return '刪除事件';
+  if (r.action === 'edit') return '編輯事件';
+  if (r.action === 'close') return '結束事件';
+  if (r.action === 'reopen') return '重開事件';
+  const voided = r.voided === true || String(r.voided || '').trim().toLowerCase() === 'true';
+  if (voided) return '已撤回';
+  if (r.type === 'trip' && (r.closed === true || String(r.closed || '').trim().toLowerCase() === 'true')) return '已結束';
+  return '有效';
+}
+
+function rowSubjectLabel(r) {
+  if (r.type === 'daily') return r.item || '日常消費';
+  if (r.type === 'settlement') return '日常還款';
+  if (r.type === 'trip') return r.name || '行程';
+  if (r.type === 'tripMember') return r.memberName || '行程成員';
+  if (r.type === 'tripExpense') return r.item || '出遊消費';
+  if (r.type === 'tripSettlement') return [r.from, r.to].filter(Boolean).join(' → ') || '出遊還款';
+  return r.item || r.name || r.id || '';
+}
+
+function rowPaymentLabel(r) {
+  if (r.type === 'daily') return r.paidBy ? `${r.paidBy}付款` : '';
+  if (r.type === 'settlement') return r.paidBy ? `${r.paidBy}還款` : '';
+  if (r.type === 'tripSettlement') return [r.from, r.to].filter(Boolean).join(' → ');
+  if (r.type === 'tripExpense') {
+    const payers = parseObjectListField(r.payers);
+    if (payers.length > 0) {
+      return payers
+        .map(p => {
+          const name = String(p?.name || '').trim();
+          const amount = fmtMoney(p?.amount);
+          return name && amount ? `${name} NT$${amount}` : name;
+        })
+        .filter(Boolean)
+        .join(' ＋ ');
+    }
+    return r.paidBy ? `${r.paidBy}付款` : '';
+  }
+  return '';
+}
+
+function rowSplitLabel(r) {
+  if (r.type === 'daily') return splitModeHuman(r);
+  if (r.type === 'trip') {
+    const members = parseListField(r.members);
+    return members.join('、');
+  }
+  if (r.type === 'tripMember') return r.memberName || '';
+  if (r.type === 'tripExpense') {
+    const splitDetails = parseObjectListField(r.splitDetails)
+      .map(item => {
+        const name = String(item?.name || '').trim();
+        const amount = fmtMoney(item?.amount);
+        return name && amount ? `${name} NT$${amount}` : name;
+      })
+      .filter(Boolean);
+    if (splitDetails.length > 0) return splitDetails.join('、');
+    return parseListField(r.splitAmong).join('、');
   }
   return '';
 }
@@ -288,7 +398,24 @@ export function renderBackupOperationPanel() {
 export function allRowsToHumanCSV() {
   const rows = appState.allRows;
   const tripNames = buildTripNameMap(rows);
-  const headers = ['日期', '類型', '動作', '摘要', '金額_NT', '備註', '紀錄id'];
+  const headers = [
+    '日期',
+    '帳本',
+    '行程',
+    '類型',
+    '動作',
+    '狀態',
+    '項目/事件',
+    '金額_NT',
+    '人民幣',
+    '匯差手續_NT',
+    '收付',
+    '分攤/成員',
+    '分類',
+    '備註',
+    '摘要',
+    '紀錄id',
+  ];
   const lines = [headers.join(',')];
 
   const sorted = rows
@@ -302,11 +429,26 @@ export function allRowsToHumanCSV() {
     const summary = humanSummaryForRow(r, tripNames, { forCsv: true });
     const typeLabel = TYPE_LABEL[r.type] || r.type;
     const actionLabel = ACTION_LABEL[r.action] || r.action;
-    const noteCol =
-      r.action === 'add' && (r.type === 'daily' || r.type === 'tripExpense') ? (r.note || '').trim() : '';
+    const noteCol = (r.note || '').trim();
     const dateStr = (r.date || '').slice(0, 10) || '';
-    const amt = rowAmountForDisplay(r);
-    const vals = [dateStr, typeLabel, actionLabel, summary, amt, noteCol, r.id || ''];
+    const vals = [
+      dateStr,
+      rowBookLabel(r),
+      rowTripLabel(r, tripNames),
+      typeLabel,
+      actionLabel,
+      rowStatusLabel(r),
+      rowSubjectLabel(r),
+      rowAnyAmountForDisplay(r),
+      rowCnyForDisplay(r),
+      rowFxFeeForDisplay(r),
+      rowPaymentLabel(r),
+      rowSplitLabel(r),
+      r.category || '',
+      noteCol,
+      summary,
+      r.id || '',
+    ];
     lines.push(vals.map(csvEscape).join(','));
   }
 
