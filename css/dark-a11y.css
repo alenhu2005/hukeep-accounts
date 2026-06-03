@@ -258,6 +258,11 @@ html.dark .member-dir-close { background: var(--bg-tertiary); color: var(--text-
 html.dark .member-dir-close:hover { background: var(--border); }
 
 /* Backup sheet */
+.backup-dialog {
+  max-height: min(88dvh, 720px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
 .backup-dialog .backup-hint {
   font-size: 11px;
   color: var(--text-muted);
@@ -267,6 +272,133 @@ html.dark .member-dir-close:hover { background: var(--border); }
   font-variant-numeric: tabular-nums;
 }
 .backup-sheet-actions { display: flex; flex-direction: column; gap: 10px; }
+.backup-panel {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--primary) 7%, #fff) 0%, var(--surface) 100%);
+}
+.backup-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.backup-panel-kicker {
+  margin-bottom: 3px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+}
+.backup-panel-title {
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 800;
+}
+.backup-health-badge {
+  flex: 0 0 auto;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+}
+.backup-health-badge--ok { color: #047857; background: #d1fae5; }
+.backup-health-badge--warning { color: #92400e; background: #fef3c7; }
+.backup-health-badge--error { color: #b91c1c; background: #fee2e2; }
+.backup-metric-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.backup-metric-row span {
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.backup-health-issues,
+.backup-trip-health-list,
+.backup-operation-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+.backup-health-issue,
+.backup-operation-item,
+.backup-trip-health-row {
+  padding: 10px 11px;
+  border-radius: 14px;
+  background: rgba(255,255,255,.72);
+  border: 1px solid var(--border);
+}
+.backup-health-issue strong,
+.backup-health-issue span {
+  display: block;
+}
+.backup-health-issue strong {
+  color: var(--text);
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+.backup-health-issue span {
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+.backup-health-issue--warning { border-color: color-mix(in srgb, #f59e0b 38%, var(--border)); }
+.backup-health-issue--error { border-color: color-mix(in srgb, #ef4444 42%, var(--border)); }
+.backup-health-issue--info { border-color: color-mix(in srgb, var(--primary) 30%, var(--border)); }
+.backup-health-empty {
+  margin-top: 12px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+.backup-trip-health-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+}
+.backup-trip-health-row span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+  font-weight: 700;
+}
+.backup-trip-health-row strong {
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.backup-trip-health-row .is-ok { color: var(--success); }
+.backup-trip-health-row .is-warn { color: var(--danger); }
+.backup-operation-meta {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+.backup-operation-summary {
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.4;
+}
+.backup-tool-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
 .backup-tech-btn { font-size: 12px; }
 .backup-close-btn { margin-top: 4px; }
 .clear-cache-link {
@@ -277,6 +409,17 @@ html.dark .member-dir-close:hover { background: var(--border); }
 }
 .clear-cache-link:hover { opacity: .7; }
 html.dark .btn-ghost.backup-tech-btn:hover { background: var(--bg-tertiary); }
+html.dark .backup-panel {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--primary) 14%, rgba(15, 23, 42, .94)) 0%, rgba(15, 23, 42, .72) 100%);
+}
+html.dark .backup-health-issue,
+html.dark .backup-operation-item,
+html.dark .backup-trip-health-row {
+  background: rgba(2, 6, 23, .28);
+}
+html.dark .backup-health-badge--ok { color: #bbf7d0; background: rgba(16, 185, 129, .18); }
+html.dark .backup-health-badge--warning { color: #fde68a; background: rgba(245, 158, 11, .18); }
+html.dark .backup-health-badge--error { color: #fecaca; background: rgba(239, 68, 68, .18); }
 
 /* Trip: stats & day groups */
 .trip-stats-body { padding-top: 0; }

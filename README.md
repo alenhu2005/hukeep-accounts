@@ -89,6 +89,7 @@ flowchart TB
 
 - 同步狀態列：同步中／已同步／僅快取；背景輪詢發現資料變更可提示「資料已更新」。
 - **備份與匯出**：CSV／文字備份（`js/backup.js`）；選單標題下顯示**日常帳精確欠款**（浮點）與進位還款額供對帳；可清除本機快取（不刪試算表）。
+- **資料健康檢查**：備份選單可檢查重複主鍵、孤兒出遊資料、待同步列、已結束但未結清行程，並可複製報告或下載健康卡片。
 - 對話框焦點陷阱、深色模式（`js/theme.js`）等。
 
 ---
@@ -146,6 +147,7 @@ npm install
 | 指令 | 說明 |
 |------|------|
 | `npm test` | 執行 Vitest（`test/*.test.js`） |
+| `npm run deploy:check` | 部署前檢查必要檔案、Service Worker 靜態資源與測試 |
 | `npm run icons:flatten` | 圖示處理（見 `scripts/flatten-app-icons.mjs`） |
 | `npm run icons:prepare` | 圖示處理（見 `scripts/prepare-app-icons.mjs`） |
 
@@ -343,12 +345,19 @@ npx serve
 ## PWA 與 Service Worker
 
 - 安裝至主畫面後以 `standalone` 顯示（見 `manifest.json`）。
-- `sw.js` 快取靜態資源清單；**變更 `CACHE_NAME`**（例如 `ledger-v78` → `ledger-v79`）可讓既有使用者取得新 JS/CSS。
+- `sw.js` 快取靜態資源清單；**變更 `CACHE_NAME`**（例如 `ledger-v78` → `ledger-v79`）可讓既有使用者取得新資源。
+- JS/CSS 使用網路優先、快取備援，避免部署後新舊模組混搭造成白屏。
 - 新增 `js/` 檔案且需離線可用時，記得把路徑加入 `STATIC_ASSETS`。
 
 ---
 
 ## 部署
+
+部署前建議先跑：
+
+```bash
+npm run deploy:check
+```
 
 ### GitHub Pages
 

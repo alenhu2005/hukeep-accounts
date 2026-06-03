@@ -22,5 +22,6 @@ export {
   copyTripClosureReportText,
   downloadTripClosureReportImage,
 } from './trip-closure-report-modal.js';
-export { exportBackupCSV, copyBackupText, exportTechnicalCSV } from './backup.js';
+export { exportBackupCSV, copyBackupText, copyOperationTimelineText, exportTechnicalCSV } from './backup.js';
+export { copyLedgerHealthReport, downloadLedgerHealthCard, renderLedgerHealthPanel } from './ledger-health.js';
 export { updateMultiPayTotal, updatePerPerson } from './views-trip-detail.js';

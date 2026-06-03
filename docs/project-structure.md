@@ -45,6 +45,8 @@
 
 - `finance.js`：結餘與結算計算。
 - `trip-stats.js`：行程統計與摘要文案。
+- `ledger-health.js`：資料健康檢查、診斷報告與健康卡片；只讀資料，不直接修復或刪除試算表。
+- `search-records.js`：日常／出遊歷史紀錄搜尋篩選。
 - `category.js`：分類推測與樣式輔助。
 - `time.js`：日期、台北時區、分析週期。
 
@@ -75,7 +77,7 @@
 - `sync-pause.js`：使用者輸入時暫停同步。
 - `session-ui.js`：工作階段還原與保存。
 - `device-info.js`：裝置資訊。
-- `backup.js`：匯出 CSV、文字備份。
+- `backup.js`：匯出 CSV、文字備份、最近操作快照。
 - `globals.js`：對 `window` 掛載需要的全域函式。
 - `utils.js`：通用工具（toast、escape、亂數、AbortSignal 等）。
 
@@ -99,6 +101,7 @@
 
 - `package.json`：npm scripts 與 devDependencies。
 - `vitest.config.js`：測試設定。
+- `scripts/check-deploy-readiness.mjs`：正式部署前檢查必要檔案、GAS 設定與 Service Worker 靜態資源。
 
 ## 快速定位建議
 

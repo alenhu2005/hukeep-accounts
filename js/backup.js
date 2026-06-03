@@ -2,7 +2,7 @@ import { USER_A, USER_B } from './config.js';
 import { appState } from './state.js';
 import { getDailyRecords, getDailyRecordsFromRows } from './data.js';
 import { computeBalance } from './finance.js';
-import { parseArr, toast } from './utils.js';
+import { esc, parseArr, toast } from './utils.js';
 
 const TZ = 'Asia/Taipei';
 
@@ -227,6 +227,63 @@ function rowDateForSort(r) {
   return (r.date || '').slice(0, 10) || '9999-12-31';
 }
 
+export function buildOperationTimeline(rows = appState.allRows, limit = 12) {
+  const source = Array.isArray(rows) ? rows : [];
+  const tripNames = buildTripNameMap(source);
+  return source
+    .map((r, i) => ({ r, i }))
+    .sort((a, b) => {
+      const d = rowDateForSort(b.r).localeCompare(rowDateForSort(a.r));
+      if (d !== 0) return d;
+      return b.i - a.i;
+    })
+    .slice(0, Math.max(1, limit))
+    .map(({ r }) => ({
+      id: r.id || '',
+      date: (r.date || '（無日期）').slice(0, 10),
+      typeLabel: TYPE_LABEL[r.type] || r.type || '資料',
+      actionLabel: ACTION_LABEL[r.action] || r.action || '更新',
+      summary: humanSummaryForRow(r, tripNames),
+    }));
+}
+
+export function operationTimelineToText(rows = appState.allRows, limit = 30) {
+  const timeline = buildOperationTimeline(rows, limit);
+  const head = ['最近操作紀錄', `匯出時間（台北）：${new Date().toLocaleString('zh-TW', { timeZone: TZ })}`, ''];
+  const body = timeline.map((item, idx) => {
+    return `${idx + 1}. ${item.date}　【${item.typeLabel}｜${item.actionLabel}】\n   ${item.summary}`;
+  });
+  return [...head, ...body].join('\n');
+}
+
+export function renderBackupOperationPanel() {
+  const el = document.getElementById('backup-operation-panel');
+  if (!el) return;
+  const timeline = buildOperationTimeline(appState.allRows, 6);
+  el.innerHTML = `
+    <div class="backup-panel-head">
+      <div>
+        <div class="backup-panel-kicker">最近操作</div>
+        <div class="backup-panel-title">目前資料快照</div>
+      </div>
+    </div>
+    ${
+      timeline.length
+        ? `<div class="backup-operation-list">${timeline
+            .map(
+              item => `
+                <div class="backup-operation-item">
+                  <div class="backup-operation-meta">${esc(item.date)} · ${esc(item.typeLabel)} · ${esc(item.actionLabel)}</div>
+                  <div class="backup-operation-summary">${esc(item.summary)}</div>
+                </div>
+              `,
+            )
+            .join('')}</div>`
+        : '<div class="backup-health-empty">目前沒有可顯示的操作。</div>'
+    }
+  `;
+}
+
 /** 可讀版 CSV：中文欄位、一列一筆事件 */
 export function allRowsToHumanCSV() {
   const rows = appState.allRows;
@@ -407,5 +464,14 @@ export async function copyBackupText() {
     toast('已複製可讀文字備份');
   } catch {
     toast('無法複製，請改用下載 CSV');
+  }
+}
+
+export async function copyOperationTimelineText() {
+  try {
+    await navigator.clipboard.writeText(operationTimelineToText(appState.allRows, 30));
+    toast('已複製最近操作紀錄');
+  } catch {
+    toast('無法複製操作紀錄');
   }
 }

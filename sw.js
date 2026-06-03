@@ -1,5 +1,5 @@
 // Bump this to force clients to refresh cached assets.
-const CACHE_NAME = 'ledger-v81';
+const CACHE_NAME = 'ledger-v83';
 
 const STATIC_ASSETS = [
   './',
@@ -38,6 +38,7 @@ const STATIC_ASSETS = [
   './js/time.js',
   './js/utils.js',
   './js/search-records.js',
+  './js/ledger-health.js',
   './js/router.js',
   './js/navigation.js',
   './js/render-registry.js',
@@ -104,6 +105,7 @@ self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
 
   if (url.origin !== self.location.origin) return;
+  if (event.request.method !== 'GET') return;
 
   if (event.request.mode === 'navigate') {
     event.respondWith(
@@ -116,6 +118,21 @@ self.addEventListener('fetch', event => {
           return response;
         })
         .catch(async () => (await caches.match(event.request)) || caches.match('./index.html')),
+    );
+    return;
+  }
+
+  if (url.pathname.endsWith('.js') || url.pathname.endsWith('.css')) {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then(c => c.put(event.request, clone));
+          }
+          return response;
+        })
+        .catch(async () => caches.match(event.request)),
     );
     return;
   }

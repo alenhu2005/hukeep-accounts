@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "test": "vitest run",
+    "deploy:check": "node scripts/check-deploy-readiness.mjs && npm test",
     "icons:flatten": "node scripts/flatten-app-icons.mjs",
     "icons:prepare": "node scripts/prepare-app-icons.mjs"
   },
