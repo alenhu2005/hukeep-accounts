@@ -13,6 +13,8 @@ import {
   clearHomeCalendarDayFilter,
   toggleHomeCalendarModal,
   closeHomeCalendarModal,
+  setHomeRecordSearch,
+  clearHomeRecordSearch,
 } from './views-home.js';
 import {
   setAnalysisPeriod,
@@ -27,6 +29,8 @@ import {
   shiftTripHistoryWeek,
   selectTripHistoryDay,
   clearTripHistoryDayFilter,
+  setTripRecordSearch,
+  clearTripRecordSearch,
 } from './views-trip-detail.js';
 import * as actions from './actions.js';
 import { toggleDetailAmountCurrency } from './trip-cny-rate.js';
@@ -176,6 +180,8 @@ Object.assign(window, {
   clearHomeCalendarDayFilter,
   toggleHomeCalendarModal,
   closeHomeCalendarModal,
+  setHomeRecordSearch,
+  clearHomeRecordSearch,
   setAnalysisPeriod,
   setPieLabelOption,
   shiftAnalysisWeek,
@@ -186,6 +192,8 @@ Object.assign(window, {
   shiftTripHistoryWeek,
   selectTripHistoryDay,
   clearTripHistoryDayFilter,
+  setTripRecordSearch,
+  clearTripRecordSearch,
   closeEditRecord: actions.closeEditRecord,
   submitEditRecord: actions.submitEditRecord,
   voidEditingRecord: actions.voidEditingRecord,

@@ -23,6 +23,8 @@ export const appState = {
   homeCalendarFilterDate: null,
   /** 日常月曆彈層是否開啟 */
   homeCalendarModalOpen: false,
+  /** 日常歷史紀錄搜尋字串 */
+  homeRecordSearchQuery: '',
   /** 下次繪製日常／行程列表時，對紀錄列做捲動進場（進頁或展開更多） */
   revealHomeRecordsNext: false,
   /** 下次繪製行程明細消費列表時做捲動進場 */
@@ -31,6 +33,8 @@ export const appState = {
   tripDetailHistoryWeekOffset: 0,
   /** 出遊歷史：選中單日 `YYYY-MM-DD`；null 表示顯示全部（依日期分組） */
   tripDetailHistoryFilterDate: null,
+  /** 出遊明細歷史紀錄搜尋字串 */
+  tripDetailHistorySearchQuery: '',
   /** 出遊統計「分類支出」圓餅圖是否展開（目前行程；重繪時沿用） */
   tripStatsPieExpanded: false,
   /** 各行程圓餅區是否曾展開（離開再進同一行程時還原） */

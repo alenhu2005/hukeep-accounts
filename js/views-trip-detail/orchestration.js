@@ -194,6 +194,7 @@ export function renderTripDetail() {
   if (state._tripDetailHistoryTripId !== trip.id) {
     state.tripDetailHistoryWeekOffset = 0;
     state.tripDetailHistoryFilterDate = null;
+    state.tripDetailHistorySearchQuery = '';
     state._tripDetailHistoryTripId = trip.id;
   }
   const expenses = getTripExpenses(state.currentTripId);

@@ -1,5 +1,5 @@
 // Bump this to force clients to refresh cached assets.
-const CACHE_NAME = 'ledger-v80';
+const CACHE_NAME = 'ledger-v81';
 
 const STATIC_ASSETS = [
   './',
@@ -37,6 +37,7 @@ const STATIC_ASSETS = [
   './js/finance.js',
   './js/time.js',
   './js/utils.js',
+  './js/search-records.js',
   './js/router.js',
   './js/navigation.js',
   './js/render-registry.js',

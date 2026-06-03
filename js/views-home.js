@@ -5,6 +5,7 @@ import { computeBalance } from './finance.js';
 import { esc, jq, prefersReducedMotion, bindScrollReveal } from './utils.js';
 import { emptyHTML } from './views-shared.js';
 import { buildRunningBalanceMap, dailyRecordHTML } from './views-daily-records.js';
+import { filterDailyRecords, hasRecordSearchQuery } from './search-records.js';
 import {
   computeDateRunningDeltas,
   directionClassFromDelta,
@@ -254,11 +255,15 @@ export function renderHome() {
   } else {
     scoped = records;
   }
+  const searchQuery = appState.homeRecordSearchQuery || '';
+  const hasSearch = hasRecordSearchQuery(searchQuery);
+  const searched = filterDailyRecords(scoped, searchQuery);
 
   const calendarEl = document.getElementById('home-calendar');
   if (calendarEl) {
     calendarEl.innerHTML = homeCalendarHTML(ym, filterDate, today, statsByDate);
   }
+  syncHomeRecordSearchDom(searched.length, scoped.length, hasSearch);
 
   const listEl = document.getElementById('home-records');
   if (listEl._scrollRevealCleanup) listEl._scrollRevealCleanup();
@@ -268,18 +273,20 @@ export function renderHome() {
     const hint = filterDate ? '這天沒有紀錄' : '還沒有消費紀錄';
     const subhint = filterDate ? '換一天，或再點月曆上同一日以顯示全部' : '填寫上方表單，開始記帳吧';
     listEl.innerHTML = emptyHTML(hint, subhint);
+  } else if (searched.length === 0) {
+    listEl.innerHTML = emptyHTML('找不到符合的紀錄', '換個關鍵字或清除搜尋');
   } else {
     const LIMIT = 5;
-    const useLimit = !appState.homeShowAll;
-    const visible = useLimit ? scoped.slice(0, LIMIT) : scoped;
-    const hidden = scoped.length - visible.length;
+    const useLimit = !hasSearch && !appState.homeShowAll;
+    const visible = useLimit ? searched.slice(0, LIMIT) : searched;
+    const hidden = searched.length - visible.length;
     const moreBtn =
       hidden > 0
         ? `<button type="button" class="show-more-btn" onclick="toggleHomeHistory()">
            <svg viewBox="0 0 24 24" width="14" height="14" style="fill:currentColor"><path d="M7 10l5 5 5-5z"/></svg>
            查看更多 ${hidden} 筆
          </button>`
-        : scoped.length > LIMIT && appState.homeShowAll
+        : searched.length > LIMIT && appState.homeShowAll && !hasSearch
           ? `<button type="button" class="show-more-btn" onclick="toggleHomeHistory()">
              <svg viewBox="0 0 24 24" width="14" height="14" style="fill:currentColor"><path d="M7 14l5-5 5 5z"/></svg>
              收合
@@ -319,6 +326,30 @@ export function renderHome() {
 export function toggleHomeHistory() {
   appState.homeShowAll = !appState.homeShowAll;
   if (appState.homeShowAll) appState.revealHomeRecordsNext = true;
+  renderHome();
+}
+
+function syncHomeRecordSearchDom(matchCount, scopedCount, hasSearch) {
+  const input = document.getElementById('home-record-search');
+  const clear = document.getElementById('home-record-search-clear');
+  const meta = document.getElementById('home-record-search-meta');
+  const query = appState.homeRecordSearchQuery || '';
+  if (input && input.value !== query) input.value = query;
+  if (clear) clear.hidden = !hasSearch;
+  if (meta) {
+    meta.textContent = hasSearch ? `${matchCount} / ${scopedCount}` : '';
+    meta.hidden = !hasSearch;
+  }
+}
+
+export function setHomeRecordSearch(value) {
+  appState.homeRecordSearchQuery = String(value || '');
+  appState.homeShowAll = true;
+  renderHome();
+}
+
+export function clearHomeRecordSearch() {
+  appState.homeRecordSearchQuery = '';
   renderHome();
 }
 

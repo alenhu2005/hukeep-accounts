@@ -10,6 +10,8 @@ export {
   shiftTripHistoryWeek,
   selectTripHistoryDay,
   clearTripHistoryDayFilter,
+  setTripRecordSearch,
+  clearTripRecordSearch,
 } from './views-trip-detail/history.js';
 export {
   resetTripDetailAmountDraft,

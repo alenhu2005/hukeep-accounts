@@ -7,6 +7,86 @@
 }
 .record-item:last-child { border-bottom: none; }
 
+.record-search {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.record-search--trip {
+  margin: 0 0 6px;
+  padding-inline: calc(16px + env(safe-area-inset-left, 0px)) calc(16px + env(safe-area-inset-right, 0px));
+}
+
+.record-search svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  opacity: 0.78;
+}
+
+.record-search-input {
+  min-width: 0;
+  width: 100%;
+  height: 34px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.record-search-input::placeholder {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.record-search-input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.record-search-clear {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  line-height: 1;
+  padding: 0;
+}
+
+.record-search-clear[hidden] {
+  display: none !important;
+}
+
+.record-search-meta {
+  min-width: 42px;
+  text-align: right;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 750;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.record-search-meta[hidden] {
+  display: none !important;
+}
+
 /* Scroll-driven list reveal (see utils.bindScrollReveal) */
 [data-scroll-reveal="active"] .record-item.scroll-reveal-pending,
 [data-scroll-reveal="active"] .trip-day-group.scroll-reveal-pending,

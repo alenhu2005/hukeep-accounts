@@ -4,6 +4,7 @@ import { emptyHTML } from '../views-shared.js';
 import { addDaysTaipei, compareDateStr, normalizeDate, todayStr, weekdayTaipeiSundayZero } from '../time.js';
 import { bindScrollReveal, esc, jq } from '../utils.js';
 import { isTripCnyModeEnabled, readLiveCnyCache, readSavedCnyTwdRate, cnyAuxAmountFromNtd } from '../trip-cny-rate.js';
+import { filterTripRecords, hasRecordSearchQuery } from '../search-records.js';
 import { tripExpenseHTML, tripSettlementHTML } from './records.js';
 
 function minDateStrInTripRecords(expenses, settlements) {
@@ -159,6 +160,8 @@ function buildTripLedgerOrderIndex(tripId, allRows) {
 }
 
 export function buildTripExpensesByDayHTML(expenses, settlements, trip, allRows, filterDate) {
+  const searchQuery = tripDetailState().tripDetailHistorySearchQuery || '';
+  const hasSearch = hasRecordSearchQuery(searchQuery);
   const orderIdx = buildTripLedgerOrderIndex(trip.id, allRows);
   const byDay = {};
   const push = (d, item) => {
@@ -192,8 +195,14 @@ export function buildTripExpensesByDayHTML(expenses, settlements, trip, allRows,
       sortDayList(list);
       for (const item of list) flatItems.push(item);
     }
-    const totalCount = flatItems.length;
-    const totalSub = expenses.filter(e => !e._voided).reduce((s, e) => s + tripExpenseBillNtd(e), 0);
+    const visibleItems = hasSearch ? filterTripRecords(flatItems, searchQuery) : flatItems;
+    if (visibleItems.length === 0) {
+      return emptyHTML('找不到符合的紀錄', '換個關鍵字或清除搜尋');
+    }
+    const totalCount = visibleItems.length;
+    const totalSub = visibleItems
+      .filter(item => item.kind === 'expense' && !item.data._voided)
+      .reduce((s, item) => s + tripExpenseBillNtd(item.data), 0);
     const subLabel = tripHistorySubtotalLabel(totalSub, trip.id);
     return `
     <div class="trip-day-group trip-day-group--all" style="--day-i:0">
@@ -202,7 +211,7 @@ export function buildTripExpensesByDayHTML(expenses, settlements, trip, allRows,
         <span class="trip-day-sub">${subLabel}</span>
       </div>
       <div class="trip-day-items">
-        ${flatItems
+        ${visibleItems
           .map(item =>
             item.kind === 'expense'
               ? tripExpenseHTML(item.data, trip.members.length, recIdx++)
@@ -217,17 +226,21 @@ export function buildTripExpensesByDayHTML(expenses, settlements, trip, allRows,
     .map((d, dayIdx) => {
       const list = byDay[d];
       sortDayList(list);
-      const expensesOnly = list.filter(x => x.kind === 'expense').map(x => x.data);
+      const visibleItems = hasSearch ? filterTripRecords(list, searchQuery) : list;
+      if (visibleItems.length === 0) {
+        return emptyHTML('找不到符合的紀錄', '換個關鍵字或清除搜尋');
+      }
+      const expensesOnly = visibleItems.filter(x => x.kind === 'expense').map(x => x.data);
       const sub = expensesOnly.filter(e => !e._voided).reduce((s, e) => s + tripExpenseBillNtd(e), 0);
       const subLabel = tripHistorySubtotalLabel(sub, trip.id);
       return `
     <div class="trip-day-group" style="--day-i:${dayIdx}">
       <div class="trip-day-label">
-        <span>${esc(d)} · ${list.length} 筆</span>
+        <span>${esc(d)} · ${visibleItems.length} 筆</span>
         <span class="trip-day-sub">${subLabel}</span>
       </div>
       <div class="trip-day-items">
-        ${list
+        ${visibleItems
           .map(item =>
             item.kind === 'expense'
               ? tripExpenseHTML(item.data, trip.members.length, recIdx++)
@@ -254,6 +267,16 @@ export function renderTripHistory(expenses, settlements, trip, allRows, reveal =
   const statsByDate = tripStatsByDateFromTrip(expenses, settlements);
   const today = todayStr();
   const filterDate = state.tripDetailHistoryFilterDate;
+  const searchQuery = state.tripDetailHistorySearchQuery || '';
+  const hasSearch = hasRecordSearchQuery(searchQuery);
+  const scopedCount = [...expenses, ...settlements].filter(row => !filterDate || row.date === filterDate).length;
+  const matchCount = filterTripRecords(
+    [
+      ...expenses.map(row => ({ kind: 'expense', data: row })),
+      ...settlements.map(row => ({ kind: 'settlement', data: row })),
+    ].filter(item => !filterDate || item.data.date === filterDate),
+    searchQuery,
+  ).length;
   const { html: stripHtml, rangeMeta } = tripHistoryStripHTML(
     range,
     state.tripDetailHistoryWeekOffset,
@@ -266,6 +289,7 @@ export function renderTripHistory(expenses, settlements, trip, allRows, reveal =
     headerMetaEl.textContent = rangeMeta;
     headerMetaEl.hidden = !rangeMeta;
   }
+  syncTripRecordSearchDom(matchCount, scopedCount, hasSearch);
   if (expenses.length === 0 && settlements.length === 0) {
     expEl.innerHTML = `${stripHtml}<div class="trip-history-list">${emptyHTML('還沒有消費或還款紀錄', '')}</div>`;
   } else {
@@ -303,5 +327,31 @@ export function selectTripHistoryDay(ds) {
 export function clearTripHistoryDayFilter() {
   const state = tripDetailState();
   state.tripDetailHistoryFilterDate = null;
+  import('../views-trip-detail.js').then(m => m.renderTripDetail());
+}
+
+function syncTripRecordSearchDom(matchCount, scopedCount, hasSearch) {
+  const state = tripDetailState();
+  const input = document.getElementById('trip-record-search');
+  const clear = document.getElementById('trip-record-search-clear');
+  const meta = document.getElementById('trip-record-search-meta');
+  const query = state.tripDetailHistorySearchQuery || '';
+  if (input && input.value !== query) input.value = query;
+  if (clear) clear.hidden = !hasSearch;
+  if (meta) {
+    meta.textContent = hasSearch ? `${matchCount} / ${scopedCount}` : '';
+    meta.hidden = !hasSearch;
+  }
+}
+
+export function setTripRecordSearch(value) {
+  const state = tripDetailState();
+  state.tripDetailHistorySearchQuery = String(value || '');
+  import('../views-trip-detail.js').then(m => m.renderTripDetail());
+}
+
+export function clearTripRecordSearch() {
+  const state = tripDetailState();
+  state.tripDetailHistorySearchQuery = '';
   import('../views-trip-detail.js').then(m => m.renderTripDetail());
 }
