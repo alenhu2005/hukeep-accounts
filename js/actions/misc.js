@@ -16,7 +16,7 @@ import {
 import { postRow, formatPostError } from '../api.js';
 import { renderBackupBalancePanel, renderBackupOperationPanel } from '../backup.js';
 import { renderLedgerHealthPanel } from '../ledger-health.js';
-import { animateOverlayIn } from '../motion.js';
+import { animateOverlayIn, bindDetailsReveal } from '../motion.js';
 import {
   getDailyRecords,
   getTripById,
@@ -163,6 +163,7 @@ export function openBackupMenu() {
   renderBackupOperationPanel();
   const overlay = document.getElementById('backup-overlay');
   overlay?.classList.add('open');
+  bindDetailsReveal(overlay?.querySelector('.backup-advanced'), '.backup-tool-grid .btn');
   animateOverlayIn(overlay, '.backup-dialog', '.backup-section, .backup-action, .ledger-health-card, .btn');
 }
 

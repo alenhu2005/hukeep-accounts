@@ -14,7 +14,7 @@ import {
   bindScrollReveal,
 } from '../utils.js';
 import { postRow, formatPostError } from '../api.js';
-import { animateOverlayIn, refreshMotion } from '../motion.js';
+import { animateOverlayIn, animatePanelEnter, refreshMotion } from '../motion.js';
 import {
   getDailyRecords,
   getTripById,
@@ -65,7 +65,11 @@ export function showCreateTripForm() {
   document.getElementById('new-member-input').value = '';
   renderNewTripMemberChips();
   renderKnownMemberPicker();
-  document.getElementById('create-trip-card').style.display = '';
+  const card = document.getElementById('create-trip-card');
+  if (card) {
+    card.style.display = '';
+    animatePanelEnter(card, '.card-header, .form-group, .known-member-bar, .inline-add, .member-chips, .btn');
+  }
   document.getElementById('new-trip-name').focus();
 }
 

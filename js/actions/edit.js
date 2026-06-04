@@ -34,7 +34,7 @@ import {
   pickRandomTripColorId,
 } from '../data.js';
 import { computeBalance, computeExpenseShares, computeSettlements } from '../finance.js';
-import { showConfirm, showAlert, showTextPrompt } from '../dialog.js';
+import { showConfirm, showAlert, showVoidReasonPrompt } from '../dialog.js';
 import { guessCategoryFromItem, GAMBLING_CATEGORY } from '../category.js';
 import { navigate } from '../navigation.js';
 import { pauseSyncBriefly } from '../sync-pause.js';
@@ -359,7 +359,7 @@ export async function voidEditingRecord() {
     : `「${label}」— NT$${Math.round(amount)} 會保留在歷史紀錄中，但不再列入目前帳務。`;
   const result = isUnsyncedLocal
     ? await showConfirm('撤回這筆紀錄？', desc)
-    : await showTextPrompt('撤回這筆紀錄？', desc);
+    : await showVoidReasonPrompt('撤回這筆紀錄？', desc);
   if (!result) return;
 
   closeEditRecord();

@@ -391,6 +391,66 @@ export function animateOverlayIn(overlay, panelSelector = '.dialog', itemSelecto
   });
 }
 
+export function animatePanelEnter(panel, itemSelector = '') {
+  if (!panel || !isMotionEnabled()) return;
+  window.requestAnimationFrame(() => {
+    refreshMotion(panel);
+    runAnimation(panel, {
+      opacity: [0, 1],
+      translateY: [22, 0],
+      scale: [0.97, 1],
+      filter: ['blur(7px)', 'blur(0px)'],
+      duration: 540,
+      ease: 'out(4)',
+    });
+    const items = itemSelector ? visibleTargets(panel, itemSelector, 18) : [];
+    runAnimation(items, {
+      opacity: [0, 1],
+      translateY: [14, 0],
+      scale: [0.985, 1],
+      duration: 480,
+      delay: stagger(34, { start: 90 }),
+      ease: 'out(4)',
+    });
+    animateAvatarFrames(panel, { force: true });
+  });
+}
+
+export function animateDetailsOpen(details, itemSelector = '') {
+  if (!details || !details.open || !isMotionEnabled()) return;
+  const body = details.querySelector(':scope > div, :scope > section, :scope > ul');
+  window.requestAnimationFrame(() => {
+    refreshMotion(details);
+    if (body) {
+      runAnimation(body, {
+        opacity: [0, 1],
+        translateY: [-8, 0],
+        scaleY: [0.96, 1],
+        transformOrigin: '50% 0%',
+        duration: 380,
+        ease: 'out(4)',
+      });
+    }
+    const items = itemSelector ? visibleTargets(details, itemSelector, 16) : [];
+    runAnimation(items, {
+      opacity: [0, 1],
+      translateY: [10, 0],
+      scale: [0.98, 1],
+      duration: 420,
+      delay: stagger(28, { start: 70 }),
+      ease: 'out(4)',
+    });
+  });
+}
+
+export function bindDetailsReveal(details, itemSelector = '') {
+  if (!details || details.dataset.motionDetailsBound === '1') return;
+  details.dataset.motionDetailsBound = '1';
+  details.addEventListener('toggle', () => {
+    if (details.open) animateDetailsOpen(details, itemSelector);
+  });
+}
+
 export function animateToastItem(el) {
   addAnimateCss(el, 'animate__fadeInUp', 360);
 }

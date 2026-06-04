@@ -31,7 +31,7 @@ import {
   pickRandomTripColorId,
 } from '../data.js';
 import { computeBalance, computeSettlements } from '../finance.js';
-import { showConfirm, showAlert, showTextPrompt } from '../dialog.js';
+import { showConfirm, showAlert, showVoidReasonPrompt } from '../dialog.js';
 import { guessCategoryFromItem, GAMBLING_CATEGORY } from '../category.js';
 import { navigate } from '../navigation.js';
 import { pauseSyncBriefly } from '../sync-pause.js';
@@ -294,7 +294,7 @@ export async function voidTripExpenseAction(id) {
   if (!r) return;
   const item = r.item || '消費';
   const amount = parseFloat(r.amount) || 0;
-  const result = await showTextPrompt(
+  const result = await showVoidReasonPrompt(
     '撤回這筆紀錄？',
     `「${item}」— NT$${Math.round(amount)} 會保留在歷史紀錄中，但不再列入目前帳務。`,
   );
