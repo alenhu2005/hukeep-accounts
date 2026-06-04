@@ -27,7 +27,7 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
     }),
   );
 
-  await page.goto('/', { waitUntil: 'networkidle' });
+  await page.goto('./', { waitUntil: 'networkidle' });
 
   await expect(page).toHaveTitle('記帳本');
   await expect(page.locator('#bottom-nav')).toBeVisible();
