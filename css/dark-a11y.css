@@ -31,6 +31,10 @@ html.dark .record-running.pos { color: #34d399; }
 html.dark .record-running.neg { color: #f87171; }
 html.dark .record-item.is-settlement { background: rgba(6,78,59,.25); }
 html.dark .record-item.is-voided { background: rgba(127,29,29,.25); }
+html.dark .record-note--void-reason {
+  background: rgba(248, 113, 113, .13);
+  color: #fca5a5;
+}
 html.dark .badge-settle { background: #064e3b; color: #6ee7b7; }
 html.dark .badge-void { background: #7f1d1d; color: #fca5a5; }
 html.dark .settle-btn { background: #064e3b; color: #6ee7b7; }
@@ -867,6 +871,103 @@ html.dark .trip-stats-summary-card--status {
   line-height: 1.5;
   color: var(--text-muted);
 }
+.trip-day-stats-section {
+  background:
+    radial-gradient(circle at top right, rgba(20, 184, 166, 0.13), transparent 38%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(245, 250, 255, 0.76));
+}
+html.dark .trip-day-stats-section {
+  background:
+    radial-gradient(circle at top right, rgba(45, 212, 191, 0.16), transparent 42%),
+    linear-gradient(180deg, rgba(18, 26, 43, 0.94), rgba(12, 18, 31, 0.92));
+}
+.trip-day-stats-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.trip-day-stats-metric {
+  min-width: 0;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--line-strong, var(--border)) 68%, transparent);
+  background: rgba(255, 255, 255, 0.58);
+}
+html.dark .trip-day-stats-metric {
+  background: rgba(255, 255, 255, 0.05);
+}
+.trip-day-stats-metric--hot {
+  border-color: color-mix(in srgb, #f97316 30%, transparent);
+  background: color-mix(in srgb, #fff7ed 74%, white);
+}
+html.dark .trip-day-stats-metric--hot {
+  background: rgba(249, 115, 22, 0.11);
+}
+.trip-day-stats-metric span,
+.trip-day-stats-metric small {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+.trip-day-stats-metric strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 16px;
+  line-height: 1.25;
+  font-weight: 900;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.trip-day-stats-metric small {
+  margin-top: 4px;
+  font-weight: 700;
+}
+.trip-day-stats-list {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.trip-day-stats-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 9px 10px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--line-strong, var(--border)) 64%, transparent);
+  background: color-mix(in srgb, var(--surface-2, var(--bg-secondary)) 92%, white 8%);
+}
+html.dark .trip-day-stats-row {
+  background: rgba(255, 255, 255, 0.04);
+}
+.trip-day-stats-date {
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.trip-day-stats-count {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.trip-day-stats-row strong {
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
 .trip-stats-compare-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -960,6 +1061,7 @@ html.dark .payer-stats-row {
 
 @media (max-width: 560px) {
   .trip-stats-summary-grid,
+  .trip-day-stats-metrics,
   .trip-stats-compare-grid {
     grid-template-columns: 1fr;
   }

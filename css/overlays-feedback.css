@@ -284,6 +284,46 @@ html.dark .member-avatar-preview-ring.member-tone {
 }
 .dialog h3 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
 .dialog p { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
+.dialog-field-wrap {
+  margin: -6px 0 20px;
+}
+.dialog-field-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  letter-spacing: .02em;
+}
+.dialog-field-input {
+  width: 100%;
+  min-height: 84px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg-secondary);
+  color: var(--text);
+  padding: 12px 13px;
+  resize: vertical;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  outline: none;
+  transition: border-color .18s var(--ease-out), box-shadow .18s var(--ease-out), background .18s var(--ease-out);
+}
+.dialog-field-input:focus {
+  border-color: var(--primary);
+  background: var(--surface);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, .14);
+}
+.dialog-field-input::placeholder {
+  color: var(--text-muted);
+  opacity: .82;
+}
+.dialog-field-hint {
+  margin-top: 7px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
 .dialog-actions { display: flex; gap: 8px; }
 .dialog-actions .btn { flex: 1; height: 42px; font-size: 14px; }
 .btn-destructive { background: var(--danger); color: white; }
@@ -309,6 +349,19 @@ html.dark .member-avatar-preview-ring.member-tone {
 
 /* ── Note line in records ── */
 .record-note { font-size: 11px; color: var(--text-muted); margin-top: 1px; font-style: italic; }
+.record-note--void-reason {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 5px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(239, 68, 68, .09);
+  color: #b91c1c;
+  font-style: normal;
+  font-weight: 700;
+}
 
 /* ── Theme toggle ── */
 #theme-toggle {

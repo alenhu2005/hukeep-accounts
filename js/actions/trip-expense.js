@@ -31,7 +31,7 @@ import {
   pickRandomTripColorId,
 } from '../data.js';
 import { computeBalance, computeSettlements } from '../finance.js';
-import { showConfirm, showAlert } from '../dialog.js';
+import { showConfirm, showAlert, showTextPrompt } from '../dialog.js';
 import { guessCategoryFromItem, GAMBLING_CATEGORY } from '../category.js';
 import { navigate } from '../navigation.js';
 import { pauseSyncBriefly } from '../sync-pause.js';
@@ -294,12 +294,13 @@ export async function voidTripExpenseAction(id) {
   if (!r) return;
   const item = r.item || '消費';
   const amount = parseFloat(r.amount) || 0;
-  const ok = await showConfirm(
+  const result = await showTextPrompt(
     '撤回這筆紀錄？',
     `「${item}」— NT$${Math.round(amount)} 會保留在歷史紀錄中，但不再列入目前帳務。`,
   );
-  if (!ok) return;
-  const row = { type: 'tripExpense', action: 'void', id };
+  if (!result) return;
+  const voidReason = String(result.value || '').trim();
+  const row = { type: 'tripExpense', action: 'void', id, ...(voidReason ? { voidReason } : {}) };
   const snapshot = snapshotRows();
   applyOptimisticPayload(row, { pending: false });
   renderTripDetail();

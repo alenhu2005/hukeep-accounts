@@ -100,6 +100,7 @@ export function normalizeRow(r) {
     r.amount = r.amount ?? 0;
     r.note = r.note || '';
     r.voided = r.voided === true || String(r.voided || '').trim().toLowerCase() === 'true';
+    r.voidReason = typeof r.voidReason === 'string' ? r.voidReason.trim() : '';
     if (r.action === 'edit') {
       if ('category' in r) {
         const v = r.category;
@@ -122,6 +123,7 @@ export function normalizeRow(r) {
     if ('_clientPostedAt' in r) r._clientPostedAt = normalizeTimeOnly(r._clientPostedAt);
     r.amount = r.amount ?? 0;
     r.voided = r.voided === true || String(r.voided || '').trim().toLowerCase() === 'true';
+    r.voidReason = typeof r.voidReason === 'string' ? r.voidReason.trim() : '';
   } else if (r.type === 'trip') {
     r.action = r.action ?? 'add';
     if ('closed' in r) r.closed = r.closed === true || String(r.closed).trim().toLowerCase() === 'true';
@@ -155,6 +157,7 @@ export function normalizeRow(r) {
     if ('_clientPostedAt' in r) r._clientPostedAt = normalizeTimeOnly(r._clientPostedAt);
     r.note = r.note || '';
     r.voided = r.voided === true || String(r.voided || '').trim().toLowerCase() === 'true';
+    r.voidReason = typeof r.voidReason === 'string' ? r.voidReason.trim() : '';
     if (r.action === 'edit') {
       if ('category' in r) {
         const v = r.category;
@@ -206,6 +209,7 @@ export function normalizeRow(r) {
     r.date = normalizeDate(r.date);
     if ('_clientPostedAt' in r) r._clientPostedAt = normalizeTimeOnly(r._clientPostedAt);
     r.voided = r.voided === true || String(r.voided || '').trim().toLowerCase() === 'true';
+    r.voidReason = typeof r.voidReason === 'string' ? r.voidReason.trim() : '';
   } else if (r.type === 'memberProfile') {
     r.action = r.action ?? '';
     if (typeof r.memberName === 'string') r.memberName = r.memberName.trim();

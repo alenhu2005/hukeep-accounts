@@ -149,7 +149,8 @@ function humanSummaryForRow(r, tripNames, opts = {}) {
   }
 
   if (r.type === 'daily' && r.action === 'void') {
-    return `將一筆日常／還款紀錄標記為撤回（紀錄 id：${r.id}）`;
+    const reason = r.voidReason ? `；原因：${r.voidReason}` : '';
+    return `將一筆日常／還款紀錄標記為撤回（紀錄 id：${r.id}${reason}）`;
   }
 
   if (r.type === 'daily' && r.action === 'edit') {
@@ -211,7 +212,8 @@ function humanSummaryForRow(r, tripNames, opts = {}) {
   }
 
   if (r.type === 'tripExpense' && r.action === 'void') {
-    return `「${tname}」撤回一筆出遊消費（紀錄 id：${r.id}）`;
+    const reason = r.voidReason ? `；原因：${r.voidReason}` : '';
+    return `「${tname}」撤回一筆出遊消費（紀錄 id：${r.id}${reason}）`;
   }
 
   if (r.type === 'tripExpense' && r.action === 'edit') {
@@ -413,6 +415,7 @@ export function allRowsToHumanCSV() {
     '分攤/成員',
     '分類',
     '備註',
+    '撤回原因',
     '摘要',
     '紀錄id',
   ];
@@ -446,6 +449,7 @@ export function allRowsToHumanCSV() {
       rowSplitLabel(r),
       r.category || '',
       noteCol,
+      (r.voidReason || '').trim(),
       summary,
       r.id || '',
     ];
@@ -478,6 +482,7 @@ export function allRowsToTechnicalCSV() {
     'memberName',
     'settlementFrom',
     'settlementTo',
+    'voidReason',
   ];
   const lines = [headers.join(',')];
   for (const r of appState.allRows) {
@@ -508,6 +513,7 @@ export function allRowsToTechnicalCSV() {
       r.memberName ?? '',
       r.from ?? '',
       r.to ?? '',
+      r.voidReason ?? '',
     ];
     lines.push(vals.map(csvEscape).join(','));
   }

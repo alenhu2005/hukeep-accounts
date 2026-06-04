@@ -33,7 +33,7 @@ import {
   pickRandomTripColorId,
 } from '../data.js';
 import { computeBalance, computeExpenseShares, computeSettlements } from '../finance.js';
-import { showConfirm, showAlert } from '../dialog.js';
+import { showConfirm, showAlert, showTextPrompt } from '../dialog.js';
 import { guessCategoryFromItem, GAMBLING_CATEGORY } from '../category.js';
 import { navigate } from '../navigation.js';
 import { pauseSyncBriefly } from '../sync-pause.js';
@@ -347,13 +347,13 @@ export async function voidEditingRecord() {
       ? '還款'
       : r.item || '消費';
   const amount = parseFloat(r.amount) || 0;
-  const ok = await showConfirm(
-    '撤回這筆紀錄？',
-    isUnsyncedLocal
-      ? `「${label}」— NT$${Math.round(amount)} 尚未同步，撤回後會直接移除。`
-      : `「${label}」— NT$${Math.round(amount)} 會保留在歷史紀錄中，但不再列入目前帳務。`,
-  );
-  if (!ok) return;
+  const desc = isUnsyncedLocal
+    ? `「${label}」— NT$${Math.round(amount)} 尚未同步，撤回後會直接移除。`
+    : `「${label}」— NT$${Math.round(amount)} 會保留在歷史紀錄中，但不再列入目前帳務。`;
+  const result = isUnsyncedLocal
+    ? await showConfirm('撤回這筆紀錄？', desc)
+    : await showTextPrompt('撤回這筆紀錄？', desc);
+  if (!result) return;
 
   closeEditRecord();
   if (isUnsyncedLocal) {
@@ -369,9 +369,11 @@ export async function voidEditingRecord() {
   const snapshot = snapshotRows();
 
   let row;
-  if (isTripExp) row = { type: 'tripExpense', action: 'void', id: r.id };
-  else if (isTripSettle) row = { type: 'tripSettlement', action: 'void', id: r.id };
-  else row = { type: r.type === 'settlement' ? 'settlement' : 'daily', action: 'void', id: r.id };
+  const voidReason = String(result.value || '').trim();
+  const reasonPatch = voidReason ? { voidReason } : {};
+  if (isTripExp) row = { type: 'tripExpense', action: 'void', id: r.id, ...reasonPatch };
+  else if (isTripSettle) row = { type: 'tripSettlement', action: 'void', id: r.id, ...reasonPatch };
+  else row = { type: r.type === 'settlement' ? 'settlement' : 'daily', action: 'void', id: r.id, ...reasonPatch };
   if (!isTripLedger) snapshotPendingHomeBalanceFromAbs();
   applyOptimisticPayload(row, { pending: false });
   if (isTripLedger) renderTripDetail();

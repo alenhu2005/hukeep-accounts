@@ -72,7 +72,7 @@ export async function copyTripClosureReportText(tripId = appState.currentTripId)
   const text = buildTripSettlementSummaryText(report.trip, report.expenses);
   try {
     await navigator.clipboard.writeText(text);
-    toast('結案報告文字已複製');
+    toast('結算分享文字已複製');
   } catch {
     toast('無法複製，請檢查瀏覽器權限');
   }
@@ -159,7 +159,7 @@ function buildTripClosureReportCanvas(model) {
   let y = cardY + 64;
   ctx.fillStyle = '#6b7280';
   ctx.font = `700 24px ${IMAGE_FONT_STACK}`;
-  ctx.fillText('Hukeep Accounts · 結案報告', innerX, y);
+  ctx.fillText('Hukeep Accounts · 結算分享卡', innerX, y);
   y += 44;
 
   ctx.fillStyle = '#111827';
@@ -340,8 +340,8 @@ export async function downloadTripClosureReportImage(tripId = appState.currentTr
     const blob = await canvasToBlob(canvas);
     if (!blob) throw new Error('blob unavailable');
     const safeName = String(report.trip.name || '行程').replace(/[\\/:*?"<>|]/g, '_');
-    downloadBlob(`${safeName}_結案報告.png`, blob);
-    toast('結案報告圖片已下載');
+    downloadBlob(`${safeName}_結算分享卡.png`, blob);
+    toast('結算分享卡已下載');
   } catch {
     toast('無法輸出圖片，請稍後再試');
   }

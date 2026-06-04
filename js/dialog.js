@@ -12,22 +12,71 @@ function finishDialogClose(overlay) {
   }
 }
 
+function setPromptField(opts = null) {
+  const wrap = document.getElementById('dlg-field-wrap');
+  const input = document.getElementById('dlg-field-input');
+  const label = document.getElementById('dlg-field-label');
+  const hint = document.getElementById('dlg-field-hint');
+  if (!wrap || !input) return;
+  const enabled = !!opts;
+  wrap.hidden = !enabled;
+  input.value = enabled ? opts.value || '' : '';
+  input.maxLength = Number.isFinite(opts?.maxLength) ? opts.maxLength : 80;
+  input.placeholder = opts?.placeholder || '例如：輸入錯誤、重複記帳、改用另一筆';
+  if (label) label.textContent = opts?.label || '撤回原因（可選）';
+  if (hint) hint.textContent = opts?.hint || '留下原因後，之後查帳會更清楚。';
+}
+
+function openDialog(title, desc, okHandler, fieldOpts = null) {
+  const titleEl = document.getElementById('dlg-title');
+  const descEl = document.getElementById('dlg-desc');
+  const okBtn = document.getElementById('dlg-ok');
+  const ov = document.getElementById('dialog-overlay');
+  titleEl.textContent = title;
+  descEl.textContent = desc;
+  setPromptField(fieldOpts);
+  okBtn.onclick = okHandler;
+  ov.classList.remove('closing');
+  if (ov._closingT) {
+    clearTimeout(ov._closingT);
+    ov._closingT = null;
+  }
+  ov.classList.add('open');
+  if (fieldOpts) {
+    window.setTimeout(() => document.getElementById('dlg-field-input')?.focus(), 80);
+  }
+}
+
 export function showConfirm(title, desc) {
   return new Promise(resolve => {
-    appState._dlgResolve = resolve;
-    document.getElementById('dlg-title').textContent = title;
-    document.getElementById('dlg-desc').textContent = desc;
-    document.getElementById('dlg-ok').onclick = () => {
-      closeDialog();
-      resolve(true);
+    appState._dlgResolve = result => {
+      appState._dlgResolve = null;
+      resolve(result);
     };
-    const ov = document.getElementById('dialog-overlay');
-    ov.classList.remove('closing');
-    if (ov._closingT) {
-      clearTimeout(ov._closingT);
-      ov._closingT = null;
-    }
-    ov.classList.add('open');
+    openDialog(title, desc, () => {
+      closeDialog();
+      appState._dlgResolve?.(true);
+    });
+  });
+}
+
+export function showTextPrompt(title, desc, opts = {}) {
+  return new Promise(resolve => {
+    appState._dlgResolve = result => {
+      appState._dlgResolve = null;
+      resolve(result);
+    };
+    openDialog(
+      title,
+      desc,
+      () => {
+        const input = document.getElementById('dlg-field-input');
+        const value = String(input?.value || '').trim();
+        closeDialog();
+        appState._dlgResolve?.({ confirmed: true, value });
+      },
+      opts,
+    );
   });
 }
 

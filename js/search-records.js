@@ -22,6 +22,7 @@ function collectBaseTerms(row) {
     row?.id,
     row?.date,
     row?._voided ? '已撤回 撤回' : '',
+    row?.voidReason,
     ...moneyTerms(row?.amount),
   ];
 }

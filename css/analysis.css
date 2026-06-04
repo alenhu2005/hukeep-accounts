@@ -399,6 +399,19 @@ button.home-cal-cell.analysis-period-dir--neutral.home-cal-cell--today {
 .trip-gamble-pl {
   margin-bottom: 12px;
 }
+.trip-gamble-pl .analysis-gamble-pl-grid {
+  grid-template-columns: minmax(3.7em, .9fr) repeat(3, minmax(0, 1fr));
+  column-gap: 7px;
+}
+.trip-gamble-pl .analysis-gamble-pl-cell--name {
+  white-space: nowrap;
+  word-break: keep-all;
+  font-size: 12px;
+}
+.trip-gamble-pl .analysis-gamble-pl-cell--num {
+  font-size: clamp(11px, 2.75vw, 13px);
+  letter-spacing: -0.03em;
+}
 .analysis-gamble-pl-title {
   font-size: 13px;
   font-weight: 700;
@@ -489,6 +502,219 @@ html.dark .analysis-gamble-pl-cell--net.analysis-gamble-pl-net--lose {
   font-size: 11px;
   font-weight: 500;
   color: var(--text-muted);
+}
+
+.monthly-report-card {
+  margin: 14px 0;
+  padding: 18px;
+  border-radius: 24px;
+  border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--border));
+  background:
+    radial-gradient(circle at top left, rgba(59, 130, 246, 0.16), transparent 42%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(246, 250, 255, 0.78));
+  box-shadow: 0 18px 42px rgba(102, 126, 174, 0.14);
+}
+html.dark .monthly-report-card {
+  border-color: color-mix(in srgb, var(--primary) 28%, transparent);
+  background:
+    radial-gradient(circle at top left, rgba(59, 130, 246, 0.22), transparent 46%),
+    linear-gradient(180deg, rgba(17, 24, 39, 0.95), rgba(11, 17, 30, 0.9));
+  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.32);
+}
+.monthly-report-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+.monthly-report-kicker {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  color: var(--primary);
+}
+.monthly-report-head h3 {
+  margin: 6px 0 4px;
+  font-size: 20px;
+  line-height: 1.25;
+  color: var(--text);
+}
+.monthly-report-head p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+.monthly-report-total {
+  flex: 0 0 auto;
+  min-width: 132px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  text-align: right;
+  background: rgba(255, 255, 255, 0.68);
+  border: 1px solid color-mix(in srgb, var(--line-strong, var(--border)) 70%, transparent);
+}
+html.dark .monthly-report-total {
+  background: rgba(255, 255, 255, 0.06);
+}
+.monthly-report-total span,
+.monthly-report-total small,
+.monthly-report-summary-card span,
+.monthly-report-summary-card small {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+.monthly-report-total strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 22px;
+  line-height: 1;
+  font-weight: 950;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.monthly-report-total small {
+  margin-top: 5px;
+}
+.monthly-report-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+.monthly-report-summary-card {
+  padding: 13px;
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--line-strong, var(--border)) 68%, transparent);
+  background: rgba(255, 255, 255, 0.56);
+  min-width: 0;
+}
+html.dark .monthly-report-summary-card {
+  background: rgba(255, 255, 255, 0.05);
+}
+.monthly-report-summary-card strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 17px;
+  line-height: 1.25;
+  font-weight: 900;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.monthly-report-summary-card small {
+  margin-top: 5px;
+}
+.monthly-report-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+.monthly-report-section {
+  padding: 14px;
+  border-radius: 20px;
+  border: 1px solid color-mix(in srgb, var(--line-strong, var(--border)) 66%, transparent);
+  background: color-mix(in srgb, var(--surface-2, var(--bg-secondary)) 92%, white 8%);
+}
+html.dark .monthly-report-section {
+  background: rgba(255, 255, 255, 0.04);
+}
+.monthly-report-section-title {
+  margin-bottom: 10px;
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--text);
+}
+.monthly-report-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.monthly-report-row,
+.monthly-report-settlement {
+  display: grid;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 9px 10px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--line-strong, var(--border)) 58%, transparent);
+  background: rgba(255, 255, 255, 0.54);
+}
+html.dark .monthly-report-row,
+html.dark .monthly-report-settlement {
+  background: rgba(255, 255, 255, 0.04);
+}
+.monthly-report-row {
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+}
+.monthly-report-settlement {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+.monthly-report-rank {
+  width: 22px;
+  height: 22px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  font-size: 11px;
+  font-weight: 900;
+}
+.monthly-report-name,
+.monthly-report-settlement span {
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.monthly-report-pct {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.monthly-report-row strong,
+.monthly-report-settlement strong {
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--text);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.monthly-report-empty {
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(148, 163, 184, 0.1);
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+@media (max-width: 560px) {
+  .monthly-report-head,
+  .monthly-report-columns {
+    grid-template-columns: 1fr;
+  }
+  .monthly-report-head {
+    display: grid;
+  }
+  .monthly-report-total {
+    text-align: left;
+  }
+  .monthly-report-summary {
+    grid-template-columns: 1fr;
+  }
 }
 .analysis-pie-empty {
   text-align: center;

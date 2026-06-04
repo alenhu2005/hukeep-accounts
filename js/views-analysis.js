@@ -89,6 +89,145 @@ function playAnalysisCountUps(root) {
   });
 }
 
+function isVoidedRecord(row) {
+  return row?._voided === true || row?.voided === true || String(row?.voided || '').trim().toLowerCase() === 'true';
+}
+
+function dailySpendAmount(row) {
+  if (!row || row.type !== 'daily') return 0;
+  if (row.splitMode === '兩人付') {
+    const hu = parseFloat(row.paidHu) || 0;
+    const zhan = parseFloat(row.paidZhan) || 0;
+    const total = hu + zhan;
+    if (total > 0) return total;
+  }
+  return parseFloat(row.amount) || 0;
+}
+
+export function buildMonthlyReportModel(allRecords, fromStr, toStr) {
+  const periodRows = (allRecords || []).filter(row => {
+    const d = String(row?.date || '').slice(0, 10);
+    return d && d >= fromStr && d <= toStr && !isVoidedRecord(row);
+  });
+  const expenses = periodRows.filter(row => row.type === 'daily');
+  const settlements = periodRows
+    .filter(row => row.type === 'settlement')
+    .sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
+
+  const payerTotals = { [USER_A]: 0, [USER_B]: 0 };
+  const categoryTotals = {};
+  let total = 0;
+
+  for (const row of expenses) {
+    const amount = dailySpendAmount(row);
+    total += amount;
+    if (row.splitMode === '兩人付') {
+      payerTotals[USER_A] += parseFloat(row.paidHu) || 0;
+      payerTotals[USER_B] += parseFloat(row.paidZhan) || 0;
+    } else if (row.paidBy === USER_A || row.paidBy === USER_B) {
+      payerTotals[row.paidBy] += amount;
+    }
+    const cat = row.category || '未分類';
+    categoryTotals[cat] = (categoryTotals[cat] || 0) + amount;
+  }
+
+  const payerRows = [USER_A, USER_B]
+    .map(name => ({ name, amount: Math.round(payerTotals[name] || 0) }))
+    .sort((a, b) => b.amount - a.amount || a.name.localeCompare(b.name));
+  const categoryRows = Object.entries(categoryTotals)
+    .map(([name, amount]) => ({ name, amount: Math.round(amount), pct: total > 0 ? Math.round((amount / total) * 100) : 0 }))
+    .sort((a, b) => b.amount - a.amount || a.name.localeCompare(b.name));
+  const settlementRows = settlements.map(row => ({
+    date: String(row.date || '').slice(0, 10),
+    paidBy: row.paidBy || '',
+    amount: Math.round(parseFloat(row.amount) || 0),
+  }));
+
+  return {
+    fromStr,
+    toStr,
+    total: Math.round(total),
+    expenseCount: expenses.length,
+    settlementCount: settlementRows.length,
+    payerRows,
+    categoryRows,
+    settlementRows,
+  };
+}
+
+function renderMonthlyReportSection(model) {
+  if (!model || (model.expenseCount === 0 && model.settlementCount === 0)) return '';
+  const topPayer = model.total > 0 ? model.payerRows[0] : null;
+  const secondPayer = model.total > 0 ? model.payerRows[1] : null;
+  const payerDiff = topPayer && secondPayer ? Math.max(0, topPayer.amount - secondPayer.amount) : 0;
+  const categoryRows = model.categoryRows.length
+    ? model.categoryRows
+        .slice(0, 5)
+        .map(
+          (row, i) => `<div class="monthly-report-row">
+        <span class="monthly-report-rank">${i + 1}</span>
+        <span class="monthly-report-name">${esc(row.name)}</span>
+        <span class="monthly-report-pct">${row.pct}%</span>
+        <strong>NT$${row.amount.toLocaleString()}</strong>
+      </div>`,
+        )
+        .join('')
+    : '<div class="monthly-report-empty">本月還沒有分類支出。</div>';
+  const settlementRows = model.settlementRows.length
+    ? model.settlementRows
+        .map(
+          row => `<div class="monthly-report-settlement">
+        <span>${esc(row.date)}</span>
+        <span>${esc(row.paidBy)}還款</span>
+        <strong>NT$${row.amount.toLocaleString()}</strong>
+      </div>`,
+        )
+        .join('')
+    : '<div class="monthly-report-empty">本月沒有還款紀錄。</div>';
+
+  return `<section class="monthly-report-card" aria-label="月結報表">
+    <div class="monthly-report-head">
+      <div>
+        <div class="monthly-report-kicker">月結報表</div>
+        <h3>${esc(model.fromStr)} ~ ${esc(model.toStr)}</h3>
+        <p>自動整理本月日常帳，方便月底對帳。</p>
+      </div>
+      <div class="monthly-report-total">
+        <span>總花費</span>
+        <strong>NT$${model.total.toLocaleString()}</strong>
+        <small>${model.expenseCount} 筆消費</small>
+      </div>
+    </div>
+    <div class="monthly-report-summary">
+      <div class="monthly-report-summary-card">
+        <span>誰付比較多</span>
+        <strong>${esc(topPayer?.name || '尚無')}</strong>
+        <small>${topPayer ? `NT$${topPayer.amount.toLocaleString()}${payerDiff ? `，多付 NT$${payerDiff.toLocaleString()}` : ''}` : '尚無付款資料'}</small>
+      </div>
+      <div class="monthly-report-summary-card">
+        <span>分類第一名</span>
+        <strong>${esc(model.categoryRows[0]?.name || '尚無')}</strong>
+        <small>${model.categoryRows[0] ? `NT$${model.categoryRows[0].amount.toLocaleString()} · ${model.categoryRows[0].pct}%` : '尚無分類資料'}</small>
+      </div>
+      <div class="monthly-report-summary-card">
+        <span>還款紀錄</span>
+        <strong>${model.settlementCount} 筆</strong>
+        <small>${model.settlementCount ? '已納入本月整理' : '本月尚未還款'}</small>
+      </div>
+    </div>
+    <div class="monthly-report-columns">
+      <div class="monthly-report-section">
+        <div class="monthly-report-section-title">分類排行</div>
+        <div class="monthly-report-list">${categoryRows}</div>
+      </div>
+      <div class="monthly-report-section">
+        <div class="monthly-report-section-title">還款紀錄</div>
+        <div class="monthly-report-list">${settlementRows}</div>
+      </div>
+    </div>
+  </section>`;
+}
+
 /**
  * @param {'cat'|'pct'|'amt'} field
  * @param {boolean} checked
@@ -496,6 +635,10 @@ export function renderAnalysis() {
     appState.analysisFilterDate && fromStr === toStr
       ? buildAnalysisHistorySection(appState.analysisFilterDate, selectedDayHistory)
       : '';
+  const monthlyReportHtml =
+    appState.analysisPeriod === 'month' && !appState.analysisFilterDate
+      ? renderMonthlyReportSection(buildMonthlyReportModel(allRecords, fromStr, toStr))
+      : '';
 
   let total = 0;
   let huTotal = 0;
@@ -533,6 +676,7 @@ export function renderAnalysis() {
       ${periodNav}
       ${filterClearHtml}
       <div class="analysis-period">${esc(periodLabel)}</div>
+      ${monthlyReportHtml}
       <div class="analysis-empty">
         <div class="analysis-empty-icon" aria-hidden="true">📊</div>
         <div class="analysis-empty-text">${esc(periodLabel)} 尚無支出紀錄</div>
@@ -655,6 +799,7 @@ export function renderAnalysis() {
         <div class="analysis-stat-val analysis-stat-val--zhan" data-analysis-count="${zhanR}" data-analysis-mode="currency">${statZhanStart}</div>
       </div>
     </div>
+    ${monthlyReportHtml}
     ${gamblePlCard}
     ${pieToggles}
     ${pieBlock}

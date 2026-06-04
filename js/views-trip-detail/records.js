@@ -131,6 +131,9 @@ export function tripExpenseHTML(e, totalMembers, recordIndex = 0) {
       ? '均分'
       : e.splitAmong.join('、');
   const noteEl = e.note ? `<div class="record-note">${esc(e.note)}</div>` : '';
+  const voidReasonEl = e._voided && e.voidReason
+    ? `<div class="record-note record-note--void-reason">撤回原因：${esc(e.voidReason)}</div>`
+    : '';
   const clickAttr = e._voided ? '' : `onclick='openEditRecordById(${jq(e.id)},true)' style="cursor:pointer" title="點擊編輯"`;
   const photoEl = tripPhotoThumb(e);
   const shareLines = computeExpenseShares(e);
@@ -151,6 +154,7 @@ export function tripExpenseHTML(e, totalMembers, recordIndex = 0) {
         </div>
         <div class="record-meta">${esc(e.date)} · ${payerStr}${hasCustomSplit ? ` · ${splitMeta}` : ` · 每人 NT$${perPerson}`}</div>
         ${noteEl}
+        ${voidReasonEl}
       </div>
       ${photoEl}
       <div class="record-amount" style="${e._voided ? 'color:#9ca3af;text-decoration:line-through' : ''}"><div class="record-amount-main">NT$${Math.round(e.amount)}</div>${tripExpenseFxFeeHtml(e)}${tripExpenseCnyHtml(e)}</div>
@@ -167,6 +171,7 @@ export function tripExpenseHTML(e, totalMembers, recordIndex = 0) {
       </div>
       <div class="record-meta">${esc(e.date)} · ${esc(e.paidBy)}付${hasCustomSplit ? ` · ${splitMeta}` : ` · 每人 NT$${shareLines.length ? Math.round(shareLines[0].amount) : 0}`}</div>
       ${noteEl}
+      ${voidReasonEl}
     </div>
     ${photoEl}
     <div class="record-amount" style="${e._voided ? 'color:#9ca3af;text-decoration:line-through' : ''}"><div class="record-amount-main">NT$${Math.round(e.amount)}</div>${tripExpenseFxFeeHtml(e)}${tripExpenseCnyHtml(e)}</div>
@@ -175,6 +180,9 @@ export function tripExpenseHTML(e, totalMembers, recordIndex = 0) {
 
 export function tripSettlementHTML(s, recordIndex = 0) {
   const ri = `--record-i:${recordIndex};`;
+  const voidReasonEl = s._voided && s.voidReason
+    ? `<div class="record-note record-note--void-reason">撤回原因：${esc(s.voidReason)}</div>`
+    : '';
   const clickAttr = s._voided
     ? ''
     : `onclick='openEditRecordById(${jq(s.id)},"tripSettlement")' style="cursor:pointer" title="點擊檢視／撤回"`;
@@ -186,6 +194,7 @@ export function tripSettlementHTML(s, recordIndex = 0) {
         <span class="badge ${s._voided ? 'badge-void' : 'badge-settle'}">${s._voided ? '已撤回' : '還款'}</span>
       </div>
       <div class="record-meta">${esc(s.date)} · ${esc(s.from)} → ${esc(s.to)}</div>
+      ${voidReasonEl}
     </div>
     <div class="record-amount${s._voided ? '' : ' record-amount--settle'}" style="${s._voided ? 'color:#9ca3af;text-decoration:line-through' : ''}">NT$${Math.round(s.amount)}</div>
   </div>`;

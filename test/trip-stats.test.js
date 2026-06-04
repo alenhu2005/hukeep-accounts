@@ -120,6 +120,9 @@ describe('renderTripStatsCard', () => {
       );
       expect(html).toContain('出遊統計摘要');
       expect(html).toContain('出最多');
+      expect(html).toContain('行程天數統計');
+      expect(html).toContain('最高消費日');
+      expect(html).toContain('每人每日平均');
       expect(html).toContain('目前差額');
       expect(html).toContain('分類支出');
     } finally {

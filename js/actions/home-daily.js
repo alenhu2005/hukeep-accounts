@@ -32,7 +32,7 @@ import {
   pickRandomTripColorId,
 } from '../data.js';
 import { computeBalance, computeSettlements } from '../finance.js';
-import { showConfirm, showAlert } from '../dialog.js';
+import { showConfirm, showAlert, showTextPrompt } from '../dialog.js';
 import { guessCategoryFromItem, GAMBLING_CATEGORY } from '../category.js';
 import { navigate } from '../navigation.js';
 import { pauseSyncBriefly } from '../sync-pause.js';
@@ -250,13 +250,13 @@ export async function voidDailyRecord(id) {
   const isUnsyncedLocal = hasQueuedAddForEntity(type, id);
   const label = r.type === 'settlement' ? '還款' : (r.item || '消費');
   const amount = parseFloat(r.amount) || 0;
-  const ok = await showConfirm(
-    '撤回這筆紀錄？',
-    isUnsyncedLocal
-      ? `「${label}」— NT$${Math.round(amount)} 尚未同步，撤回後會直接移除。`
-      : `「${label}」— NT$${Math.round(amount)} 會保留在歷史紀錄中，但不再列入目前帳務。`,
-  );
-  if (!ok) return;
+  const desc = isUnsyncedLocal
+    ? `「${label}」— NT$${Math.round(amount)} 尚未同步，撤回後會直接移除。`
+    : `「${label}」— NT$${Math.round(amount)} 會保留在歷史紀錄中，但不再列入目前帳務。`;
+  const result = isUnsyncedLocal
+    ? await showConfirm('撤回這筆紀錄？', desc)
+    : await showTextPrompt('撤回這筆紀錄？', desc);
+  if (!result) return;
   snapshotPendingHomeBalanceFromAbs();
   if (isUnsyncedLocal) {
     discardUnsyncedLocalEntity(type, id);
@@ -265,7 +265,8 @@ export async function voidDailyRecord(id) {
     toast('已移除尚未同步的紀錄');
     return;
   }
-  const row = { type, action: 'void', id };
+  const voidReason = String(result.value || '').trim();
+  const row = { type, action: 'void', id, ...(voidReason ? { voidReason } : {}) };
   const snapshot = snapshotRows();
   applyOptimisticPayload(row, { pending: false });
   renderHome();

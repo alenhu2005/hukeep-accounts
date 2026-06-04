@@ -18,15 +18,15 @@ var ARCHIVE_SHEETS = {
 var LEGACY_SHEETS = ['日常', '出遊', '人物'];
 
 var ACTIVE_HEADERS = {
-  '日常消費': ['type', 'action', 'id', 'date', '_clientPostedAt', 'item', 'amount', 'paidBy', 'splitMode', 'note', 'paidHu', 'paidZhan', 'category', 'photoUrl', 'photoFileId', 'voided'],
-  '日常還款': ['type', 'action', 'id', 'date', '_clientPostedAt', 'amount', 'paidBy', 'voided'],
+  '日常消費': ['type', 'action', 'id', 'date', '_clientPostedAt', 'item', 'amount', 'paidBy', 'splitMode', 'note', 'paidHu', 'paidZhan', 'category', 'photoUrl', 'photoFileId', 'voided', 'voidReason'],
+  '日常還款': ['type', 'action', 'id', 'date', '_clientPostedAt', 'amount', 'paidBy', 'voided', 'voidReason'],
   '行程': ['type', 'action', 'id', 'name', 'members', 'createdAt', 'closed', 'colorId', 'cnyMode'],
-  '出遊消費': ['type', 'action', 'id', 'tripId', 'date', '_clientPostedAt', 'item', 'amount', 'paidBy', 'splitAmong', 'note', 'category', 'amountCny', 'fxFeeNtd', 'payers', 'splitDetails', 'photoUrl', 'photoFileId', 'voided'],
-  '出遊還款': ['type', 'action', 'id', 'tripId', 'date', '_clientPostedAt', 'from', 'to', 'amount', 'voided'],
+  '出遊消費': ['type', 'action', 'id', 'tripId', 'date', '_clientPostedAt', 'item', 'amount', 'paidBy', 'splitAmong', 'note', 'category', 'amountCny', 'fxFeeNtd', 'payers', 'splitDetails', 'photoUrl', 'photoFileId', 'voided', 'voidReason'],
+  '出遊還款': ['type', 'action', 'id', 'tripId', 'date', '_clientPostedAt', 'from', 'to', 'amount', 'voided', 'voidReason'],
   '成員': ['type', 'memberName', 'deleted', 'colorId'],
   '頭像': ['type', 'id', 'memberName', 'avatarScope', 'avatarUrl', 'avatarFileId'],
-  '封存_日常事件': ['type', 'action', 'id', 'date', 'item', 'amount', 'paidBy', 'splitMode', 'note', 'paidHu', 'paidZhan', 'category', 'photoUrl', 'photoFileId', '_archivedAt'],
-  '封存_出遊事件': ['type', 'action', 'id', 'tripId', 'name', 'members', 'createdAt', 'memberName', 'newName', 'colorId', 'item', 'amount', 'paidBy', 'splitAmong', 'date', 'note', 'category', 'amountCny', 'fxFeeNtd', 'payers', 'splitDetails', 'from', 'to', 'photoUrl', 'photoFileId', 'closed', 'cnyMode', '_archivedAt'],
+  '封存_日常事件': ['type', 'action', 'id', 'date', 'item', 'amount', 'paidBy', 'splitMode', 'note', 'paidHu', 'paidZhan', 'category', 'photoUrl', 'photoFileId', 'voidReason', '_archivedAt'],
+  '封存_出遊事件': ['type', 'action', 'id', 'tripId', 'name', 'members', 'createdAt', 'memberName', 'newName', 'colorId', 'item', 'amount', 'paidBy', 'splitAmong', 'date', 'note', 'category', 'amountCny', 'fxFeeNtd', 'payers', 'splitDetails', 'from', 'to', 'photoUrl', 'photoFileId', 'closed', 'cnyMode', 'voidReason', '_archivedAt'],
   '封存_人物事件': ['type', 'action', 'id', 'memberName', 'newName', 'colorId', 'deleted', 'avatarScope', 'avatarUrl', 'avatarFileId', '_archivedAt'],
 };
 
@@ -193,11 +193,12 @@ function deleteActiveRow_(sheetName, key, value) {
   writeObjectsToSheet_(sheetName, rows, ACTIVE_HEADERS[sheetName]);
 }
 
-function markActiveRowVoided_(sheetName, key, value, voided) {
+function markActiveRowVoided_(sheetName, key, value, voided, reason) {
   var rows = sheetRowsToObjects_(sheetName);
   for (var i = 0; i < rows.length; i++) {
     if (!rowMatchesKey_(rows[i], key, value)) continue;
     rows[i].voided = !!voided;
+    if (reason !== undefined) rows[i].voidReason = trim_(reason);
     writeObjectsToSheet_(sheetName, rows, ACTIVE_HEADERS[sheetName]);
     return;
   }
@@ -310,6 +311,7 @@ function payloadToActiveRow_(data) {
       photoUrl: data.photoUrl || '',
       photoFileId: data.photoFileId || '',
       voided: false,
+      voidReason: data.voidReason || '',
     };
   }
   if (data.type === 'settlement') {
@@ -322,6 +324,7 @@ function payloadToActiveRow_(data) {
       amount: data.amount,
       paidBy: data.paidBy,
       voided: false,
+      voidReason: data.voidReason || '',
     };
   }
   if (data.type === 'trip') {
@@ -358,6 +361,7 @@ function payloadToActiveRow_(data) {
       photoUrl: data.photoUrl || '',
       photoFileId: data.photoFileId || '',
       voided: false,
+      voidReason: data.voidReason || '',
     };
   }
   if (data.type === 'tripSettlement') {
@@ -372,6 +376,7 @@ function payloadToActiveRow_(data) {
       to: data.to,
       amount: data.amount,
       voided: false,
+      voidReason: data.voidReason || '',
     };
   }
   if (data.type === 'memberProfile') {
@@ -430,15 +435,15 @@ function applyCurrentStateMutation_(data) {
         photoFileId: data.photoFileId !== undefined ? data.photoFileId : '',
       });
     } else if (data.action === 'void' || data.action === 'delete') {
-      markActiveRowVoided_(ACTIVE_SHEETS.daily, 'id', data.id, true);
-      markActiveRowVoided_(ACTIVE_SHEETS.settlement, 'id', data.id, true);
+      markActiveRowVoided_(ACTIVE_SHEETS.daily, 'id', data.id, true, data.voidReason || '');
+      markActiveRowVoided_(ACTIVE_SHEETS.settlement, 'id', data.id, true, data.voidReason || '');
     }
     return;
   }
 
   if (data.type === 'settlement') {
     if (data.action === 'add') upsertActiveRow_(ACTIVE_SHEETS.settlement, 'id', data.id, payloadToActiveRow_(data));
-    else if (data.action === 'void' || data.action === 'delete') markActiveRowVoided_(ACTIVE_SHEETS.settlement, 'id', data.id, true);
+    else if (data.action === 'void' || data.action === 'delete') markActiveRowVoided_(ACTIVE_SHEETS.settlement, 'id', data.id, true, data.voidReason || '');
     return;
   }
 
@@ -480,7 +485,7 @@ function applyCurrentStateMutation_(data) {
       if (data.amountCny !== undefined) patch.amountCny = data.amountCny;
       upsertActiveRow_(ACTIVE_SHEETS.tripExpense, 'id', data.id, patch);
     } else if (data.action === 'void' || data.action === 'delete') {
-      markActiveRowVoided_(ACTIVE_SHEETS.tripExpense, 'id', data.id, true);
+      markActiveRowVoided_(ACTIVE_SHEETS.tripExpense, 'id', data.id, true, data.voidReason || '');
     }
     return;
   }
@@ -489,7 +494,7 @@ function applyCurrentStateMutation_(data) {
     if (data.action === 'add') {
       upsertActiveRow_(ACTIVE_SHEETS.tripSettlement, 'id', data.id, payloadToActiveRow_(data));
     } else if (data.action === 'void' || data.action === 'delete') {
-      markActiveRowVoided_(ACTIVE_SHEETS.tripSettlement, 'id', data.id, true);
+      markActiveRowVoided_(ACTIVE_SHEETS.tripSettlement, 'id', data.id, true, data.voidReason || '');
     }
     return;
   }
@@ -601,9 +606,11 @@ function migrateLegacyEventsToCurrentState() {
   if (!legacy.length) return;
 
   var dailyVoided = {};
+  var dailyVoidReasons = {};
   legacy.forEach(function (row) {
     if ((row.type === 'daily' || row.type === 'settlement') && (row.action === 'void' || row.action === 'delete')) {
       dailyVoided[trim_(row.id)] = true;
+      if (trim_(row.voidReason)) dailyVoidReasons[trim_(row.id)] = trim_(row.voidReason);
     }
   });
   var dailyEdit = {};
@@ -616,6 +623,7 @@ function migrateLegacyEventsToCurrentState() {
   Object.keys(firstAddById_(legacy, 'daily')).forEach(function (id) {
     var base = payloadToActiveRow_(firstAddById_(legacy, 'daily')[id]);
     base.voided = !!dailyVoided[id];
+    base.voidReason = dailyVoidReasons[id] || '';
     var edit = dailyEdit[id];
     if (edit) {
       base.date = edit.date || base.date;
@@ -631,6 +639,7 @@ function migrateLegacyEventsToCurrentState() {
   Object.keys(firstAddById_(legacy, 'settlement')).forEach(function (id) {
     var base = payloadToActiveRow_(firstAddById_(legacy, 'settlement')[id]);
     base.voided = !!dailyVoided[id];
+    base.voidReason = dailyVoidReasons[id] || '';
     settlementRows.push(base);
   });
 
@@ -671,8 +680,12 @@ function migrateLegacyEventsToCurrentState() {
   });
 
   var expenseVoided = {};
+  var expenseVoidReasons = {};
   legacy.forEach(function (row) {
-    if (row.type === 'tripExpense' && (row.action === 'void' || row.action === 'delete')) expenseVoided[trim_(row.id)] = true;
+    if (row.type === 'tripExpense' && (row.action === 'void' || row.action === 'delete')) {
+      expenseVoided[trim_(row.id)] = true;
+      if (trim_(row.voidReason)) expenseVoidReasons[trim_(row.id)] = trim_(row.voidReason);
+    }
   });
   var expenseEdit = {};
   legacy.forEach(function (row) {
@@ -683,6 +696,7 @@ function migrateLegacyEventsToCurrentState() {
     var base = payloadToActiveRow_(firstAddById_(legacy, 'tripExpense')[id]);
     if (deletedTripIds[trim_(base.tripId)]) return;
     base.voided = !!expenseVoided[id];
+    base.voidReason = expenseVoidReasons[id] || '';
     var edit = expenseEdit[id];
     if (edit) {
       base.date = edit.date || base.date;
@@ -698,14 +712,19 @@ function migrateLegacyEventsToCurrentState() {
   });
 
   var tripSettlementVoided = {};
+  var tripSettlementVoidReasons = {};
   legacy.forEach(function (row) {
-    if (row.type === 'tripSettlement' && (row.action === 'void' || row.action === 'delete')) tripSettlementVoided[trim_(row.id)] = true;
+    if (row.type === 'tripSettlement' && (row.action === 'void' || row.action === 'delete')) {
+      tripSettlementVoided[trim_(row.id)] = true;
+      if (trim_(row.voidReason)) tripSettlementVoidReasons[trim_(row.id)] = trim_(row.voidReason);
+    }
   });
   var tripSettlementRows = [];
   Object.keys(firstAddById_(legacy, 'tripSettlement')).forEach(function (id) {
     var base = payloadToActiveRow_(firstAddById_(legacy, 'tripSettlement')[id]);
     if (deletedTripIds[trim_(base.tripId)]) return;
     base.voided = !!tripSettlementVoided[id];
+    base.voidReason = tripSettlementVoidReasons[id] || '';
     tripSettlementRows.push(base);
   });
 

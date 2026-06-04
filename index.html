@@ -225,6 +225,17 @@
     <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-title">
       <h3 id="dlg-title"></h3>
       <p id="dlg-desc"></p>
+      <div id="dlg-field-wrap" class="dialog-field-wrap" hidden>
+        <label id="dlg-field-label" class="dialog-field-label" for="dlg-field-input">撤回原因（可選）</label>
+        <textarea
+          id="dlg-field-input"
+          class="dialog-field-input"
+          rows="3"
+          maxlength="80"
+          placeholder="例如：輸入錯誤、重複記帳、改用另一筆"
+        ></textarea>
+        <div id="dlg-field-hint" class="dialog-field-hint">留下原因後，之後查帳會更清楚。</div>
+      </div>
       <div class="dialog-actions">
         <button class="btn btn-outline" onclick="cancelDialog()">取消</button>
         <button class="btn btn-destructive" id="dlg-ok">確定</button>
@@ -508,14 +519,14 @@
     </div>
   </div>
 
-  <!-- 出遊結案報告 -->
+  <!-- 出遊結算分享卡 -->
   <div class="member-preview-overlay" id="trip-closure-report-modal-overlay" onclick="if(event.target===this)closeTripClosureReportModal()">
     <div class="member-preview-panel" role="dialog" aria-modal="true" aria-labelledby="trip-closure-report-modal-title" onclick="event.stopPropagation()">
       <div class="member-preview-header">
-        <h3 id="trip-closure-report-modal-title">結案報告</h3>
+        <h3 id="trip-closure-report-modal-title">結算分享卡</h3>
         <div class="trip-closure-report-modal-actions">
           <button type="button" class="btn btn-outline btn-sm" onclick="copyTripClosureReportText()">複製文字</button>
-          <button type="button" class="btn btn-primary btn-sm" onclick="downloadTripClosureReportImage()">下載圖片</button>
+          <button type="button" class="btn btn-primary btn-sm" onclick="downloadTripClosureReportImage()">下載分享卡</button>
           <button type="button" class="member-dir-close" onclick="closeTripClosureReportModal()" aria-label="關閉">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
           </button>

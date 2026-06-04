@@ -234,6 +234,27 @@ export function renderTripStatsCard(members, expenses, opts = {}) {
     .find(name => (outstandingByMember[name] || 0) < 0);
   const topCreditorAmount = topCreditorName ? Math.round(outstandingByMember[topCreditorName] || 0) : 0;
   const topDebtorAmount = topDebtorName ? Math.abs(Math.round(outstandingByMember[topDebtorName] || 0)) : 0;
+  const daySubtotals = computeTripDaySubtotals(active);
+  const activeCountByDay = {};
+  active.forEach(e => {
+    const d = e.date || '（無日期）';
+    activeCountByDay[d] = (activeCountByDay[d] || 0) + 1;
+  });
+  const dayRows = Object.keys(daySubtotals)
+    .sort()
+    .map(date => ({
+      date,
+      amount: Math.round(daySubtotals[date] || 0),
+      count: activeCountByDay[date] || 0,
+    }));
+  const highestDay = dayRows
+    .slice()
+    .sort((a, b) => b.amount - a.amount || a.date.localeCompare(b.date))[0];
+  const tripDayCount = dayRows.length;
+  const avgPerDay = tripDayCount > 0 ? Math.round(totalSpend / tripDayCount) : 0;
+  const avgPerMemberDay = tripDayCount > 0 && members.length > 0
+    ? Math.round(totalSpend / tripDayCount / members.length)
+    : 0;
 
   let statI = 0;
   let rowI = 0;
@@ -318,6 +339,41 @@ export function renderTripStatsCard(members, expenses, opts = {}) {
       </div>
     </div>`
       : '';
+
+  const dayStatsRows = dayRows
+    .map(row => `<div class="trip-day-stats-row">
+      <span class="trip-day-stats-date">${esc(row.date)}</span>
+      <span class="trip-day-stats-count">${row.count} 筆</span>
+      <strong>${formatCurrency(row.amount)}</strong>
+    </div>`)
+    .join('');
+  const dayStatsBlock = dayRows.length
+    ? `<div class="trip-stats-section trip-stats-section--card trip-day-stats-section" style="--stat-i:${statI++}">
+      <div class="trip-stats-section-head">
+        <div>
+          <div class="trip-stats-label">行程天數統計</div>
+          <p class="trip-stats-section-desc">每天花費、最高消費日、每人每日平均</p>
+        </div>
+      </div>
+      <div class="trip-day-stats-metrics">
+        <div class="trip-day-stats-metric">
+          <span>行程天數</span>
+          <strong>${tripDayCount} 天</strong>
+        </div>
+        <div class="trip-day-stats-metric trip-day-stats-metric--hot">
+          <span>最高消費日</span>
+          <strong>${esc(highestDay.date)}</strong>
+          <small>${formatCurrency(highestDay.amount)}</small>
+        </div>
+        <div class="trip-day-stats-metric">
+          <span>每人每日平均</span>
+          <strong>${formatCurrency(avgPerMemberDay)}</strong>
+          <small>每日平均 ${formatCurrency(avgPerDay)}</small>
+        </div>
+      </div>
+      <div class="trip-day-stats-list">${dayStatsRows}</div>
+    </div>`
+    : '';
 
   const prepaidTitle = hasGambling ? '先付排行（未含賭博，佔合計比例）' : '先付排行（佔先付合計比例）';
   const prepaidFoot = `先付加總 ${formatCurrency(prepaidSumAll)}`;
@@ -434,7 +490,7 @@ export function renderTripStatsCard(members, expenses, opts = {}) {
 
   const rankingGrid = `<div class="trip-stats-compare-grid">${prepaidBlock}${shareBlock}</div>`;
 
-  return `<div class="card-body trip-stats-body">${tripStatsHero}${walletOutTripSection}${netBlock}${rankingGrid}${tripPieBlock}</div>`;
+  return `<div class="card-body trip-stats-body">${tripStatsHero}${dayStatsBlock}${walletOutTripSection}${netBlock}${rankingGrid}${tripPieBlock}</div>`;
 }
 
 export function buildTripClosureReportModel(trip, expenses, allRows = appState.allRows) {
@@ -552,7 +608,7 @@ export function renderTripClosureReportCard(model) {
 
   return `<div class="trip-closure-report-card">
     <div class="trip-closure-report-hero">
-      <div class="trip-closure-report-kicker">已結束行程報告</div>
+      <div class="trip-closure-report-kicker">結算分享卡</div>
       <h4 class="trip-closure-report-title">${esc(model.tripName)}</h4>
       <div class="trip-closure-report-meta">
         <span>${model.dateRangeLabel ? esc(model.dateRangeLabel) : '未標記日期'}</span>
@@ -622,7 +678,7 @@ export function renderTripClosureReportCard(model) {
 export function buildTripSettlementSummaryText(trip, expenses) {
   const model = buildTripClosureReportModel(trip, expenses, appState.allRows);
 
-  let t = `【${trip.name}】出遊結案報告\n`;
+  let t = `【${trip.name}】結算分享卡\n`;
   t += `成員：${model.members.join('、')}\n`;
   if (model.dateRangeLabel) t += `日期：${model.dateRangeLabel}\n`;
   t += `有效消費：${model.activeCount} 筆，總計 NT$${model.total.toLocaleString()}`;

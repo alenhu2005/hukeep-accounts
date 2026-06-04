@@ -22,7 +22,7 @@
 
 這些工作表只保留目前有效的 current state。
 
-其中會進入歷史紀錄的帳務資料，若被使用者「撤回」，不會真的刪列，而是直接把 active 列標成 `voided=true`：
+其中會進入歷史紀錄的帳務資料，若被使用者「撤回」，不會真的刪列，而是直接把 active 列標成 `voided=true`，並可選填 `voidReason`：
 
 - `日常消費`
 - `日常還款`
@@ -67,6 +67,7 @@
 
 - active 列保留
 - 將 `voided` 設為 `true`
+- 若使用者有填原因，將 `voidReason` 寫入 active 與 archive
 - append 一筆 `void` 或 `delete` 事件到 archive
 
 ### 真刪除

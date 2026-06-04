@@ -54,6 +54,7 @@ function normalizeActiveRow(row, { pending = false } = {}) {
 
   if (next.type === 'daily' || next.type === 'settlement' || next.type === 'tripExpense' || next.type === 'tripSettlement') {
     next.voided = toBool(next.voided);
+    next.voidReason = trimString(next.voidReason);
   }
 
   if (next.type === 'trip') {
@@ -144,16 +145,20 @@ export function removeCurrentStateEntity(rows, type, id) {
   return removeById(rows, kind, id);
 }
 
-function setDailyLikeVoided(rows, id, voided, { pending = false } = {}) {
+function setDailyLikeVoided(rows, id, voided, { pending = false, voidReason } = {}) {
   const idx = findDailyLikeIndex(rows, id);
   if (idx === -1) return;
-  patchRow(rows[idx], { voided: !!voided }, { pending });
+  const patch = { voided: !!voided };
+  if (voidReason !== undefined) patch.voidReason = trimString(voidReason);
+  patchRow(rows[idx], patch, { pending });
 }
 
-function setVoidedById(rows, type, id, voided, { pending = false } = {}) {
+function setVoidedById(rows, type, id, voided, { pending = false, voidReason } = {}) {
   const idx = findIdIndex(rows, type, id);
   if (idx === -1) return;
-  patchRow(rows[idx], { voided: !!voided }, { pending });
+  const patch = { voided: !!voided };
+  if (voidReason !== undefined) patch.voidReason = trimString(voidReason);
+  patchRow(rows[idx], patch, { pending });
 }
 
 function removeTripCascade(rows, tripId) {
@@ -353,26 +358,26 @@ export function applyCurrentStatePayload(rows, payload, { pending = false } = {}
   if (type === 'daily') {
     if (action === 'add') addActiveRow(rows, payload, { pending });
     else if (action === 'edit') editDaily(rows, payload, { pending });
-    else if (action === 'void' || action === 'delete') setDailyLikeVoided(rows, payload.id, true, { pending });
+    else if (action === 'void' || action === 'delete') setDailyLikeVoided(rows, payload.id, true, { pending, voidReason: payload.voidReason });
     return rows;
   }
 
   if (type === 'settlement') {
     if (action === 'add') addActiveRow(rows, payload, { pending });
-    else if (action === 'void' || action === 'delete') setDailyLikeVoided(rows, payload.id, true, { pending });
+    else if (action === 'void' || action === 'delete') setDailyLikeVoided(rows, payload.id, true, { pending, voidReason: payload.voidReason });
     return rows;
   }
 
   if (type === 'tripExpense') {
     if (action === 'add') addActiveRow(rows, payload, { pending });
     else if (action === 'edit') editTripExpense(rows, payload, { pending });
-    else if (action === 'void' || action === 'delete') setVoidedById(rows, 'tripExpense', payload.id, true, { pending });
+    else if (action === 'void' || action === 'delete') setVoidedById(rows, 'tripExpense', payload.id, true, { pending, voidReason: payload.voidReason });
     return rows;
   }
 
   if (type === 'tripSettlement') {
     if (action === 'add') addActiveRow(rows, payload, { pending });
-    else if (action === 'void' || action === 'delete') setVoidedById(rows, 'tripSettlement', payload.id, true, { pending });
+    else if (action === 'void' || action === 'delete') setVoidedById(rows, 'tripSettlement', payload.id, true, { pending, voidReason: payload.voidReason });
     return rows;
   }
 

@@ -59,6 +59,9 @@ export function dailyRecordHTML(r, runBal, recordIndex = 0) {
   const ri = `--record-i:${recordIndex};`;
   const isHu = r.paidBy === USER_A;
   const a = parseFloat(r.amount) || 0;
+  const voidReasonEl = r._voided && r.voidReason
+    ? `<div class="record-note record-note--void-reason">撤回原因：${esc(r.voidReason)}</div>`
+    : '';
 
   const clickAttr = r._voided ? '' : `onclick='openEditRecordById(${jq(r.id)},false)' style="cursor:pointer" title="點擊編輯"`;
   const photoEl = photoThumbHTML(r);
@@ -72,6 +75,7 @@ export function dailyRecordHTML(r, runBal, recordIndex = 0) {
           <span class="badge ${r._voided ? 'badge-void' : 'badge-settle'}">${r._voided ? '已撤回' : '還款'}</span>
         </div>
         <div class="record-meta">${esc(r.date)}</div>
+        ${voidReasonEl}
       </div>
       <div class="record-amount-wrap">
         <div class="record-amount${r._voided ? '' : ' record-amount--settle'}" style="${r._voided ? 'color:#9ca3af' : ''}">NT$${Math.round(a)}</div>
@@ -96,6 +100,7 @@ export function dailyRecordHTML(r, runBal, recordIndex = 0) {
         </div>
         <div class="record-meta">${esc(r.date)} · ${metaDetail}</div>
         ${noteEl}
+        ${voidReasonEl}
       </div>
       ${photoEl}
       <div class="record-amount-wrap">
@@ -116,6 +121,7 @@ export function dailyRecordHTML(r, runBal, recordIndex = 0) {
       </div>
       <div class="record-meta">${esc(r.date)} · ${esc(r.paidBy)}付</div>
       ${noteEl}
+      ${voidReasonEl}
     </div>
     ${photoEl}
     <div class="record-amount-wrap">

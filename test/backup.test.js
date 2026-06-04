@@ -47,6 +47,7 @@ describe('allRowsToHumanCSV', () => {
         splitMode: '均分',
         category: '餐飲',
         voided: true,
+        voidReason: '重複記帳',
         date: '2026-04-03',
       },
     ];
@@ -54,10 +55,10 @@ describe('allRowsToHumanCSV', () => {
     const csv = allRowsToHumanCSV();
     const header = csv.split('\n')[0].replace(/^\uFEFF/, '');
     expect(header).toBe(
-      '日期,帳本,行程,類型,動作,狀態,項目/事件,金額_NT,人民幣,匯差手續_NT,收付,分攤/成員,分類,備註,摘要,紀錄id',
+      '日期,帳本,行程,類型,動作,狀態,項目/事件,金額_NT,人民幣,匯差手續_NT,收付,分攤/成員,分類,備註,撤回原因,摘要,紀錄id',
     );
     expect(csv).toContain('2026-04-02,出遊,台南,出遊消費,新增,有效,早餐,120,80,5,胡 NT$70 ＋ 詹 NT$50,胡、詹,餐飲');
     expect(csv).toContain('"早餐,熱豆漿"');
-    expect(csv).toContain('2026-04-03,日常,,日常消費,新增,已撤回,飲料,80,,,胡付款,各付一半,餐飲');
+    expect(csv).toContain('2026-04-03,日常,,日常消費,新增,已撤回,飲料,80,,,胡付款,各付一半,餐飲,,重複記帳');
   });
 });

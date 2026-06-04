@@ -283,7 +283,7 @@ export function renderTripDetail() {
         此行程已結束，僅供瀏覽
       </div>
       <div class="trip-closed-bar-actions">
-        <button type="button" class="btn btn-primary btn-sm" onclick='openTripClosureReportModal(${jq(trip.id)})'>查看結案報告</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick='openTripClosureReportModal(${jq(trip.id)})'>查看分享卡</button>
         <button type="button" class="btn btn-outline btn-sm" onclick='reopenTripAction(${jq(trip.id)})'>重新開啟</button>
       </div>
     </div>`;
