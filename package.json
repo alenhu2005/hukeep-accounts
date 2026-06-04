@@ -3,13 +3,17 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build && node scripts/prepare-dist.mjs",
+    "preview": "vite preview --host 0.0.0.0",
     "test": "vitest run",
-    "deploy:check": "node scripts/check-deploy-readiness.mjs && npm test",
+    "deploy:check": "node scripts/check-deploy-readiness.mjs && npm test && npm run build",
     "icons:flatten": "node scripts/flatten-app-icons.mjs",
     "icons:prepare": "node scripts/prepare-app-icons.mjs"
   },
   "devDependencies": {
     "sharp": "^0.33.5",
-    "vitest": "^3.0.5"
+    "vite": "^7.3.5",
+    "vitest": "^4.1.8"
   }
 }

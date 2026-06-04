@@ -7,21 +7,13 @@ const requiredFiles = [
   'index.html',
   'js/config.js',
   'sw.js',
+  'vite.config.js',
+  'scripts/prepare-dist.mjs',
+  '.github/workflows/deploy.yml',
   'gas/current-state.gs',
   'docs/gas程式碼.md',
   'docs/operations-checklist.md',
   'README.md',
-];
-
-const requiredStaticAssets = [
-  './index.html',
-  './css/dark-a11y.css',
-  './js/main.js',
-  './js/search-records.js',
-  './js/ledger-health.js',
-  './js/backup.js',
-  './js/actions.js',
-  './js/globals.js',
 ];
 
 const errors = [];
@@ -41,17 +33,32 @@ if (errors.length === 0) {
     errors.push('js/config.js 的 DEFAULT_API 看起來不是 GAS Web App URL。');
   }
 
-  const sw = read('sw.js');
-  if (!/const CACHE_NAME\s*=\s*['"]ledger-v\d+['"]/.test(sw)) {
-    errors.push('sw.js 缺少 ledger-v* CACHE_NAME。');
+  const vite = read('vite.config.js');
+  if (!/base:\s*['"]\/hukeep-accounts\/['"]/.test(vite)) {
+    errors.push('vite.config.js 的 base 應為 /hukeep-accounts/，否則 GitHub Pages 子路徑資源會載入失敗。');
   }
-  for (const asset of requiredStaticAssets) {
-    if (!sw.includes(asset)) errors.push(`sw.js STATIC_ASSETS 缺少 ${asset}`);
+
+  const pkg = read('package.json');
+  for (const script of ['"build"', '"preview"', '"deploy:check"']) {
+    if (!pkg.includes(script)) errors.push(`package.json 缺少 ${script} script。`);
+  }
+
+  const distPrep = read('scripts/prepare-dist.mjs');
+  for (const marker of ['manifest.json', 'icons', 'CACHE_NAME', 'STATIC_ASSETS', 'dist']) {
+    if (!distPrep.includes(marker)) errors.push(`scripts/prepare-dist.mjs 缺少 ${marker} 處理。`);
+  }
+
+  const workflow = read('.github/workflows/deploy.yml');
+  for (const marker of ['actions/configure-pages', 'actions/upload-pages-artifact', 'actions/deploy-pages', 'npm run deploy:check']) {
+    if (!workflow.includes(marker)) errors.push(`GitHub Pages workflow 缺少 ${marker}。`);
   }
 
   const readme = read('README.md');
   if (!readme.includes('npm run deploy:check')) {
     warnings.push('README 尚未提到 npm run deploy:check。');
+  }
+  if (!readme.includes('npm run build')) {
+    warnings.push('README 尚未提到 npm run build。');
   }
   if (!readme.includes('資料健康檢查')) {
     warnings.push('README 尚未提到資料健康檢查。');

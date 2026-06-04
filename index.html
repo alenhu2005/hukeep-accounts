@@ -727,7 +727,7 @@
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
       navigator.serviceWorker
-        .register('sw.js')
+        .register(new URL('sw.js', document.baseURI).toString())
         .then(function (reg) {
           try { reg.update(); } catch (e) {}
         })

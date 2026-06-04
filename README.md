@@ -1,6 +1,6 @@
 # 記帳本（Ledger App）
 
-兩人**日常帳**與多人**出遊分帳**的 Web 應用：純靜態前端（ES Modules），資料經 **Google Apps Script (GAS)** 讀寫 **Google 試算表**，瀏覽器端以 **localStorage** 快取並支援**離線 POST 佇列**，弱網或斷線時仍可操作、連線後自動補送。
+兩人**日常帳**與多人**出遊分帳**的 Web 應用：Vite 建置的靜態前端（原生 ES Modules），資料經 **Google Apps Script (GAS)** 讀寫 **Google 試算表**，瀏覽器端以 **localStorage** 快取並支援**離線 POST 佇列**，弱網或斷線時仍可操作、連線後自動補送。
 
 ---
 
@@ -27,7 +27,7 @@
 
 | 層級 | 技術 |
 |------|------|
-| 前端 | HTML / CSS / 原生 JavaScript（ES Modules），無打包器 |
+| 前端 | HTML / CSS / 原生 JavaScript（ES Modules），Vite build |
 | 資料持久化 | Google 試算表（經 GAS Web App） |
 | 本機快取 | `localStorage`（日常／出遊分鍵儲存） |
 | 離線 | POST 佇列（FIFO）、Service Worker 靜態快取 |
@@ -103,7 +103,9 @@ flowchart TB
 | [index.html](index.html) | 唯一 HTML 入口；含 `<base>` 修正（GitHub Pages 子路徑）、PWA meta |
 | [css/](css/) | 全站樣式（依用途分多檔，載入順序見 `index.html`） |
 | [manifest.json](manifest.json) | PWA 名稱、圖示、`start_url` |
-| [sw.js](sw.js) | Service Worker；**`CACHE_NAME` 版本號**變更可強制更新快取資源 |
+| [sw.js](sw.js) | 開發/舊靜態流程用 Service Worker；正式部署由 `scripts/prepare-dist.mjs` 產生 `dist/sw.js` |
+| [vite.config.js](vite.config.js) | Vite 建置設定；GitHub Pages 子路徑 base 為 `/hukeep-accounts/` |
+| [.github/workflows/deploy.yml](.github/workflows/deploy.yml) | GitHub Actions 建置並發布 `dist/` 到 Pages |
 | [.nojekyll](.nojekyll) | GitHub Pages 不使用 Jekyll |
 
 `js/` 模組職責精簡對照：
@@ -148,20 +150,28 @@ npm install
 
 | 指令 | 說明 |
 |------|------|
+| `npm run dev` | 啟動 Vite 本機開發伺服器 |
 | `npm test` | 執行 Vitest（`test/*.test.js`） |
-| `npm run deploy:check` | 部署前檢查必要檔案、Service Worker 靜態資源與測試 |
+| `npm run build` | 產生 `dist/`，並寫入 GitHub Pages/PWA 需要的靜態檔與 `dist/sw.js` |
+| `npm run preview` | 預覽 `dist/` 產物 |
+| `npm run deploy:check` | 部署前檢查 Vite/GitHub Actions 設定、跑測試並建置 |
 | `npm run icons:flatten` | 圖示處理（見 `scripts/flatten-app-icons.mjs`） |
 | `npm run icons:prepare` | 圖示處理（見 `scripts/prepare-app-icons.mjs`） |
 
-### 啟動靜態伺服器（擇一）
+### 啟動本機開發
 
 ```bash
-python3 -m http.server 8080
-# 或
-npx serve
+npm run dev
 ```
 
-瀏覽器開啟對應網址（例如 `http://localhost:8080/`），勿省略子路徑規則時的尾隨 `/`（與線上 GitHub Pages 行為一致時較穩）。
+正式產物預覽：
+
+```bash
+npm run build
+npm run preview
+```
+
+Vite 設定的 GitHub Pages base 是 `/hukeep-accounts/`；預覽正式產物時請開啟 Vite 顯示的 `/hukeep-accounts/` URL。
 
 ---
 
@@ -347,9 +357,9 @@ npx serve
 ## PWA 與 Service Worker
 
 - 安裝至主畫面後以 `standalone` 顯示（見 `manifest.json`）。
-- `sw.js` 快取靜態資源清單；**變更 `CACHE_NAME`**（例如 `ledger-v78` → `ledger-v79`）可讓既有使用者取得新資源。
+- 正式部署時，`npm run build` 會由 `scripts/prepare-dist.mjs` 掃描 `dist/` 產物並產生 `dist/sw.js`；`CACHE_NAME` 會依檔案內容雜湊自動更新。
 - JS/CSS 使用網路優先、快取備援，避免部署後新舊模組混搭造成白屏。
-- 新增 `js/` 檔案且需離線可用時，記得把路徑加入 `STATIC_ASSETS`。
+- 新增被 Vite 入口引用的 `js/` 或 `css/` 檔案時，build 產物會自動納入 `dist/sw.js` 快取清單。
 
 ---
 
@@ -363,10 +373,10 @@ npm run deploy:check
 
 ### GitHub Pages
 
-- 來源通常為 **`main` 分支根目錄**。
-- 網址形如：`https://<帳號>.github.io/<repo>/`
-- **務必使用結尾 `/` 的網址**（例如 `.../repo/`），避免相對路徑錯誤；`index.html` 內已用 `<base>` 輔助修正。
-- 根目錄保留 `.nojekyll`。
+- Pages 來源使用 **GitHub Actions**，由 `.github/workflows/deploy.yml` 建置並發布 `dist/`。
+- `vite.config.js` 的 `base` 固定為 `/hukeep-accounts/`，對應正式網址 `https://alenhu2005.github.io/hukeep-accounts/`。
+- **務必使用結尾 `/` 的網址**（例如 `.../hukeep-accounts/`），避免相對路徑錯誤；`index.html` 內已用 `<base>` 輔助修正。
+- `.nojekyll` 會在 build 後複製到 `dist/`。
 
 ### 發布後建議驗收
 

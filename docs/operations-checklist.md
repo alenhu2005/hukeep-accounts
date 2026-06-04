@@ -3,15 +3,17 @@
 ## A. 部署前
 
 - [ ] `js/config.js` 的 API URL 指向正確 GAS Web App。
-- [ ] `npm run deploy:check` 通過。
-- [ ] `npm test` 全綠。
-- [ ] 若有改動離線資源：檢查 `sw.js` 快取版本是否需要更新。
+- [ ] `npm run deploy:check` 通過（包含設定檢查、測試與 Vite build）。
+- [ ] 必要時用 `npm run preview` 預覽 `dist/`，並開啟 `/hukeep-accounts/` 路徑。
+- [ ] 若有改動離線資源：確認 `npm run build` 產生的 `dist/sw.js` 已包含新產物。
 - [ ] README 與 docs 已同步更新（避免文件與行為不一致）。
 
 ## B. GitHub Pages 發布後
 
 - [ ] 開啟正式網址確認首頁可載入。
 - [ ] 切換三個分頁（日常/出遊/分析）確認無白屏。
+- [ ] DevTools Network 確認 JS/CSS 從 `/hukeep-accounts/assets/` 載入，且沒有 404。
+- [ ] DevTools Application 確認 Service Worker 作用範圍在 `/hukeep-accounts/`。
 - [ ] 新增一筆資料，確認同步狀態列可回到「已同步」。
 - [ ] 開啟「備份與匯出」，確認資料健康檢查、最近操作與匯出按鈕可正常顯示。
 - [ ] 強制重新整理（Cmd+Shift+R / Ctrl+Shift+R）確認新版本生效。
