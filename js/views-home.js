@@ -19,6 +19,7 @@ import {
   shiftYm,
   todayStr,
 } from './time.js';
+import { animateBalanceIcon, animateCountBadge } from './motion.js';
 
 let balanceCountGen = 0;
 let prevHomeDailyExpCount = null;
@@ -128,14 +129,7 @@ export function renderHome() {
   const homeCountEl = document.getElementById('home-count');
   homeCountEl.textContent = expCount + ' 筆';
   if (prevHomeDailyExpCount !== null && prevHomeDailyExpCount !== expCount && !prefersReducedMotion()) {
-    homeCountEl.classList.remove('home-count--tick');
-    void homeCountEl.offsetWidth;
-    homeCountEl.classList.add('home-count--tick');
-    window.clearTimeout(homeCountEl._tickT);
-    homeCountEl._tickT = window.setTimeout(() => {
-      homeCountEl.classList.remove('home-count--tick');
-      homeCountEl._tickT = null;
-    }, 420);
+    animateCountBadge(homeCountEl);
   }
   prevHomeDailyExpCount = expCount;
 
@@ -211,14 +205,7 @@ export function renderHome() {
   }
   const barClsNow = bar.className;
   if (prevBalanceBarClass && prevBalanceBarClass !== barClsNow && !prefersReducedMotion()) {
-    iconWrap.classList.remove('balance-icon--pulse');
-    void iconWrap.offsetWidth;
-    iconWrap.classList.add('balance-icon--pulse');
-    window.clearTimeout(iconWrap._pulseT);
-    iconWrap._pulseT = window.setTimeout(() => {
-      iconWrap.classList.remove('balance-icon--pulse');
-      iconWrap._pulseT = null;
-    }, 420);
+    animateBalanceIcon(iconWrap);
   }
   prevBalanceBarClass = barClsNow;
   sub.textContent = expCount > 0 ? '共 ' + expCount + ' 筆消費' : '';

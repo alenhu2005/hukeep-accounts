@@ -3,6 +3,7 @@ import { getTripById, getTripExpenses } from './data.js';
 import { bindScrollReveal } from './utils.js';
 import { renderTripStatsCard } from './trip-stats.js';
 import { toggleCollapsible } from './ui-collapsible.js';
+import { animateOverlayIn } from './motion.js';
 
 const TRIP_STATS_MODAL_CLOSE_MS = 380;
 
@@ -68,6 +69,11 @@ export function openTripStatsModal() {
     enabled: true,
   });
   overlay.classList.add('open');
+  animateOverlayIn(
+    overlay,
+    '.member-preview-panel',
+    '.trip-stats-section, .trip-stats-summary-card, .trip-stats-net-card, .payer-stats-row, .analysis-legend-row',
+  );
 }
 
 export function closeTripStatsModal() {

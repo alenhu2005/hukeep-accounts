@@ -24,6 +24,7 @@ import {
   shiftAnalysisYear,
   selectAnalysisDay,
   clearAnalysisDayFilter,
+  toggleMonthlyReport,
 } from './views-analysis.js';
 import {
   shiftTripHistoryWeek,
@@ -54,6 +55,7 @@ import {
   nbombSecretLotteryTitlePressStart,
   nbombSecretLotteryTitlePressEnd,
 } from './trip-play-number-bomb.js';
+import { animateOverlayIn } from './motion.js';
 
 let lbScale = 1, lbX = 0, lbY = 0, lbPinchDist = 0, lbPanning = false, lbStartX = 0, lbStartY = 0, lbOrigX = 0, lbOrigY = 0;
 
@@ -75,6 +77,7 @@ function openPhotoLightbox(src) {
   img.src = src;
   lbReset();
   lb.classList.add('open');
+  animateOverlayIn(lb, '.photo-lightbox-wrap', '.photo-lightbox-img');
 }
 function closePhotoLightbox() {
   const lb = document.getElementById('photo-lightbox');
@@ -189,6 +192,7 @@ Object.assign(window, {
   shiftAnalysisYear,
   selectAnalysisDay,
   clearAnalysisDayFilter,
+  toggleMonthlyReport,
   shiftTripHistoryWeek,
   selectTripHistoryDay,
   clearTripHistoryDayFilter,

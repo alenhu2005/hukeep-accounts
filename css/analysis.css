@@ -505,9 +505,9 @@ html.dark .analysis-gamble-pl-cell--net.analysis-gamble-pl-net--lose {
 }
 
 .monthly-report-card {
-  margin: 14px 0;
-  padding: 18px;
-  border-radius: 24px;
+  margin: 10px 0 12px;
+  padding: 10px;
+  border-radius: 22px;
   border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--border));
   background:
     radial-gradient(circle at top left, rgba(59, 130, 246, 0.16), transparent 42%),
@@ -520,6 +520,75 @@ html.dark .monthly-report-card {
     radial-gradient(circle at top left, rgba(59, 130, 246, 0.22), transparent 46%),
     linear-gradient(180deg, rgba(17, 24, 39, 0.95), rgba(11, 17, 30, 0.9));
   box-shadow: 0 20px 44px rgba(0, 0, 0, 0.32);
+}
+.monthly-report-card--expanded {
+  padding: 12px;
+}
+.monthly-report-toggle {
+  width: 100%;
+  min-height: 58px;
+  border: 1px solid color-mix(in srgb, var(--primary) 14%, transparent);
+  border-radius: 18px;
+  padding: 10px 12px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+}
+html.dark .monthly-report-toggle {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: color-mix(in srgb, var(--primary) 24%, rgba(148, 163, 184, 0.18));
+}
+.monthly-report-toggle-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.monthly-report-toggle-main strong {
+  font-size: 18px;
+  line-height: 1.05;
+  font-weight: 950;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  white-space: nowrap;
+}
+.monthly-report-toggle-meta {
+  min-width: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.monthly-report-toggle-icon {
+  padding: 6px 10px;
+  border-radius: 999px;
+  color: var(--primary-dark);
+  background: var(--primary-light);
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+html.dark .monthly-report-toggle-icon {
+  color: color-mix(in srgb, var(--primary) 70%, white);
+  background: color-mix(in srgb, var(--primary) 22%, rgba(15, 23, 42, 0.85));
+}
+.monthly-report-detail {
+  padding: 4px 2px 0;
+}
+.monthly-report-desc {
+  margin: 12px 4px 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.45;
+  font-weight: 700;
 }
 .monthly-report-head {
   display: flex;
@@ -702,6 +771,13 @@ html.dark .monthly-report-settlement {
 }
 
 @media (max-width: 560px) {
+  .monthly-report-toggle {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px 10px;
+  }
+  .monthly-report-toggle-meta {
+    grid-column: 1 / -1;
+  }
   .monthly-report-head,
   .monthly-report-columns {
     grid-template-columns: 1fr;

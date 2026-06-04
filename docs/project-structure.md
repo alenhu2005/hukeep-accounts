@@ -5,7 +5,8 @@
 ## 1) 入口與資源（Root）
 
 - `index.html`：唯一 HTML 入口，包含頁面骨架、對話框容器、底部導覽、PWA 載入點。
-- `css/*.css`：全站樣式（依用途分檔：`base`、`layout`、`home`、`trip-lottery`、`forms-controls`、`records-history`、`analysis`、`trip-cards`、`members-rare`、`trip-forms-collapsible`、`shell-nav`、`overlays-feedback`、`sheets-directory`、`dark-a11y`；`index.html` 中 `<link>` 順序須與相依關係一致）。
+- `css/*.css`：全站樣式（依用途分檔：`base`、`layout`、`home`、`trip-lottery`、`forms-controls`、`records-history`、`analysis`、`trip-cards`、`members-rare`、`trip-forms-collapsible`、`shell-nav`、`overlays-feedback`、`sheets-directory`、`dark-a11y`、`motion`；`index.html` 中 `<link>` 順序須與相依關係一致）。
+- `css/vendor/`：前端第三方 CSS 資產；目前放置 Animate.css。
 - `sw.js`：Service Worker（快取與離線策略）。
 - `manifest.json`：PWA 描述檔。
 - `.nojekyll`：GitHub Pages 靜態部署設定。
@@ -67,6 +68,8 @@
 - `dialog.js`、`dialog-a11y.js`：對話框與焦點管理。
 - `amount-input.js`：金額輸入控制。
 - `trip-lottery.js`：抽籤功能。
+- `motion.js`：全站動效入口；Anime.js 負責頁面/彈窗/互動編舞，AutoAnimate 負責列表新增刪除與重排補間，Animate.css 作為提示或強調效果素材。
+- `vendor/`：前端第三方 JS 資產；目前放置 Anime.js 與 AutoAnimate 的本地 ESM 檔，避免 CDN 影響 PWA/離線體驗。
 
 ### E. 行為與工具
 
@@ -107,6 +110,7 @@
 
 - 想改「同步流程」：先看 `js/bootstrap.js` + `js/api.js` + `js/offline-queue.js`
 - 想改「某頁 UI」：先看對應 `views-*.js`；若是行程明細，再進 `js/views-trip-detail/`
+- 想改「動畫節奏」：優先改 `js/motion.js` 與 `css/motion.css`；不要在各個 view 分散新增 keyframe。
 - 想改「結算邏輯」：`js/finance.js`
 - 想改「PWA/快取」：`sw.js` + `manifest.json`
 

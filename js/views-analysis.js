@@ -160,6 +160,8 @@ function renderMonthlyReportSection(model) {
   const topPayer = model.total > 0 ? model.payerRows[0] : null;
   const secondPayer = model.total > 0 ? model.payerRows[1] : null;
   const payerDiff = topPayer && secondPayer ? Math.max(0, topPayer.amount - secondPayer.amount) : 0;
+  const topCategory = model.categoryRows[0] || null;
+  const expanded = !!appState.analysisMonthlyReportExpanded;
   const categoryRows = model.categoryRows.length
     ? model.categoryRows
         .slice(0, 5)
@@ -185,19 +187,9 @@ function renderMonthlyReportSection(model) {
         .join('')
     : '<div class="monthly-report-empty">本月沒有還款紀錄。</div>';
 
-  return `<section class="monthly-report-card" aria-label="月結報表">
-    <div class="monthly-report-head">
-      <div>
-        <div class="monthly-report-kicker">月結報表</div>
-        <h3>${esc(model.fromStr)} ~ ${esc(model.toStr)}</h3>
-        <p>自動整理本月日常帳，方便月底對帳。</p>
-      </div>
-      <div class="monthly-report-total">
-        <span>總花費</span>
-        <strong>NT$${model.total.toLocaleString()}</strong>
-        <small>${model.expenseCount} 筆消費</small>
-      </div>
-    </div>
+  const detailHtml = expanded
+    ? `<div class="monthly-report-detail" id="monthly-report-detail">
+    <p class="monthly-report-desc">自動整理本月日常帳，方便月底對帳。</p>
     <div class="monthly-report-summary">
       <div class="monthly-report-summary-card">
         <span>誰付比較多</span>
@@ -206,8 +198,8 @@ function renderMonthlyReportSection(model) {
       </div>
       <div class="monthly-report-summary-card">
         <span>分類第一名</span>
-        <strong>${esc(model.categoryRows[0]?.name || '尚無')}</strong>
-        <small>${model.categoryRows[0] ? `NT$${model.categoryRows[0].amount.toLocaleString()} · ${model.categoryRows[0].pct}%` : '尚無分類資料'}</small>
+        <strong>${esc(topCategory?.name || '尚無')}</strong>
+        <small>${topCategory ? `NT$${topCategory.amount.toLocaleString()} · ${topCategory.pct}%` : '尚無分類資料'}</small>
       </div>
       <div class="monthly-report-summary-card">
         <span>還款紀錄</span>
@@ -225,6 +217,21 @@ function renderMonthlyReportSection(model) {
         <div class="monthly-report-list">${settlementRows}</div>
       </div>
     </div>
+  </div>`
+    : '';
+
+  return `<section class="monthly-report-card${expanded ? ' monthly-report-card--expanded' : ' monthly-report-card--collapsed'}" aria-label="月結報表">
+    <button type="button" class="monthly-report-toggle" onclick="toggleMonthlyReport()" aria-expanded="${expanded ? 'true' : 'false'}" aria-controls="monthly-report-detail">
+      <span class="monthly-report-toggle-main">
+        <span class="monthly-report-kicker">月結報表</span>
+        <strong>NT$${model.total.toLocaleString()}</strong>
+      </span>
+      <span class="monthly-report-toggle-meta">
+        ${model.expenseCount} 筆消費${topCategory ? ` · ${esc(topCategory.name)} ${topCategory.pct}%` : ''}${model.settlementCount ? ` · ${model.settlementCount} 筆還款` : ''}
+      </span>
+      <span class="monthly-report-toggle-icon" aria-hidden="true">${expanded ? '收合' : '展開'}</span>
+    </button>
+    ${detailHtml}
   </section>`;
 }
 
@@ -241,27 +248,36 @@ export function setPieLabelOption(field, checked) {
   renderAnalysis();
 }
 
+export function toggleMonthlyReport() {
+  appState.analysisMonthlyReportExpanded = !appState.analysisMonthlyReportExpanded;
+  renderAnalysis();
+}
+
 export function setAnalysisPeriod(p) {
   appState.analysisPeriod = p;
   appState.analysisFilterDate = null;
+  appState.analysisMonthlyReportExpanded = false;
   renderAnalysis();
 }
 
 export function shiftAnalysisWeek(delta) {
   appState.analysisWeekOffset += delta;
   appState.analysisFilterDate = null;
+  appState.analysisMonthlyReportExpanded = false;
   renderAnalysis();
 }
 
 export function shiftAnalysisMonth(delta) {
   appState.analysisMonthOffset += delta;
   appState.analysisFilterDate = null;
+  appState.analysisMonthlyReportExpanded = false;
   renderAnalysis();
 }
 
 export function shiftAnalysisYear(delta) {
   appState.analysisYearOffset += delta;
   appState.analysisFilterDate = null;
+  appState.analysisMonthlyReportExpanded = false;
   renderAnalysis();
 }
 
@@ -271,11 +287,13 @@ export function selectAnalysisDay(dateStr) {
   } else {
     appState.analysisFilterDate = dateStr;
   }
+  appState.analysisMonthlyReportExpanded = false;
   renderAnalysis();
 }
 
 export function clearAnalysisDayFilter() {
   appState.analysisFilterDate = null;
+  appState.analysisMonthlyReportExpanded = false;
   renderAnalysis();
 }
 

@@ -130,7 +130,7 @@ export async function submitTripExpense() {
           amount: parseMoneyLike(amountEls[i]?.value),
         }))
         .filter(p => p.amount > 0 && p.name);
-    const payers = collectPayers();
+    let payers = collectPayers();
     if (payers.length === 0) {
       toast('請在各列填寫付款人與金額（總計為各列出資相加）');
       return;

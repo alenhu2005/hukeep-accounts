@@ -5,6 +5,7 @@ import { cancelHomeBalanceAnim, closeHomeCalendarModal } from './views-home.js';
 import { cancelAnalysisCountAnim } from './views-analysis.js';
 import { cancelTripSettlementAnim, resetTripDetailAmountDraft } from './views-trip-detail.js';
 import { closeMemberDirectory } from './actions/trips-members.js';
+import { animatePageEnter, refreshMotion } from './motion.js';
 
 function syncMemberDirFabVisibility(page = appState.currentPage, tripId = appState.currentTripId) {
   const fab = document.getElementById('member-dir-fab');
@@ -118,15 +119,19 @@ export function navigate(page, tripId = null, opts = {}) {
     if (ha) ha.innerHTML = '';
   }
   render();
+  const activePageEl = document.getElementById(pageId);
+  refreshMotion(activePageEl);
   if (typeof restoreScrollY === 'number' && Number.isFinite(restoreScrollY)) {
     requestAnimationFrame(() => {
       syncMemberDirFabVisibility(page, tripId);
       window.scrollTo(0, Math.max(0, restoreScrollY));
       persistSessionSnapshot();
+      animatePageEnter(activePageEl, { page, restored: true });
     });
   } else {
     requestAnimationFrame(() => syncMemberDirFabVisibility(page, tripId));
     window.scrollTo(0, 0);
     persistSessionSnapshot();
+    animatePageEnter(activePageEl, { page });
   }
 }

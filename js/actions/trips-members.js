@@ -14,6 +14,7 @@ import {
   bindScrollReveal,
 } from '../utils.js';
 import { postRow, formatPostError } from '../api.js';
+import { animateOverlayIn, refreshMotion } from '../motion.js';
 import {
   getDailyRecords,
   getTripById,
@@ -373,7 +374,13 @@ export function openHiddenStylePreview() {
       </div>
     </div>`;
   }).join('');
-  document.getElementById('member-preview-overlay').classList.add('open');
+  const overlay = document.getElementById('member-preview-overlay');
+  overlay.classList.add('open');
+  animateOverlayIn(
+    overlay,
+    '.member-preview-panel',
+    '.member-preview-row, .member-chip--rare, .known-member-bar-dot--rare, .trip-lottery-avatar--rare, .member-dir-avatar--rare',
+  );
 }
 
 export function closeHiddenStylePreview() {
@@ -474,7 +481,13 @@ export function openMemberAvatarPreview(memberName, scope = 'trip') {
     innerEl.innerHTML = `<div class="${ringCls}"><div class="${fb}" style="${st}">${esc(name.charAt(0))}</div></div>`;
   }
   document.getElementById('member-avatar-preview-overlay')?.classList.toggle('member-avatar-preview-overlay--daily', isDailyPreview);
-  document.getElementById('member-avatar-preview-overlay')?.classList.add('open');
+  const overlay = document.getElementById('member-avatar-preview-overlay');
+  overlay?.classList.add('open');
+  animateOverlayIn(
+    overlay,
+    '.member-avatar-preview-panel',
+    '.member-avatar-preview-ring, .member-avatar-preview-title, .member-avatar-preview-change',
+  );
 }
 
 export function closeMemberAvatarPreview() {
@@ -539,6 +552,7 @@ export function renderMemberDirectory() {
     bindScrollReveal(body, '.member-dir-item', { enabled: appState.revealMemberDirNext });
     appState.revealMemberDirNext = false;
   }
+  refreshMotion(body);
 }
 
 export async function cycleMemberColor(memberName) {
@@ -762,4 +776,3 @@ export async function removeMemberAction(name) {
     toast(formatPostError(e));
   }
 }
-

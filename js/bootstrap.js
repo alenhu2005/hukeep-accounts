@@ -12,6 +12,7 @@ import { cancelDialog } from './dialog.js';
 import { syncPausedForUserInput } from './sync-pause.js';
 import { navigate } from './navigation.js';
 import { getTripById } from './data.js';
+import { initMotionSystem, refreshMotion, animateUpdateBadge } from './motion.js';
 import {
   persistSessionSnapshot,
   readSessionSnapshot,
@@ -31,6 +32,7 @@ function showUpdateBadge() {
   el.classList.remove('update-badge--pop');
   void el.offsetWidth;
   el.classList.add('update-badge--pop');
+  animateUpdateBadge(el);
   clearTimeout(el._hideTimer);
   el._hideTimer = setTimeout(() => {
     el.style.display = 'none';
@@ -42,6 +44,7 @@ function renderCurrentPage() {
   const y = window.scrollY;
   const id = document.activeElement && document.activeElement.id;
   render();
+  refreshMotion(document.getElementById('app') || document);
   requestAnimationFrame(() => {
     window.scrollTo(0, y);
     if (id) {
@@ -172,6 +175,7 @@ function initBottomNavTouchNavigate() {
 export async function initApp() {
   updateThemeIcon();
   applyAccentMetaFromDom();
+  initMotionSystem();
   ensureClientStorageSchema();
   loadCache();
   updateSyncUI();
@@ -203,11 +207,13 @@ export async function initApp() {
   });
 
   initAmountInputs();
+  refreshMotion(document.getElementById('app') || document);
 
   const unchangedAfterFetch = await loadData();
   await flushPostOutbox({ silent: true });
   lastSyncFinished = Date.now();
   if (!unchangedAfterFetch) renderCurrentPage();
+  else refreshMotion(document.getElementById('app') || document);
   schedulePoll();
 
   window.addEventListener('online', () => {

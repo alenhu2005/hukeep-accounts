@@ -16,6 +16,7 @@ import {
 import { postRow, formatPostError } from '../api.js';
 import { renderBackupBalancePanel, renderBackupOperationPanel } from '../backup.js';
 import { renderLedgerHealthPanel } from '../ledger-health.js';
+import { animateOverlayIn } from '../motion.js';
 import {
   getDailyRecords,
   getTripById,
@@ -160,7 +161,9 @@ export function openBackupMenu() {
   renderBackupBalancePanel();
   renderLedgerHealthPanel();
   renderBackupOperationPanel();
-  document.getElementById('backup-overlay')?.classList.add('open');
+  const overlay = document.getElementById('backup-overlay');
+  overlay?.classList.add('open');
+  animateOverlayIn(overlay, '.backup-dialog', '.backup-section, .backup-action, .ledger-health-card, .btn');
 }
 
 export function closeBackupMenu() {

@@ -15,6 +15,7 @@ import {
   bindScrollReveal,
 } from '../utils.js';
 import { postRow, formatPostError, fetchHistoryRows, saveCache } from '../api.js';
+import { animateOverlayIn } from '../motion.js';
 import {
   getDailyRecords,
   getTripById,
@@ -282,7 +283,13 @@ export function openEditRecord(r) {
   if (inp) inp.value = '';
   setEditPhotoPreview(r.photoUrl || null);
 
-  document.getElementById('edit-overlay').classList.add('open');
+  const editOverlay = document.getElementById('edit-overlay');
+  editOverlay.classList.add('open');
+  animateOverlayIn(
+    editOverlay,
+    '.edit-dialog',
+    '.edit-summary, .edit-summary-row, .edit-photo-preview, .form-group, .edit-actions .btn',
+  );
 
   if (r.type === 'tripExpense' && r.id) {
     void loadTripExpenseRevisionTrail(r.id)

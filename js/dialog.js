@@ -1,4 +1,5 @@
 import { appState } from './state.js';
+import { animateOverlayIn } from './motion.js';
 
 const OVERLAY_OUT_MS = 280;
 
@@ -42,6 +43,7 @@ function openDialog(title, desc, okHandler, fieldOpts = null) {
     ov._closingT = null;
   }
   ov.classList.add('open');
+  animateOverlayIn(ov, '.dialog', '.dialog h3, .dialog p, .dialog .form-group, .dialog .btn');
   if (fieldOpts) {
     window.setTimeout(() => document.getElementById('dlg-field-input')?.focus(), 80);
   }
@@ -126,6 +128,7 @@ export function showAlert(title, desc) {
       overlay._closingT = null;
     }
     overlay.classList.add('open');
+    animateOverlayIn(overlay, '.dialog', '.dialog h3, .dialog p, .dialog .btn');
     okBtn.focus();
   });
 }

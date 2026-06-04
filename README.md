@@ -117,12 +117,14 @@ flowchart TB
 | 商業邏輯 | `finance.js`、`trip-stats.js`、`category.js`、`time.js` |
 | 畫面 | `views-home.js`、`views-trips.js`、`views-trip-detail.js`、`js/views-trip-detail/*.js`、`views-analysis.js`、`views-shared.js` |
 | 互動 | `actions.js`、`js/actions/*.js`、`dialog.js`、`globals.js`（掛載 `window` 供 inline 呼叫） |
+| 動效 | `motion.js`、`css/motion.css`、`js/vendor/*`、`css/vendor/*` |
 | 其他 | `pie-chart.js`、`sync-ui.js`、`sync-pause.js`、`session-ui.js`、`device-info.js`、`utils.js` |
 
 模組邊界補充：
 
 - `data.js`、`offline-queue.js`、`views-trip-detail.js` 是對外穩定入口；內部實作分別放在 `js/data/`、`js/sync/`、`js/views-trip-detail/`
 - `api.js` 保留流程控制與 I/O；schema migration、outbox merge、pending cleanup 抽到 `js/sync/`
+- `motion.js` 是全站動畫入口；Anime.js 管頁面/彈窗/互動編舞，AutoAnimate 管列表重排，Animate.css 只做提示或強調效果。
 - `gas/current-state.gs` 仍維持單檔部署，但檔內章節固定為：sheet schema、row utils、active mutations、migration、media upload、HTTP handlers
 
 **更細的檔案地圖**請見 [docs/project-structure.md](docs/project-structure.md)。

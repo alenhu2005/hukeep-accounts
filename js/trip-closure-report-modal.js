@@ -6,6 +6,7 @@ import {
   buildTripSettlementSummaryText,
   renderTripClosureReportCard,
 } from './trip-stats.js';
+import { animateOverlayIn } from './motion.js';
 
 const TRIP_CLOSURE_REPORT_MODAL_CLOSE_MS = 380;
 const IMAGE_FONT_STACK = '"SF Pro Text","PingFang TC","Noto Sans TC",system-ui,sans-serif';
@@ -53,6 +54,11 @@ export function openTripClosureReportModal(tripId = appState.currentTripId) {
     { enabled: true },
   );
   overlay.classList.add('open');
+  animateOverlayIn(
+    overlay,
+    '.member-preview-panel',
+    '.trip-closure-report-section, .trip-closure-report-person-row, .trip-closure-report-transfer-row, .trip-closure-report-metric',
+  );
 }
 
 export function closeTripClosureReportModal() {

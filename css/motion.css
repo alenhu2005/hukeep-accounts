@@ -1,0 +1,204 @@
+/* Motion system: Anime.js owns choreography, AutoAnimate owns layout shifts. */
+:root {
+  --animate-duration: 0.52s;
+  --animate-delay: 0s;
+  --motion-avatar-glow: color-mix(in srgb, var(--primary) 22%, transparent);
+}
+
+.motion-js .page.active,
+.motion-js #page-home.home-refresh-reveal > header.header,
+.motion-js #page-home.home-refresh-reveal > .main > #balance-card,
+.motion-js #page-home.home-refresh-reveal > .main > .card:nth-of-type(2),
+.motion-js #page-home.home-refresh-reveal > .main > div:last-child,
+.motion-js .trip-card,
+.motion-js .trips-list-reveal-section .trip-section-label,
+.motion-js .trips-list-reveal-section .trip-section-label + .trip-card-wrap .trip-card,
+.motion-js .analysis-stat-card,
+.motion-js .analysis-legend-card,
+.motion-js [data-scroll-reveal="active"] .record-item.scroll-reveal-visible,
+.motion-js [data-scroll-reveal="active"] .record-item.scroll-reveal-visible .badge,
+.motion-js [data-scroll-reveal="active"] .record-item.scroll-reveal-visible .category-badge,
+.motion-js [data-scroll-reveal="active"] .trip-day-group.scroll-reveal-visible,
+.motion-js [data-scroll-reveal="active"] .member-chip.scroll-reveal-visible,
+.motion-js [data-scroll-reveal="active"] .known-member-bar-btn.scroll-reveal-visible,
+.motion-js [data-scroll-reveal="active"] .trip-stats-section.scroll-reveal-visible,
+.motion-js [data-scroll-reveal="active"] .payer-stats-row.scroll-reveal-visible,
+.motion-js [data-scroll-reveal="active"] .member-dir-item.scroll-reveal-visible {
+  animation: none !important;
+}
+
+.motion-js [data-scroll-reveal="active"] .record-item.scroll-reveal-pending,
+.motion-js [data-scroll-reveal="active"] .trip-day-group.scroll-reveal-pending,
+.motion-js [data-scroll-reveal="active"] .member-chip.scroll-reveal-pending,
+.motion-js [data-scroll-reveal="active"] .known-member-bar-btn.scroll-reveal-pending,
+.motion-js [data-scroll-reveal="active"] .trip-stats-section.scroll-reveal-pending,
+.motion-js [data-scroll-reveal="active"] .payer-stats-row.scroll-reveal-pending,
+.motion-js [data-scroll-reveal="active"] .member-dir-item.scroll-reveal-pending {
+  opacity: 0;
+  transform: translate3d(0, 14px, 0) scale(0.985);
+}
+
+.motion-js .page,
+.motion-js .card,
+.motion-js .trip-card,
+.motion-js .record-item,
+.motion-js .nav-btn,
+.motion-js .btn,
+.motion-js .btn-toggle,
+.motion-js .header-icon,
+.motion-js .header-icon-btn,
+.motion-js .member-chip,
+.motion-js .known-member-bar-btn,
+.motion-js .analysis-stat-card,
+.motion-js .analysis-legend-row,
+.motion-js .monthly-report-card {
+  transform-origin: center;
+  will-change: transform, opacity;
+}
+
+.motion-js .member-dir-avatar,
+.motion-js .member-chip-avatar,
+.motion-js .record-avatar,
+.motion-js .member-avatar-preview-ring,
+.motion-js .trip-lottery-avatar,
+.motion-js .known-member-bar-dot {
+  transform-origin: center;
+  will-change: transform, filter, opacity;
+}
+
+@keyframes motionRareFrameFlow {
+  0% {
+    background-position: 0% 50%;
+    filter: saturate(1) brightness(1);
+  }
+  45% {
+    background-position: 100% 50%;
+    filter: saturate(1.2) brightness(1.08);
+  }
+  100% {
+    background-position: 0% 50%;
+    filter: saturate(1) brightness(1);
+  }
+}
+
+@keyframes motionRareHaloBreathe {
+  0%,
+  100% {
+    opacity: var(--rare-ring-opacity, 0.52);
+    transform: scale(0.96) rotate(0deg);
+  }
+  50% {
+    opacity: min(0.94, calc(var(--rare-ring-opacity, 0.52) + 0.18));
+    transform: scale(1.08) rotate(180deg);
+  }
+}
+
+@keyframes motionRareSweep {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translate3d(-44%, -26%, 0) rotate(18deg);
+  }
+  42% {
+    opacity: 0.42;
+  }
+  64% {
+    opacity: 0;
+    transform: translate3d(48%, 28%, 0) rotate(18deg);
+  }
+}
+
+.motion-js .member-dir-avatar--rare,
+.motion-js .record-avatar--rare,
+.motion-js .member-avatar-preview-ring--rare {
+  animation: motionRareFrameFlow var(--rare-frame, 5.8s) ease-in-out infinite !important;
+  box-shadow:
+    0 0 0 1px var(--rare-avatar-ring-a, rgba(250, 204, 21, 0.62)),
+    0 0 0 3px var(--rare-avatar-ring-b, rgba(168, 85, 247, 0.34)),
+    0 12px 32px var(--rare-avatar-shadow, rgba(6, 182, 212, 0.18)),
+    0 0 28px var(--motion-avatar-glow);
+}
+
+.motion-js .member-dir-avatar--rare::before,
+.motion-js .record-avatar--rare::before,
+.motion-js .member-avatar-preview-ring--rare::before {
+  content: '';
+  position: absolute;
+  inset: -16px;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: var(--rare-deco-opacity, 0.28);
+  background:
+    var(--rare-deco-bg, none),
+    linear-gradient(100deg, transparent 38%, rgba(255, 255, 255, 0.34) 50%, transparent 62%);
+  filter: var(--rare-deco-filter, drop-shadow(0 0 10px rgba(59, 130, 246, 0.18)));
+  z-index: 3;
+  animation:
+    var(--rare-deco-anim, none),
+    motionRareSweep 3.8s ease-in-out infinite;
+}
+
+.motion-js .member-dir-avatar--rare::after,
+.motion-js .record-avatar--rare::after,
+.motion-js .member-avatar-preview-ring--rare::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 999px;
+  pointer-events: none;
+  z-index: 4;
+  opacity: var(--rare-ring-opacity, 0.58);
+  background: var(
+    --rare-ring-bg,
+    conic-gradient(from 0deg, transparent, rgba(59, 130, 246, 0.5), rgba(34, 211, 238, 0.36), transparent)
+  );
+  mask: radial-gradient(closest-side, transparent calc(100% - 4px), #000 calc(100% - 2px));
+  -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 4px), #000 calc(100% - 2px));
+  filter: var(--rare-ring-filter, drop-shadow(0 0 18px rgba(59, 130, 246, 0.2)));
+  animation: motionRareHaloBreathe 5.8s ease-in-out infinite;
+}
+
+.motion-js .member-avatar-preview-ring {
+  position: relative;
+}
+
+.motion-js .member-avatar-preview-ring--rare .member-avatar-preview-img,
+.motion-js .member-avatar-preview-ring--rare .member-avatar-preview-fallback,
+.motion-js .member-dir-avatar--rare .member-dir-avatar-img,
+.motion-js .member-dir-avatar--rare .member-dir-avatar-fallback,
+.motion-js .record-avatar--rare > .record-avatar-img {
+  position: relative;
+  z-index: 5;
+}
+
+.motion-js .member-chip--rare {
+  animation: none !important;
+  box-shadow:
+    0 0 0 1px var(--rare-ring, rgba(250, 204, 21, 0.18)),
+    0 8px 22px var(--rare-shadow, rgba(168, 85, 247, 0.12));
+}
+
+.motion-js .member-chip--rare::before {
+  animation: motionRareSweep var(--rare-shimmer, 3s) ease-in-out infinite !important;
+}
+
+.motion-js .member-chip-avatar--rare,
+.motion-js .known-member-bar-dot--rare,
+.motion-js .trip-lottery-avatar--rare {
+  animation: motionRareFrameFlow var(--rare-frame, 6s) ease-in-out infinite;
+}
+
+html.dark .motion-js,
+html.dark.motion-js {
+  --motion-avatar-glow: color-mix(in srgb, var(--primary) 34%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-js *,
+  .motion-js *::before,
+  .motion-js *::after {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

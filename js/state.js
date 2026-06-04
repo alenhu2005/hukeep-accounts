@@ -61,6 +61,8 @@ export const appState = {
   analysisYearOffset: 0,
   /** 分析頁：點選單日時 `YYYY-MM-DD`；null 表示該週／該月整段 */
   analysisFilterDate: null,
+  /** 分析頁：月結報表預設收合，避免佔滿第一屏 */
+  analysisMonthlyReportExpanded: false,
   /** 分析頁圓餅環上：分類 / 比例 / 金額（可各別關閉） */
   ...(() => {
     try {
