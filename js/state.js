@@ -10,6 +10,7 @@ export const appState = {
   /** 閒置 | 同步中 | 已與伺服端一致 | 僅快取（連線失敗）| 無資料且無法載入 */
   syncStatus: 'idle',
   lastSyncAt: null,
+  schemaWarnings: [],
 
   currentPage: 'home',
   currentTripId: null,

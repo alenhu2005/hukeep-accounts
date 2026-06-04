@@ -16,6 +16,7 @@ import {
 import { postRow, formatPostError } from '../api.js';
 import { renderBackupBalancePanel, renderBackupOperationPanel } from '../backup.js';
 import { renderLedgerHealthPanel } from '../ledger-health.js';
+import { renderDiagnosticsPanel } from '../diagnostics.js';
 import { animateOverlayIn, bindDetailsReveal } from '../motion.js';
 import {
   getDailyRecords,
@@ -160,6 +161,7 @@ export async function handleAvatarSelected(ev) {
 export function openBackupMenu() {
   renderBackupBalancePanel();
   renderLedgerHealthPanel();
+  renderDiagnosticsPanel();
   renderBackupOperationPanel();
   const overlay = document.getElementById('backup-overlay');
   overlay?.classList.add('open');

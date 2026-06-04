@@ -508,7 +508,7 @@ export function memberAvatarPreviewChangePhoto() {
   const name = avatarPreviewMemberName;
   const scope = avatarPreviewScope;
   closeMemberAvatarPreview();
-  if (name) openAvatarPickerForMember(name, scope);
+  if (name) window.openAvatarPickerForMember?.(name, scope);
 }
 
 export function renderMemberDirectory() {

@@ -265,11 +265,13 @@
         <button type="button" class="btn btn-outline btn-full" onclick="copyBackupText().then(() => closeBackupMenu())">複製文字備份</button>
       </div>
       <div id="backup-health-panel" class="backup-health-summary" aria-live="polite"></div>
+      <div id="diagnostics-panel" class="backup-health-summary diagnostics-panel" aria-live="polite"></div>
       <details class="backup-advanced">
         <summary>進階工具</summary>
         <div class="backup-tool-grid">
           <button type="button" class="btn btn-outline btn-full" onclick="refreshLedgerHealthPanel()">重新檢查資料</button>
           <button type="button" class="btn btn-outline btn-full" onclick="copyLedgerHealthReport()">複製健康報告</button>
+          <button type="button" class="btn btn-outline btn-full" onclick="copyDiagnosticsReport()">複製診斷報告</button>
           <button type="button" class="btn btn-outline btn-full" onclick="copyOperationTimelineText()">複製最近操作</button>
           <button type="button" class="btn btn-ghost btn-full backup-tech-btn" onclick="downloadLedgerHealthCard()">下載健康卡片</button>
           <button type="button" class="btn btn-ghost btn-full backup-tech-btn" onclick="exportTechnicalCSV(); closeBackupMenu()">下載原始格式 CSV（技術用）</button>
@@ -723,17 +725,5 @@
 </div>
 
 <script type="module" src="js/main.js"></script>
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function () {
-      navigator.serviceWorker
-        .register(new URL('sw.js', document.baseURI).toString())
-        .then(function (reg) {
-          try { reg.update(); } catch (e) {}
-        })
-        .catch(function () {});
-    });
-  }
-</script>
 </body>
 </html>

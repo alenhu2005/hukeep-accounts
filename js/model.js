@@ -75,6 +75,7 @@ import { normalizeDate, normalizeTimeOnly } from './time.js';
 
 export const TRIP_TYPES = new Set(['trip', 'tripMember', 'tripExpense', 'tripSettlement', 'avatar', 'memberProfile']);
 export const DAILY_TYPES = new Set(['daily', 'settlement']);
+export const LEDGER_TYPES = new Set([...DAILY_TYPES, ...TRIP_TYPES]);
 
 export function isDailyRow(r) {
   return r && DAILY_TYPES.has(r.type);
@@ -227,4 +228,61 @@ export function normalizeRow(r) {
     else r.avatarScope = 'auto';
   }
   return r;
+}
+
+function isPlainObject(value) {
+  return value != null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function hasFiniteOptionalAmount(r, key) {
+  if (r[key] == null || String(r[key]).trim() === '') return true;
+  return Number.isFinite(Number(r[key]));
+}
+
+function isValidLedgerDate(value) {
+  const normalized = normalizeDate(value);
+  const m = String(normalized || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return false;
+  const year = Number(m[1]);
+  const month = Number(m[2]);
+  const day = Number(m[3]);
+  const dt = new Date(Date.UTC(year, month - 1, day));
+  return dt.getUTCFullYear() === year && dt.getUTCMonth() === month - 1 && dt.getUTCDate() === day;
+}
+
+export function validateLedgerRow(raw) {
+  const issues = [];
+  if (!isPlainObject(raw)) {
+    return [{ level: 'error', code: 'not_object', message: 'Row is not an object' }];
+  }
+  if (!raw.type || typeof raw.type !== 'string') {
+    issues.push({ level: 'error', code: 'missing_type', message: 'Row is missing type' });
+  } else if (!LEDGER_TYPES.has(raw.type)) {
+    issues.push({ level: 'error', code: 'unknown_type', message: `Unknown row type: ${raw.type}` });
+  }
+  for (const key of ['amount', 'paidHu', 'paidZhan', 'amountCny', 'fxFeeNtd']) {
+    if (!hasFiniteOptionalAmount(raw, key)) {
+      issues.push({ level: 'warning', code: `invalid_${key}`, message: `${key} is not numeric` });
+    }
+  }
+  if (raw.date != null && String(raw.date).trim() && !isValidLedgerDate(raw.date)) {
+    issues.push({ level: 'warning', code: 'invalid_date', message: 'date could not be normalized' });
+  }
+  return issues;
+}
+
+export function normalizeRows(rawRows, opts = {}) {
+  const rows = [];
+  const warnings = [];
+  const sourceRows = Array.isArray(rawRows) ? rawRows : [];
+  sourceRows.forEach((raw, index) => {
+    const issues = validateLedgerRow(raw);
+    if (issues.length > 0) {
+      warnings.push({ index, type: raw?.type || '', issues });
+    }
+    if (issues.some(issue => issue.level === 'error')) return;
+    rows.push(normalizeRow({ ...raw }));
+  });
+  if (warnings.length > 0) opts.onWarnings?.(warnings);
+  return rows;
 }

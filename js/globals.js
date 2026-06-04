@@ -3,7 +3,7 @@
  * Keep this list in sync with index.html and dynamic innerHTML in views.
  */
 import { navigate } from './navigation.js';
-import { cancelDialog } from './dialog.js';
+import { cancelDialog, showConfirm } from './dialog.js';
 import { toggleTheme } from './theme.js';
 import { toggleAccentMenu, closeAccentMenu, setAccentTheme } from './accent-theme.js';
 import {
@@ -56,6 +56,8 @@ import {
   nbombSecretLotteryTitlePressEnd,
 } from './trip-play-number-bomb.js';
 import { animateOverlayIn } from './motion.js';
+import { clearLedgerLocalStorage } from './api.js';
+import { toast } from './utils.js';
 
 let lbScale = 1, lbX = 0, lbY = 0, lbPinchDist = 0, lbPanning = false, lbStartX = 0, lbStartY = 0, lbOrigX = 0, lbOrigY = 0;
 
@@ -151,16 +153,13 @@ function closePhotoLightbox() {
 })();
 
 async function clearLocalCache() {
-  const { showConfirm } = await import('./dialog.js');
   const ok = await showConfirm('清除本地快取？', '將清除本機暫存的帳務資料，下次開啟會重新從伺服器載入。');
   if (!ok) return;
-  const { clearLedgerLocalStorage } = await import('./api.js');
   clearLedgerLocalStorage();
   try {
     localStorage.removeItem('ledger_sync_last_at_v1');
     sessionStorage.clear();
   } catch {}
-  const { toast } = await import('./utils.js');
   toast('本地快取已清除，重新載入中…');
   setTimeout(() => location.reload(), 800);
 }
@@ -243,6 +242,7 @@ Object.assign(window, {
   copyOperationTimelineText: actions.copyOperationTimelineText,
   refreshLedgerHealthPanel: actions.renderLedgerHealthPanel,
   copyLedgerHealthReport: actions.copyLedgerHealthReport,
+  copyDiagnosticsReport: actions.copyDiagnosticsReport,
   downloadLedgerHealthCard: actions.downloadLedgerHealthCard,
   showCreateTripForm: actions.showCreateTripForm,
   addNewTripMember: actions.addNewTripMember,

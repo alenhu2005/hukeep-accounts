@@ -10,6 +10,7 @@ import {
   syncDetailAmountCurrencyToggleUi,
   updateCnyRateInlineDisplay,
 } from '../trip-cny-rate.js';
+import { applyTripCnyToTwd, refreshTripLiveCnyRateUi } from '../trip-cny-ui.js';
 import { showConfirm } from '../dialog.js';
 import { formatPostError } from '../api.js';
 import {
@@ -336,9 +337,7 @@ export function syncDetailTripFormLabels() {
   }
   if (isTripCnyModeEnabled(state.currentTripId)) {
     hydrateTripCnyRateInput();
-    import('../actions/trip-form.js').then(m => {
-      m.applyTripCnyToTwd();
-      void m.refreshTripLiveCnyRateUi({ force: false });
-    });
+    applyTripCnyToTwd();
+    void refreshTripLiveCnyRateUi({ force: false });
   }
 }

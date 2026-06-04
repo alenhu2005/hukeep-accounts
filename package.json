@@ -6,12 +6,21 @@
     "dev": "vite --host 0.0.0.0",
     "build": "vite build && node scripts/prepare-dist.mjs",
     "preview": "vite preview --host 0.0.0.0",
+    "lint": "eslint js/*.js js/actions/*.js js/backup/*.js js/data/*.js js/sync/*.js js/views-trip-detail/*.js scripts/*.mjs test/**/*.js vite.config.js playwright.config.js eslint.config.js",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "test": "vitest run",
-    "deploy:check": "node scripts/check-deploy-readiness.mjs && npm test && npm run build",
+    "test:e2e": "playwright test",
+    "deploy:check": "node scripts/check-deploy-readiness.mjs && npm run lint && npm test && npm run build && npm run test:e2e",
     "icons:flatten": "node scripts/flatten-app-icons.mjs",
     "icons:prepare": "node scripts/prepare-app-icons.mjs"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.60.0",
+    "eslint": "^10.4.1",
+    "globals": "^17.6.0",
+    "prettier": "^3.8.3",
     "sharp": "^0.33.5",
     "vite": "^7.3.5",
     "vitest": "^4.1.8"

@@ -1,5 +1,6 @@
 import { tripDetailState } from '../state-accessors.js';
 import { tripExpenseBillNtd } from '../finance.js';
+import { render } from '../render-registry.js';
 import { emptyHTML } from '../views-shared.js';
 import { addDaysTaipei, compareDateStr, normalizeDate, todayStr, weekdayTaipeiSundayZero } from '../time.js';
 import { bindScrollReveal, esc, jq } from '../utils.js';
@@ -311,7 +312,7 @@ export function shiftTripHistoryWeek(delta) {
   const state = tripDetailState();
   state.tripDetailHistoryWeekOffset += delta;
   if (state.tripDetailHistoryWeekOffset < 0) state.tripDetailHistoryWeekOffset = 0;
-  import('../views-trip-detail.js').then(m => m.renderTripDetail());
+  render();
 }
 
 export function selectTripHistoryDay(ds) {
@@ -321,13 +322,13 @@ export function selectTripHistoryDay(ds) {
   } else {
     state.tripDetailHistoryFilterDate = ds;
   }
-  import('../views-trip-detail.js').then(m => m.renderTripDetail());
+  render();
 }
 
 export function clearTripHistoryDayFilter() {
   const state = tripDetailState();
   state.tripDetailHistoryFilterDate = null;
-  import('../views-trip-detail.js').then(m => m.renderTripDetail());
+  render();
 }
 
 function syncTripRecordSearchDom(matchCount, scopedCount, hasSearch) {
@@ -347,11 +348,11 @@ function syncTripRecordSearchDom(matchCount, scopedCount, hasSearch) {
 export function setTripRecordSearch(value) {
   const state = tripDetailState();
   state.tripDetailHistorySearchQuery = String(value || '');
-  import('../views-trip-detail.js').then(m => m.renderTripDetail());
+  render();
 }
 
 export function clearTripRecordSearch() {
   const state = tripDetailState();
   state.tripDetailHistorySearchQuery = '';
-  import('../views-trip-detail.js').then(m => m.renderTripDetail());
+  render();
 }

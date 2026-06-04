@@ -1,6 +1,7 @@
 import { appState } from './state.js';
 import { getTripById, getAvatarUrlByMemberName, getMemberColor, isHiddenMemberColorId, getHiddenMemberStyleKey } from './data.js';
 import { esc, jq, prefersReducedMotion, randomUniformIndex, toast, memberToneClass, memberToneVars } from './utils.js';
+import { attachNbombSecretLotteryTitleListeners } from './trip-play-number-bomb.js';
 
 const STORAGE_KEY = 'ledger_trip_lottery_v1';
 
@@ -289,7 +290,7 @@ export function renderTripLotteryCard(trip) {
       </div>
     </div>`;
 
-  void import('./trip-play-number-bomb.js').then(m => m.attachNbombSecretLotteryTitleListeners(pop));
+  attachNbombSecretLotteryTitleListeners(pop);
 }
 
 /**

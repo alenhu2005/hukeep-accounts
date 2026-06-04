@@ -1,5 +1,5 @@
 // Bump this to force clients to refresh cached assets.
-const CACHE_NAME = 'ledger-v88';
+const CACHE_NAME = 'ledger-v89';
 
 const STATIC_ASSETS = [
   './',
@@ -40,6 +40,8 @@ const STATIC_ASSETS = [
   './js/time.js',
   './js/utils.js',
   './js/motion.js',
+  './js/pwa-update.js',
+  './js/diagnostics.js',
   './js/vendor/anime.esm.min.js',
   './js/vendor/auto-animate.mjs',
   './js/search-records.js',
@@ -54,6 +56,7 @@ const STATIC_ASSETS = [
   './js/actions/home-daily.js',
   './js/actions/trip-form.js',
   './js/trip-cny-rate.js',
+  './js/trip-cny-ui.js',
   './js/actions/trips-members.js',
   './js/actions/trip-expense.js',
   './js/actions/edit.js',
@@ -75,6 +78,7 @@ const STATIC_ASSETS = [
   './js/dialog-a11y.js',
   './js/amount-input.js',
   './js/backup.js',
+  './js/backup/balance-panel.js',
   './js/trip-closure-report-modal.js',
   './js/sync-ui.js',
   './js/sync-pause.js',
@@ -104,6 +108,12 @@ self.addEventListener('activate', event => {
       .then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))),
   );
   self.clients.claim();
+});
+
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener('fetch', event => {

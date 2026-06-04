@@ -31,7 +31,7 @@
 | 資料持久化 | Google 試算表（經 GAS Web App） |
 | 本機快取 | `localStorage`（日常／出遊分鍵儲存） |
 | 離線 | POST 佇列（FIFO）、Service Worker 靜態快取 |
-| 測試 | [Vitest](https://vitest.dev/) |
+| 測試 | [Vitest](https://vitest.dev/) + Playwright smoke test |
 | PWA | `manifest.json` + `sw.js` |
 
 ```mermaid
@@ -89,7 +89,7 @@ flowchart TB
 
 - 同步狀態列：同步中／已同步／僅快取；背景輪詢發現資料變更可提示「資料已更新」。
 - **備份與匯出**：CSV／文字備份（`js/backup.js`）；選單標題下顯示**日常帳精確欠款**（浮點）與進位還款額供對帳；可清除本機快取（不刪試算表）。
-- **資料健康檢查**：備份選單可檢查重複主鍵、孤兒出遊資料、待同步列、已結束但未結清行程，並可複製報告或下載健康卡片。
+- **資料健康檢查與診斷面板**：備份選單可檢查重複主鍵、孤兒出遊資料、待同步列、已結束但未結清行程，並可複製報告、下載健康卡片或複製同步/版本/API 診斷資訊。
 - 對話框焦點陷阱、深色模式（`js/theme.js`）等。
 
 ---
@@ -105,7 +105,8 @@ flowchart TB
 | [manifest.json](manifest.json) | PWA 名稱、圖示、`start_url` |
 | [sw.js](sw.js) | 開發/舊靜態流程用 Service Worker；正式部署由 `scripts/prepare-dist.mjs` 產生 `dist/sw.js` |
 | [vite.config.js](vite.config.js) | Vite 建置設定；GitHub Pages 子路徑 base 為 `/hukeep-accounts/` |
-| [.github/workflows/deploy.yml](.github/workflows/deploy.yml) | GitHub Actions 建置並發布 `dist/` 到 Pages |
+| [.github/workflows/ci.yml](.github/workflows/ci.yml) | GitHub Actions 驗證：lint、Vitest、build、Playwright smoke |
+| [.github/workflows/deploy.yml](.github/workflows/deploy.yml) | CI 成功後建置並發布 `dist/` 到 Pages |
 | [.nojekyll](.nojekyll) | GitHub Pages 不使用 Jekyll |
 
 `js/` 模組職責精簡對照：
@@ -120,7 +121,7 @@ flowchart TB
 | 畫面 | `views-home.js`、`views-trips.js`、`views-trip-detail.js`、`js/views-trip-detail/*.js`、`views-analysis.js`、`views-shared.js` |
 | 互動 | `actions.js`、`js/actions/*.js`、`dialog.js`、`globals.js`（掛載 `window` 供 inline 呼叫） |
 | 動效 | `motion.js`、`css/motion.css`、`js/vendor/*`、`css/vendor/*` |
-| 其他 | `pie-chart.js`、`sync-ui.js`、`sync-pause.js`、`session-ui.js`、`device-info.js`、`utils.js` |
+| 其他 | `pie-chart.js`、`sync-ui.js`、`sync-pause.js`、`session-ui.js`、`device-info.js`、`diagnostics.js`、`pwa-update.js`、`utils.js` |
 
 模組邊界補充：
 
@@ -151,10 +152,14 @@ npm install
 | 指令 | 說明 |
 |------|------|
 | `npm run dev` | 啟動 Vite 本機開發伺服器 |
+| `npm run lint` | 執行 ESLint |
+| `npm run format` | 用 Prettier 格式化專案 |
+| `npm run format:check` | 檢查 Prettier 格式（目前不併入 CI，避免一次重排既有檔案） |
 | `npm test` | 執行 Vitest（`test/*.test.js`） |
+| `npm run test:e2e` | 執行 Playwright smoke test（會 build 並 preview `dist/`） |
 | `npm run build` | 產生 `dist/`，並寫入 GitHub Pages/PWA 需要的靜態檔與 `dist/sw.js` |
 | `npm run preview` | 預覽 `dist/` 產物 |
-| `npm run deploy:check` | 部署前檢查 Vite/GitHub Actions 設定、跑測試並建置 |
+| `npm run deploy:check` | 部署前檢查設定、lint、Vitest、build 與 Playwright smoke |
 | `npm run icons:flatten` | 圖示處理（見 `scripts/flatten-app-icons.mjs`） |
 | `npm run icons:prepare` | 圖示處理（見 `scripts/prepare-app-icons.mjs`） |
 
@@ -179,10 +184,13 @@ Vite 設定的 GitHub Pages base 是 `/hukeep-accounts/`；預覽正式產物時
 
 ### GAS Web App URL
 
-- **預設**：`js/config.js` 內 `DEFAULT_API`。
-- **覆寫方式 A**：在載入 `js/main.js` **之前**設定  
+- **建置時設定**：複製 `.env.example` 為 `.env.local`，設定 `VITE_LEDGER_API_URL='https://script.google.com/macros/s/.../exec'`。
+- **預設備援**：`js/config.js` 內 `FALLBACK_API`。
+- **覆寫方式 A**：在載入 `js/main.js` **之前**設定
   `window.__LEDGER_API_URL__ = 'https://script.google.com/macros/s/.../exec'`
 - **覆寫方式 B**：應用內呼叫 `setApiUrl(url)`（`js/actions.js`，並透過 `globals.js` 掛到介面）寫入 `localStorage` 鍵 `ledger_api_url_v1`。
+
+目前實際使用的是 build、window、localStorage 或 fallback，可在「備份與匯出」的診斷面板查看。
 
 重新部署 GAS 後，**部署 URL 可能變更**，務必同步更新前端。
 
@@ -358,6 +366,7 @@ Vite 設定的 GitHub Pages base 是 `/hukeep-accounts/`；預覽正式產物時
 
 - 安裝至主畫面後以 `standalone` 顯示（見 `manifest.json`）。
 - 正式部署時，`npm run build` 會由 `scripts/prepare-dist.mjs` 掃描 `dist/` 產物並產生 `dist/sw.js`；`CACHE_NAME` 會依檔案內容雜湊自動更新。
+- `dist/version.json` 會記錄 build id、建立時間與 cache name；前端偵測到新 Service Worker waiting 時會提示「有新版本」並可立即更新。
 - JS/CSS 使用網路優先、快取備援，避免部署後新舊模組混搭造成白屏。
 - 新增被 Vite 入口引用的 `js/` 或 `css/` 檔案時，build 產物會自動納入 `dist/sw.js` 快取清單。
 
@@ -374,6 +383,7 @@ npm run deploy:check
 ### GitHub Pages
 
 - Pages 來源使用 **GitHub Actions**，由 `.github/workflows/deploy.yml` 建置並發布 `dist/`。
+- `.github/workflows/ci.yml` 先跑 lint、Vitest、build 與 Playwright smoke；CI 成功後才觸發 Deploy workflow。
 - `vite.config.js` 的 `base` 固定為 `/hukeep-accounts/`，對應正式網址 `https://alenhu2005.github.io/hukeep-accounts/`。
 - **務必使用結尾 `/` 的網址**（例如 `.../hukeep-accounts/`），避免相對路徑錯誤；`index.html` 內已用 `<base>` 輔助修正。
 - `.nojekyll` 會在 build 後複製到 `dist/`。
@@ -387,7 +397,9 @@ npm run deploy:check
 ## 測試
 
 ```bash
+npm run lint
 npm test
+npm run test:e2e
 ```
 
 | 檔案 | 涵蓋方向 |
@@ -400,8 +412,9 @@ npm test
 | `test/time.test.js` | 台北時區、分析週期 |
 | `test/utils.test.js` | 工具函式 |
 | `test/actions-shared.test.js` | 未同步還款列丟棄等 actions 共用邏輯 |
+| `test/e2e/smoke.spec.js` | GitHub Pages 子路徑、主要分頁切換與 Service Worker scope |
 
-目前共 **83** 項測試。設定檔：[vitest.config.js](vitest.config.js)。
+目前共 **93** 項 Vitest 測試，另有 Playwright smoke test。設定檔：[vitest.config.js](vitest.config.js)、[playwright.config.js](playwright.config.js)。
 
 ---
 
@@ -411,6 +424,7 @@ npm test
 |------|------|
 | 線上版仍是舊 UI | 強制重新整理（`Cmd+Shift+R` / `Ctrl+Shift+R`）；或關閉分頁重開；檢查 `sw.js` 快取版本是否已更新 |
 | 長期「僅快取」或同步失敗 | 確認 `API_URL`、GAS 部署權限、試算表連結是否正常 |
+| 不確定目前吃哪個 API 或快取版本 | 開啟「備份與匯出」→ 診斷面板，使用「複製診斷報告」貼出同步、版本、API 來源與 Service Worker 狀態 |
 | 日常記帳有更新、還款在試算表看不到 | 確認是否開啟 **`日常還款`** 分頁（非 `日常消費`、非舊版 `日常`） |
 | 行程狀態或已撤回資料看起來被加回來 | 先強制重新整理一次；current-state 版前端會清掉舊快取 / 舊 outbox，避免舊事件模型覆蓋新資料 |
 | 新增後對方看不到 | 確認對方也完成同步；背景輪詢或手動重新整理 |
@@ -433,8 +447,8 @@ npm test
 - 同步流程：`js/bootstrap.js`、`js/api.js`、`js/offline-queue.js`、`js/sync/*.js`
 - 畫面：`js/views-*.js`、`js/views-trip-detail/*.js` → `js/actions.js`（`js/actions/` 子模組）、`css/*.css`
 - 結算與規則：`js/finance.js`、`js/data.js`、`js/data/*.js`、`js/model.js`（運算邏輯詳見上文 [運算邏輯](#運算邏輯)）
-- 備份／精確欠款顯示：`js/backup.js`
-- PWA／離線資源：`sw.js`、`manifest.json`
+- 備份／精確欠款顯示：`js/backup.js`、`js/backup/balance-panel.js`
+- PWA／離線資源與更新提示：`sw.js`、`manifest.json`、`js/pwa-update.js`
 
 ---
 

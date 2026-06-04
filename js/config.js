@@ -7,8 +7,11 @@ export const TIMEZONE = 'Asia/Taipei';
 export const USER_A = '胡';
 export const USER_B = '詹';
 
-const DEFAULT_API =
+const FALLBACK_API =
   'https://script.google.com/macros/s/AKfycbzDxvHzVV8TR3PR5IMS3zgZE_t1Dq3CDw1yEGGm3FkiQzikl7WnaCOvNMf8rvrcO9Jz/exec';
+const BUILD_API = String(import.meta.env?.VITE_LEDGER_API_URL || '').trim();
+export const APP_BUILD_ID = String(import.meta.env?.VITE_LEDGER_BUILD_ID || 'dev').trim() || 'dev';
+export const DEFAULT_API = BUILD_API || FALLBACK_API;
 
 function readApiOverrideFromLocalStorage() {
   try {
@@ -18,10 +21,12 @@ function readApiOverrideFromLocalStorage() {
   }
 }
 
-export const API_URL =
-  (typeof window !== 'undefined' && window.__LEDGER_API_URL__) ||
-  readApiOverrideFromLocalStorage() ||
-  DEFAULT_API;
+const WINDOW_API =
+  typeof window !== 'undefined' && window.__LEDGER_API_URL__ ? String(window.__LEDGER_API_URL__).trim() : '';
+const LOCAL_API = readApiOverrideFromLocalStorage();
+
+export const API_URL = WINDOW_API || LOCAL_API || DEFAULT_API;
+export const API_URL_SOURCE = WINDOW_API ? 'window' : LOCAL_API ? 'localStorage' : BUILD_API ? 'build' : 'default';
 
 export const CACHE_DAILY = 'gasRows_daily_v2';
 export const CACHE_TRIP = 'gasRows_trip_v2';

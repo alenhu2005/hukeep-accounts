@@ -10,6 +10,8 @@
 - `sw.js`：Service Worker（快取與離線策略）。
 - `manifest.json`：PWA 描述檔。
 - `.nojekyll`：GitHub Pages 靜態部署設定。
+- `.github/workflows/ci.yml`：CI 驗證流程（lint、Vitest、build、Playwright smoke）。
+- `.github/workflows/deploy.yml`：CI 成功後發布 GitHub Pages。
 
 ## 2) 應用核心（`js/`）
 
@@ -76,11 +78,15 @@
 - `actions.js`：行為匯總（re-export）；實作在 `actions/`（`shared`、`home-daily`、`trip-form`、`trips-members`、`trip-expense`、`edit`、`misc`）。
 - `ui-collapsible.js`：共用收合區塊（`toggleCollapsible`），供 HTML／views／actions 使用。
 - `trip-stats-modal.js`：出遊統計頂欄彈窗與圓餅收合狀態。
+- `trip-cny-ui.js`：出遊人民幣模式的金額換算與即時匯率 UI helper。
 - `sync-ui.js`：同步狀態列與更新提示。
 - `sync-pause.js`：使用者輸入時暫停同步。
 - `session-ui.js`：工作階段還原與保存。
 - `device-info.js`：裝置資訊。
-- `backup.js`：匯出 CSV、文字備份、最近操作快照。
+- `backup.js`：匯出 CSV、文字備份、資料健康檢查、最近操作快照。
+- `backup/balance-panel.js`：備份選單的日常帳精確欠款面板。
+- `diagnostics.js`：備份選單的版本、API、同步與 Service Worker 診斷面板。
+- `pwa-update.js`：Service Worker 註冊與新版 waiting 提示。
 - `globals.js`：對 `window` 掛載需要的全域函式。
 - `utils.js`：通用工具（toast、escape、亂數、AbortSignal 等）。
 
@@ -92,6 +98,7 @@
 - `refactor-regression.test.js`：fixture / golden 回歸測試（`voided`、`closed`、rename、settlement、outbox merge）。
 - `trip-stats.test.js`：統計摘要測試。
 - `utils.test.js`：工具函式測試。
+- `e2e/smoke.spec.js`：Playwright smoke test，驗證 Pages 子路徑、主要分頁與 Service Worker scope。
 - `fixtures/`：回歸測試樣本資料。
 
 ## 4) 文件（`docs/`）
@@ -104,6 +111,7 @@
 
 - `package.json`：npm scripts 與 devDependencies。
 - `vitest.config.js`：測試設定。
+- `playwright.config.js`：e2e smoke test 與 preview server 設定。
 - `scripts/check-deploy-readiness.mjs`：正式部署前檢查必要檔案、GAS 設定與 Service Worker 靜態資源。
 
 ## 快速定位建議
@@ -112,7 +120,7 @@
 - 想改「某頁 UI」：先看對應 `views-*.js`；若是行程明細，再進 `js/views-trip-detail/`
 - 想改「動畫節奏」：優先改 `js/motion.js` 與 `css/motion.css`；不要在各個 view 分散新增 keyframe。
 - 想改「結算邏輯」：`js/finance.js`
-- 想改「PWA/快取」：`sw.js` + `manifest.json`
+- 想改「PWA/快取/更新提示」：`sw.js` + `manifest.json` + `js/pwa-update.js`
 
 ## 邊界原則
 

@@ -1,4 +1,5 @@
 import { animateThemeToggle } from './motion.js';
+import { render } from './render-registry.js';
 
 export function updateThemeIcon() {
   const dark = document.documentElement.classList.contains('dark');
@@ -13,5 +14,5 @@ export function toggleTheme() {
   updateThemeIcon();
   const btn = document.getElementById('theme-toggle');
   animateThemeToggle(btn);
-  import('./render-registry.js').then(m => m.render());
+  render();
 }

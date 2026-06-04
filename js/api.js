@@ -18,8 +18,8 @@ import {
   TIMEZONE,
 } from './config.js';
 import { appState } from './state.js';
-import { isDailyRow, isTripRow, normalizeRow } from './model.js';
-import { abortSignalAfter } from './utils.js';
+import { isDailyRow, isTripRow, normalizeRows } from './model.js';
+import { abortSignalAfter, toast } from './utils.js';
 import { updateSyncUI } from './sync-ui.js';
 import { getClientDeviceSummary } from './device-info.js';
 import {
@@ -77,6 +77,18 @@ function readSyncTimestampFromStorage() {
   }
 }
 
+function rememberSchemaWarnings(source, warnings) {
+  appState.schemaWarnings = warnings.map(w => ({
+    source,
+    index: w.index,
+    type: w.type,
+    issues: w.issues.map(issue => issue.code),
+  }));
+  if (warnings.length > 0) {
+    console.warn(`[schema] ignored or normalized ${warnings.length} row(s) from ${source}`, warnings);
+  }
+}
+
 /**
  * 一次性前端資料格式遷移：
  * - 清掉舊快取（日常/出遊/舊版鍵）
@@ -108,10 +120,13 @@ export function loadCache() {
   try {
     const daily = localStorage.getItem(CACHE_DAILY);
     const trip = localStorage.getItem(CACHE_TRIP);
-    appState.allRows = [
+    const cachedRows = [
       ...(daily ? JSON.parse(daily) : []),
       ...(trip ? JSON.parse(trip) : []),
-    ].map(normalizeRow);
+    ];
+    appState.allRows = normalizeRows(cachedRows, {
+      onWarnings: warnings => rememberSchemaWarnings('cache', warnings),
+    });
     pruneStalePendingSyncFlags(appState.allRows, readPostOutbox());
     const ts = readSyncTimestampFromStorage();
     appState.lastSyncAt = ts;
@@ -141,7 +156,7 @@ export function saveCache() {
     localStorage.setItem(CACHE_TRIP, JSON.stringify(appState.allRows.filter(isTripRow).map(stripBase64Fields)));
   } catch (e) {
     if (e && e.name === 'QuotaExceededError') {
-      import('./utils.js').then(m => m.toast('儲存空間已滿，快取寫入失敗'));
+      toast('儲存空間已滿，快取寫入失敗');
     }
   }
 }
@@ -196,7 +211,9 @@ export async function fetchHistoryRows(params = {}) {
   });
   const res = await fetchGetWithRetry(`${API_URL}?${search.toString()}`);
   const raw = await res.json();
-  return Array.isArray(raw) ? raw : [];
+  return Array.isArray(raw)
+    ? normalizeRows(raw, { onWarnings: warnings => rememberSchemaWarnings('history', warnings) })
+    : [];
 }
 
 function ledgerRowSortKey(r) {
@@ -259,7 +276,7 @@ export async function loadData(opts = {}) {
       return true;
     }
 
-    let fresh = raw.filter(r => r && r.type).map(normalizeRow);
+    let fresh = normalizeRows(raw, { onWarnings: warnings => rememberSchemaWarnings('sync', warnings) });
 
     // 試算表為準：不再用本機列補 GAS 缺欄；未送出且仍在 POST 佇列者才併回。
     fresh = mergeFreshWithOutboxBackedPending(localSnapshot, fresh, readPostOutbox());
@@ -479,7 +496,7 @@ export async function flushPostOutbox(opts = {}) {
       sent++;
     } catch (e) {
       if (isQueueableForOutbox(e)) break;
-      import('./utils.js').then(m => m.toast(formatPostError(e)));
+      toast(formatPostError(e));
       break;
     }
   }

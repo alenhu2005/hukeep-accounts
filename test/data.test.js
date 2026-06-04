@@ -11,7 +11,43 @@ import {
   HIDDEN_MEMBER_COLORS,
 } from '../js/data.js';
 import { gamblingSplitFromCatTotals, GAMBLING_CATEGORY } from '../js/category.js';
-import { normalizeRow } from '../js/model.js';
+import { normalizeRow, normalizeRows, validateLedgerRow } from '../js/model.js';
+
+describe('ledger schema validation', () => {
+  it('drops malformed rows and reports warnings', () => {
+    const warnings = [];
+    const rows = normalizeRows(
+      [
+        null,
+        { action: 'add', amount: 10 },
+        { type: 'unknown', amount: 1 },
+        { type: 'daily', action: 'add', id: 'ok', amount: '25', paidBy: '胡', splitMode: '均分', date: '2026-06-01' },
+      ],
+      { onWarnings: next => warnings.push(...next) },
+    );
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0].id).toBe('ok');
+    expect(warnings.map(w => w.issues[0].code)).toEqual(['not_object', 'missing_type', 'unknown_type']);
+  });
+
+  it('keeps rows with non-fatal amount/date warnings', () => {
+    const issues = validateLedgerRow({
+      type: 'tripExpense',
+      action: 'add',
+      id: 'warn',
+      tripId: 't1',
+      amount: 'not money',
+      splitAmong: '["胡"]',
+      date: 'bad date',
+    });
+    const rows = normalizeRows([{ type: 'daily', action: 'add', amount: 'not money', date: 'bad date' }]);
+
+    expect(issues.map(issue => issue.code)).toEqual(['invalid_amount', 'invalid_date']);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].date).toBe('bad date');
+  });
+});
 
 describe('getDailyRecordsFromRows', () => {
   it('彙整 add 並套用 void / edit', () => {
