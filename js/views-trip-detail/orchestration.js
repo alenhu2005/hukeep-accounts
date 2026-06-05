@@ -1,6 +1,6 @@
 import { tripDetailState } from '../state-accessors.js';
 import { getTripById, getTripExpenses, getTripSettlementDisplayRowsFromRows } from '../data.js';
-import { bindScrollReveal, esc, jq, toast } from '../utils.js';
+import { bindScrollReveal, esc, jq, jqAttr, toast } from '../utils.js';
 import { navigate } from '../navigation.js';
 import { renderTripLotteryCard } from '../trip-lottery.js';
 import {
@@ -248,7 +248,7 @@ export function renderTripDetail() {
     paidWrap.innerHTML = trip.members
       .map(
         m =>
-          `<button type="button" class="btn-toggle${m === state.detailPaidBy ? ' active' : ''}" data-member="${esc(m)}" onclick="setDetailPaidBy(${JSON.stringify(m)})">${esc(m)}</button>`,
+          `<button type="button" class="btn-toggle${m === state.detailPaidBy ? ' active' : ''}" data-member="${esc(m)}" onclick="setDetailPaidBy(${jqAttr(m)})">${esc(m)}</button>`,
       )
       .join('');
   }
