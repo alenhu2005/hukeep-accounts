@@ -1,0 +1,603 @@
+/* Mobile polish pass: dense, readable, and overflow-safe. */
+
+@media (max-width: 430px) {
+  .page {
+    padding-bottom: 126px;
+  }
+
+  .main,
+  #analysis-content.analysis-main {
+    gap: 12px;
+    padding: 12px 0 118px;
+  }
+
+  .header {
+    min-height: 60px;
+    margin-top: calc(env(safe-area-inset-top) + 8px);
+    padding: 10px 12px;
+    border-radius: 16px;
+    gap: 8px;
+  }
+
+  .header-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 11px;
+  }
+
+  .header h1 {
+    min-width: 0;
+    font-size: 17px;
+    line-height: 1.22;
+  }
+
+  .header-meta {
+    min-height: 28px;
+    padding-inline: 9px;
+    font-size: 10.5px;
+  }
+
+  .header-icon-btn,
+  #theme-toggle,
+  .back-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+
+  .card,
+  .analysis-period-nav,
+  .analysis-stat-card,
+  .analysis-legend-card,
+  .analysis-history-section,
+  .analysis-gamble-pl,
+  .monthly-report-card {
+    border-radius: 16px;
+  }
+
+  .card-header {
+    padding: 12px 14px 10px;
+  }
+
+  .card-body {
+    padding: 14px;
+  }
+}
+
+@media (max-width: 430px) {
+  #page-trip-detail > .header {
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr) 36px 36px minmax(36px, auto);
+    grid-template-areas:
+      "back count stats lottery actions"
+      "name name name name name";
+    align-items: center;
+    column-gap: 8px;
+    row-gap: 6px;
+  }
+
+  #page-trip-detail .back-btn {
+    grid-area: back;
+  }
+
+  #page-trip-detail #detail-count {
+    grid-area: count;
+    justify-self: start;
+    max-width: 100%;
+  }
+
+  #page-trip-detail .trip-header-stats-btn {
+    grid-area: stats;
+  }
+
+  #page-trip-detail .trip-lottery-trigger {
+    grid-area: lottery;
+  }
+
+  #page-trip-detail #trip-header-actions {
+    grid-area: actions;
+    justify-self: end;
+    min-width: 0;
+  }
+
+  #page-trip-detail #trip-header-actions:empty {
+    display: none;
+  }
+
+  #page-trip-detail #trip-header-actions .btn {
+    width: 36px;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 !important;
+    gap: 0 !important;
+    border-radius: 10px;
+    font-size: 0 !important;
+  }
+
+  #page-trip-detail #trip-header-actions .btn svg {
+    width: 17px !important;
+    height: 17px !important;
+    margin: 0;
+  }
+
+  #page-trip-detail #detail-name {
+    grid-area: name;
+    width: 100% !important;
+    max-width: 100% !important;
+    flex-basis: auto !important;
+    margin: 0 !important;
+    font-size: 16px !important;
+    line-height: 1.22;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    word-break: break-word;
+  }
+
+  #trip-members-card .card-body {
+    padding-top: 12px;
+  }
+
+  .member-chips,
+  .split-chips {
+    gap: 6px;
+  }
+
+  .member-chip {
+    padding: 4px 8px;
+  }
+
+  .member-chip-name {
+    max-width: min(132px, 52vw);
+  }
+
+  #d-paidby-toggles,
+  #d-split-chips {
+    gap: 6px;
+  }
+
+  #d-paidby-toggles .btn-toggle,
+  #d-split-chips .split-chip {
+    min-height: 34px;
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  #detail-expenses-header-toggle {
+    align-items: flex-start;
+  }
+
+  #detail-expenses-card .trip-history-header-meta {
+    width: 100%;
+    max-width: none;
+    margin-top: 2px;
+    text-align: left;
+  }
+
+  .settlement-flow {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr) 14px 28px minmax(0, 1fr);
+    align-items: center;
+    gap: 6px 7px;
+  }
+
+  .settlement-row--visual .settlement-names {
+    max-width: none;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+
+  .settlement-row--visual .settlement-arrow {
+    justify-self: center;
+  }
+
+  .settlement-flow-tail {
+    grid-column: 1 / -1;
+    width: 100%;
+    margin-left: 0;
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 430px) {
+  .analysis-tabs {
+    gap: 4px;
+    margin-bottom: 8px;
+    padding: 4px;
+    border-radius: 14px;
+  }
+
+  .analysis-tab {
+    min-height: 38px;
+    border-radius: 10px;
+    font-size: 13px;
+  }
+
+  .analysis-period-nav {
+    padding: 12px;
+  }
+
+  .analysis-cal-nav-row {
+    margin-bottom: 8px;
+  }
+
+  .analysis-nav-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+  }
+
+  .analysis-week-strip,
+  .analysis-cal-weekdays,
+  .analysis-cal-row,
+  .analysis-year-months {
+    gap: 5px;
+  }
+
+  button.analysis-week-cell,
+  button.analysis-cal-cell,
+  .analysis-year-mo {
+    min-height: 41px;
+    border-radius: 10px;
+    padding: 3px 2px;
+    font-size: 12px;
+  }
+
+  button.analysis-cal-cell:has(.cal-cell-delta) {
+    min-height: 44px;
+    padding: 4px 2px;
+  }
+
+  button.analysis-cal-cell:has(.cal-cell-delta) .analysis-cal-cell-day {
+    font-size: 11px;
+  }
+
+  .cal-cell-delta {
+    font-size: 10px;
+    line-height: 1.1;
+  }
+
+  .analysis-year-mo {
+    min-height: 48px;
+  }
+
+  .analysis-year-mo-label {
+    font-size: 12px;
+  }
+
+  .analysis-year-mo-amt {
+    font-size: 10px;
+    letter-spacing: 0;
+  }
+
+  .analysis-period {
+    min-height: 30px;
+    padding-inline: 10px;
+    font-size: 11px;
+  }
+
+  .analysis-stats-grid {
+    gap: 8px;
+  }
+
+  .analysis-stat-card {
+    padding: 12px;
+  }
+
+  .analysis-stat-label {
+    font-size: 10.5px;
+  }
+
+  .analysis-stat-val {
+    margin-top: 5px;
+    font-size: 22px;
+    line-height: 1.05;
+  }
+
+  .analysis-legend-card {
+    padding-inline: 12px;
+  }
+
+  .analysis-legend-row {
+    gap: 8px;
+    padding: 9px 0;
+  }
+
+  .analysis-legend-name {
+    font-size: 12.5px;
+  }
+
+  .analysis-legend-amt {
+    min-width: 70px;
+    font-size: 13px;
+  }
+
+  .analysis-history-section {
+    margin-top: 12px;
+    padding: 12px;
+  }
+
+  .analysis-history-head {
+    padding: 14px 14px 0;
+  }
+
+  .analysis-history-list {
+    padding: 10px 4px 6px;
+  }
+}
+
+@media (max-width: 430px) {
+  .monthly-report-card {
+    margin: 8px 0 10px;
+    padding: 8px;
+  }
+
+  .monthly-report-card--expanded {
+    padding: 10px;
+  }
+
+  .monthly-report-toggle {
+    min-height: 50px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 4px 8px;
+    padding: 9px 10px;
+    border-radius: 14px;
+  }
+
+  .monthly-report-toggle-main strong {
+    font-size: 16px;
+    line-height: 1.08;
+  }
+
+  .monthly-report-toggle-meta {
+    grid-column: 1 / -1;
+    font-size: 11px;
+    line-height: 1.25;
+  }
+
+  .monthly-report-toggle-icon {
+    padding: 5px 8px;
+    font-size: 10.5px;
+  }
+
+  .monthly-report-desc {
+    margin-top: 8px;
+  }
+
+  .monthly-report-summary {
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .monthly-report-summary-card,
+  .monthly-report-section,
+  .monthly-report-row,
+  .monthly-report-settlement {
+    border-radius: 14px;
+  }
+
+  .monthly-report-summary-card {
+    padding: 10px;
+  }
+
+  .monthly-report-summary-card strong {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  .monthly-report-columns {
+    gap: 9px;
+    margin-top: 10px;
+  }
+
+  .monthly-report-section {
+    padding: 10px;
+  }
+}
+
+@media (max-width: 430px) {
+  .member-preview-panel {
+    max-height: min(88vh, 760px);
+    border-radius: 18px 18px 0 0;
+  }
+
+  .member-preview-header,
+  .member-dir-header {
+    padding: 12px 16px 10px;
+  }
+
+  .member-preview-header h3,
+  .member-dir-header h2 {
+    font-size: 15px;
+  }
+
+  .member-preview-body,
+  .member-dir-body {
+    padding: 10px 14px 14px;
+  }
+
+  .trip-stats-body {
+    gap: 10px;
+    padding: 0;
+  }
+
+  .trip-stats-section--card,
+  .trip-stats-hero,
+  .trip-stats-section--accent.trip-stats-wallet-out {
+    padding: 12px;
+    border-radius: 16px;
+  }
+
+  .trip-stats-hero-top {
+    gap: 10px;
+  }
+
+  .trip-stats-hero-total {
+    margin-top: 6px;
+    font-size: 28px;
+  }
+
+  .trip-stats-hero-sub {
+    margin-top: 6px;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .trip-stats-chip {
+    min-height: 30px;
+    padding-inline: 9px;
+    font-size: 11px;
+  }
+
+  .trip-stats-summary-grid {
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .trip-stats-summary-card {
+    padding: 10px;
+    border-radius: 14px;
+  }
+
+  .trip-stats-summary-name {
+    margin-top: 6px;
+  }
+
+  .trip-stats-summary-value {
+    margin-top: 4px;
+    font-size: 19px;
+  }
+
+  .trip-stats-section-head {
+    margin-bottom: 8px;
+  }
+
+  .trip-stats-section-desc {
+    margin-top: 2px;
+    font-size: 11.5px;
+    line-height: 1.35;
+  }
+
+  .trip-day-stats-metrics,
+  .trip-stats-summary-grid,
+  .trip-stats-compare-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .trip-day-stats-metric,
+  .trip-day-stats-row,
+  .payer-stats-row,
+  .trip-stats-net-card,
+  .trip-stats-wallet-out-row {
+    border-radius: 12px;
+  }
+
+  .trip-day-stats-metric {
+    padding: 9px 10px;
+  }
+
+  .trip-day-stats-metric strong {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  .trip-day-stats-row,
+  .payer-stats-row {
+    padding: 8px 9px;
+  }
+
+  .payer-stats-amt {
+    font-size: 13px;
+  }
+
+  .payer-stats-pct {
+    display: block;
+    margin-left: 0;
+    margin-top: 1px;
+  }
+
+  .trip-stats-net-card {
+    padding: 10px;
+  }
+
+  .trip-stats-net-card-head {
+    gap: 6px;
+  }
+
+  .trip-stats-net-card-status {
+    white-space: nowrap;
+  }
+
+  .trip-stats-net-card-compare {
+    gap: 5px;
+  }
+}
+
+@media (max-width: 430px) {
+  .trip-closure-report-card {
+    gap: 10px;
+  }
+
+  .trip-closure-report-hero,
+  .trip-closure-report-section {
+    border-radius: 16px;
+  }
+
+  .trip-closure-report-hero,
+  .trip-closure-report-section {
+    padding: 12px;
+  }
+
+  .trip-closure-report-title {
+    font-size: 22px;
+    line-height: 1.18;
+  }
+
+  .trip-closure-report-meta {
+    gap: 5px 8px;
+    margin-top: 8px;
+    font-size: 12px;
+  }
+
+  .trip-closure-report-metrics {
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .trip-closure-report-metric {
+    padding: 10px;
+    border-radius: 14px;
+  }
+
+  .trip-closure-report-metric strong {
+    font-size: 18px;
+  }
+
+  .trip-closure-report-section-head {
+    margin-bottom: 8px;
+  }
+
+  .trip-closure-report-person-row {
+    padding: 9px 2px;
+  }
+
+  .trip-closure-report-person-name {
+    word-break: break-word;
+  }
+
+  .trip-closure-report-transfer-row,
+  .trip-closure-report-mini-row {
+    gap: 8px;
+    padding: 9px 0;
+  }
+
+  .trip-closure-report-transfer-flow,
+  .trip-closure-report-transfer-amt {
+    font-size: 14px;
+  }
+}

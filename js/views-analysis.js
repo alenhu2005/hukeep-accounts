@@ -633,6 +633,18 @@ export function renderAnalysis() {
     }
   }
 
+  const rangeMetaEl = document.getElementById('analysis-range-meta');
+  if (rangeMetaEl) {
+    const metaLabel = appState.analysisFilterDate
+      ? appState.analysisFilterDate.slice(5).replace('-', '/')
+      : appState.analysisPeriod === 'week'
+        ? '本週'
+        : appState.analysisPeriod === 'month'
+          ? fromStr.slice(0, 7).replace('-', '/')
+          : fromStr.slice(0, 4);
+    rangeMetaEl.textContent = metaLabel;
+  }
+
   const allRecords = getDailyRecords();
   const allDaily = allRecords.filter(r => !r._voided && r.type === 'daily');
   const periodNav = buildAnalysisPeriodNav(
@@ -682,7 +694,7 @@ export function renderAnalysis() {
   const tabs = ['week', 'month', 'year']
     .map(
       p =>
-        `<button onclick="setAnalysisPeriod('${p}')" style="flex:1;padding:9px;border-radius:10px;border:none;cursor:pointer;font-size:13px;font-weight:600;background:${appState.analysisPeriod === p ? 'var(--primary)' : 'var(--bg-secondary)'};color:${appState.analysisPeriod === p ? '#fff' : 'var(--text-muted)'};transition:.15s">
+        `<button type="button" class="analysis-tab${appState.analysisPeriod === p ? ' active' : ''}" onclick="setAnalysisPeriod('${p}')" aria-pressed="${appState.analysisPeriod === p ? 'true' : 'false'}">
       ${{ week: '本週', month: '本月', year: '本年' }[p]}
     </button>`,
     )

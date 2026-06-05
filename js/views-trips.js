@@ -38,6 +38,8 @@ function tripCardHTML(t, listIndex = 0) {
 export function renderTrips() {
   const trips = getTrips();
   const el = document.getElementById('trips-list');
+  const countEl = document.getElementById('trips-count');
+  if (countEl) countEl.textContent = `${trips.length} 行程`;
   if (trips.length === 0) {
     el.innerHTML = emptyHTML('還沒有出遊行程', '點擊「新增行程」開始記帳吧');
     return;

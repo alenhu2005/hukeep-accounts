@@ -55,6 +55,8 @@
   <link rel="stylesheet" href="css/accent-themes.css">
   <link rel="stylesheet" href="css/vendor/animate.min.css">
   <link rel="stylesheet" href="css/motion.css">
+  <link rel="stylesheet" href="css/design-refresh.css">
+  <link rel="stylesheet" href="css/mobile-polish.css">
 </head>
 <body>
 <div id="app">
@@ -302,7 +304,7 @@
     <div class="main">
 
       <!-- Balance card -->
-      <div class="card" id="balance-card">
+      <div class="card card--hero" id="balance-card">
         <div class="balance-bar" id="balance-bar"></div>
         <div class="balance-content">
           <div class="balance-icon" id="balance-icon-wrap">
@@ -319,11 +321,14 @@
       </div>
 
       <!-- Add expense form -->
-      <div class="card">
+      <div class="card card--workspace" id="home-entry-card">
         <div class="card-header">
-          <div class="card-title">
-            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-            新增消費
+          <div class="card-title-block">
+            <div class="card-kicker">日常帳</div>
+            <div class="card-title">
+              <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+              新增消費
+            </div>
           </div>
           <button class="toggle-btn" onclick="toggleCollapsible('home-form','home-toggle-icon')">
             <svg id="home-toggle-icon" viewBox="0 0 24 24"><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>
@@ -431,18 +436,24 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
       </button>
       <h1>出遊記帳</h1>
-      <button class="btn btn-primary btn-sm" onclick="showCreateTripForm()">
-        <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-        新增行程
-      </button>
+      <div class="header-meta" id="trips-count">0 行程</div>
+      <div class="header-tools">
+        <button class="btn btn-primary btn-sm" onclick="showCreateTripForm()">
+          <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+          新增行程
+        </button>
+      </div>
     </header>
     <div class="main">
       <!-- Create trip form -->
-      <div class="card" id="create-trip-card" style="display:none">
+      <div class="card card--workspace" id="create-trip-card" style="display:none">
         <div class="card-header">
-          <div class="card-title">
-            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-            新增行程
+          <div class="card-title-block">
+            <div class="card-kicker">旅遊工作台</div>
+            <div class="card-title">
+              <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+              新增行程
+            </div>
           </div>
         </div>
         <div class="card-body">
@@ -548,8 +559,9 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 2v20c-5.07-.5-9-4.79-9-10s3.93-9.5 9-10zm2.03 0v8.99H22c-.47-4.74-4.24-8.52-8.97-8.99zm0 11.01V22c4.74-.47 8.5-4.25 8.97-8.99h-8.97z"/></svg>
       </button>
       <h1>消費分析</h1>
+      <div class="header-meta" id="analysis-range-meta">本週</div>
     </header>
-    <div id="analysis-content" style="padding:16px 16px 100px"></div>
+    <div id="analysis-content" class="main analysis-main"></div>
   </div>
 
   <!-- ═══════════════ PAGE: 行程詳情 ═══════════════ -->
@@ -572,9 +584,17 @@
     <div class="main">
 
       <!-- Members -->
-      <div class="card">
+      <div class="card card--workspace" id="trip-members-card">
+        <div class="card-header">
+          <div class="card-title-block">
+            <div class="card-kicker">同行名單</div>
+            <div class="card-title">
+              <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+              成員管理
+            </div>
+          </div>
+        </div>
         <div class="card-body">
-          <div class="form-label" style="margin-bottom:10px">成員</div>
           <div id="detail-member-chips" class="member-chips" style="margin-bottom:10px"></div>
           <div id="detail-known-members"></div>
           <div class="inline-add">
@@ -589,7 +609,7 @@
       </div>
 
       <!-- Settlement -->
-      <div class="card" id="settlement-card">
+      <div class="card card--hero" id="settlement-card">
         <div class="balance-bar" id="settlement-bar"></div>
         <div id="settlement-body"></div>
       </div>
@@ -598,11 +618,14 @@
       <div id="trip-archive-bar"></div>
 
       <!-- Add expense form -->
-      <div class="card" id="add-expense-card">
+      <div class="card card--workspace" id="add-expense-card">
         <div class="card-header card-header--toggle-row" id="detail-form-header-toggle" role="button" tabindex="0" aria-expanded="true" aria-controls="detail-form" title="收合／展開新增消費" onclick="tripDetailFormHeaderClick(event)" onkeydown="tripDetailFormHeaderKeydown(event)">
-          <div class="card-title">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-            新增消費
+          <div class="card-title-block">
+            <div class="card-kicker">共同支出</div>
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+              新增消費
+            </div>
           </div>
           <div class="card-header-trail">
             <button type="button" id="d-gambling-toggle" class="btn btn-outline btn-sm d-gambling-toggle" onclick="event.stopPropagation(); toggleDetailGamblingMode()" aria-pressed="false" title="切換賭博模式（文案與分類為賭博）">賭博模式</button>
@@ -669,9 +692,10 @@
       </div>
 
       <!-- Expense history -->
-      <div class="card" id="detail-expenses-card">
+      <div class="card card--workspace" id="detail-expenses-card">
         <button type="button" class="card-header card-header--toggle" id="detail-expenses-header-toggle" onclick="toggleCollapsible('detail-expenses-panel','detail-expenses-toggle-icon','detail-expenses-header-toggle')" aria-expanded="true" aria-controls="detail-expenses-panel" title="收合／展開歷史紀錄">
           <span class="card-title-block">
+            <span class="card-kicker">帳務流水</span>
             <span class="card-title">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
               歷史紀錄
