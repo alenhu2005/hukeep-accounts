@@ -95,13 +95,6 @@
   box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
 }
 
-.notes-storage-note {
-  grid-column: 1 / -1;
-  color: var(--text-muted);
-  font-size: 10px;
-  line-height: 1;
-}
-
 .notes-list {
   display: flex;
   flex-direction: column;
@@ -328,10 +321,6 @@ html.dark .note-body-input {
 
   .notes-filter-btn {
     width: 100%;
-  }
-
-  .notes-storage-note {
-    grid-column: auto;
   }
 
   .note-editor-body {
