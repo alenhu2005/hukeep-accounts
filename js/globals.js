@@ -33,6 +33,18 @@ import {
   setTripRecordSearch,
   clearTripRecordSearch,
 } from './views-trip-detail.js';
+import {
+  clearNotesSearch,
+  closeNoteEditor,
+  deleteNote,
+  editNote,
+  openNewNoteEditor,
+  saveNote,
+  saveNoteFromShortcut,
+  setNotesFilter,
+  setNotesSearch,
+  toggleNotePin,
+} from './views-notes.js';
 import * as actions from './actions.js';
 import { toggleDetailAmountCurrency } from './trip-cny-rate.js';
 import {
@@ -197,6 +209,16 @@ Object.assign(window, {
   clearTripHistoryDayFilter,
   setTripRecordSearch,
   clearTripRecordSearch,
+  openNewNoteEditor,
+  editNote,
+  closeNoteEditor,
+  saveNote,
+  saveNoteFromShortcut,
+  deleteNote,
+  toggleNotePin,
+  setNotesSearch,
+  clearNotesSearch,
+  setNotesFilter,
   closeEditRecord: actions.closeEditRecord,
   submitEditRecord: actions.submitEditRecord,
   voidEditingRecord: actions.voidEditingRecord,

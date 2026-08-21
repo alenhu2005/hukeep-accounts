@@ -5,7 +5,7 @@
 ## 1) 入口與資源（Root）
 
 - `index.html`：唯一 HTML 入口，包含頁面骨架、對話框容器、底部導覽、PWA 載入點。
-- `css/*.css`：全站樣式（依用途分檔：`base`、`layout`、`home`、`trip-lottery`、`forms-controls`、`records-history`、`analysis`、`trip-cards`、`members-rare`、`trip-forms-collapsible`、`shell-nav`、`overlays-feedback`、`sheets-directory`、`dark-a11y`、`motion`；`index.html` 中 `<link>` 順序須與相依關係一致）。
+- `css/*.css`：全站樣式（依用途分檔：`base`、`layout`、`home`、`notes`、`trip-lottery`、`forms-controls`、`records-history`、`analysis`、`trip-cards`、`members-rare`、`trip-forms-collapsible`、`shell-nav`、`overlays-feedback`、`sheets-directory`、`dark-a11y`、`motion`；`index.html` 中 `<link>` 順序須與相依關係一致）。
 - `css/vendor/`：前端第三方 CSS 資產；目前放置 Animate.css。
 - `sw.js`：Service Worker（快取與離線策略）。
 - `manifest.json`：PWA 描述檔。
@@ -50,12 +50,15 @@
 - `trip-stats.js`：行程統計與摘要文案。
 - `ledger-health.js`：資料健康檢查、診斷報告與健康卡片；只讀資料，不直接修復或刪除試算表。
 - `search-records.js`：日常／出遊歷史紀錄搜尋篩選。
+- `notes-store.js`：共享記事正規化、建立、搜尋與排序純邏輯。
+- `note-links.js`：記事內文安全網址辨識與可點擊連結輸出。
 - `category.js`：分類推測與樣式輔助。
 - `time.js`：日期、台北時區、分析週期。
 
 ### D. UI / View 層
 
 - `views-home.js`：日常頁渲染。
+- `views-notes.js`：共享記事新增、編輯、刪除、置頂與同步狀態。
 - `views-trips.js`：行程列表頁渲染。
 - `views-trip-detail.js`：行程明細頁對外入口（facade）。
 - `views-trip-detail/`：行程明細頁內部模組。
@@ -95,6 +98,7 @@
 - `finance.test.js`：金流計算測試。
 - `data.test.js`：資料轉換與推導測試。
 - `offline-queue.test.js`：離線佇列與 pending 合併測試。
+- `notes-store.test.js`、`note-links.test.js`：記事資料邏輯與安全連結測試。
 - `refactor-regression.test.js`：fixture / golden 回歸測試（`voided`、`closed`、rename、settlement、outbox merge）。
 - `trip-stats.test.js`：統計摘要測試。
 - `utils.test.js`：工具函式測試。

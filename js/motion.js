@@ -21,6 +21,7 @@ const AVATAR_SELECTOR = [
 
 const AUTO_ANIMATE_ROOTS = [
   '#home-records',
+  '#notes-list',
   '#trips-list',
   '#settlement-body',
   '#detail-member-chips',
@@ -52,6 +53,7 @@ const PAGE_TARGETS = [
   '#balance-card',
   '#settlement-card',
   '#trips-list',
+  '#notes-list',
 ].join(',');
 
 const REVEAL_CHILD_TARGETS = [

@@ -51,6 +51,7 @@ function normalizeActiveRow(row, { pending = false } = {}) {
   if (next.type === 'settlement' && !('action' in next)) next.action = 'add';
   if (next.type === 'tripExpense' && !('action' in next)) next.action = 'add';
   if (next.type === 'tripSettlement' && !('action' in next)) next.action = 'add';
+  if (next.type === 'note' && !('action' in next)) next.action = 'add';
 
   if (next.type === 'daily' || next.type === 'settlement' || next.type === 'tripExpense' || next.type === 'tripSettlement') {
     next.voided = toBool(next.voided);
@@ -62,6 +63,13 @@ function normalizeActiveRow(row, { pending = false } = {}) {
     next.closed = toBool(next.closed);
     next.cnyMode = toBool(next.cnyMode);
     next.colorId = trimString(next.colorId);
+  } else if (next.type === 'note') {
+    next.id = trimString(next.id);
+    next.title = trimString(next.title);
+    next.body = trimString(next.body);
+    next.pinned = toBool(next.pinned);
+    next.createdAt = Number.isFinite(Number(next.createdAt)) ? Number(next.createdAt) : 0;
+    next.updatedAt = Number.isFinite(Number(next.updatedAt)) ? Number(next.updatedAt) : next.createdAt;
   } else if (next.type === 'memberProfile') {
     next.memberName = trimString(next.memberName);
     next.colorId = trimString(next.colorId);
@@ -345,6 +353,18 @@ function editTripExpense(rows, payload, { pending = false } = {}) {
   patchRow(rows[idx], patch, { pending });
 }
 
+function editNote(rows, payload, { pending = false } = {}) {
+  const idx = findIdIndex(rows, 'note', payload.id);
+  if (idx === -1) return;
+  const patch = {
+    ...(payload.title !== undefined ? { title: payload.title } : {}),
+    ...(payload.body !== undefined ? { body: payload.body } : {}),
+    ...(payload.pinned !== undefined ? { pinned: payload.pinned } : {}),
+    ...(payload.updatedAt !== undefined ? { updatedAt: payload.updatedAt } : {}),
+  };
+  patchRow(rows[idx], patch, { pending });
+}
+
 export function cloneRowsSnapshot(rows) {
   return deepClone(rows || []);
 }
@@ -365,6 +385,13 @@ export function applyCurrentStatePayload(rows, payload, { pending = false } = {}
   if (type === 'settlement') {
     if (action === 'add') addActiveRow(rows, payload, { pending });
     else if (action === 'void' || action === 'delete') setDailyLikeVoided(rows, payload.id, true, { pending, voidReason: payload.voidReason });
+    return rows;
+  }
+
+  if (type === 'note') {
+    if (action === 'add') addActiveRow(rows, payload, { pending });
+    else if (action === 'edit') editNote(rows, payload, { pending });
+    else if (action === 'delete') removeById(rows, 'note', payload.id);
     return rows;
   }
 

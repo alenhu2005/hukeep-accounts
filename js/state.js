@@ -55,6 +55,12 @@ export const appState = {
   _tripExpenseCache: [],
   _tripSettlementCache: [],
 
+  /** 記事本搜尋與畫面狀態；記事內容由 GAS current-state 同步。 */
+  notesSearchQuery: '',
+  notesFilter: 'all',
+  noteEditorOpen: false,
+  editingNoteId: null,
+
   analysisPeriod: 'month',
   /** 分析頁：相對於「本週／本月／本年」的位移（上一段為負） */
   analysisWeekOffset: 0,

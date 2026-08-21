@@ -104,14 +104,24 @@ export function navigate(page, tripId = null, opts = {}) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   const pageId =
-    page === 'tripDetail' ? 'page-trip-detail' : page === 'trips' ? 'page-trips' : page === 'analysis' ? 'page-analysis' : 'page-home';
+    page === 'tripDetail'
+      ? 'page-trip-detail'
+      : page === 'trips'
+        ? 'page-trips'
+        : page === 'analysis'
+          ? 'page-analysis'
+          : page === 'notes'
+            ? 'page-notes'
+            : 'page-home';
   document.getElementById(pageId).classList.add('active');
   const navId =
     page === 'trips' || page === 'tripDetail'
       ? 'nav-trips'
       : page === 'analysis'
         ? 'nav-analysis'
-        : 'nav-home';
+        : page === 'notes'
+          ? 'nav-notes'
+          : 'nav-home';
   document.getElementById(navId).classList.add('active');
   syncMemberDirFabVisibility(page, tripId);
   if (page !== 'tripDetail') {

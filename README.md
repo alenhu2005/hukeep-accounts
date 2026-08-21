@@ -221,7 +221,7 @@ Vite 設定的 GitHub Pages base 是 `/hukeep-accounts/`；預覽正式產物時
 
 試算表目前採兩層結構：
 
-- **active current-state**：只保留目前有效資料，供首頁、行程、分析頁平常讀取
+- **active current-state**：只保留目前有效資料，供首頁、記事、行程、分析頁平常讀取
 - **archive 封存事件**：保留新增、編輯、撤回等完整歷程，供歷史查詢使用
 
 其中日常 / 還款 / 出遊消費 / 出遊還款這些帳務資料，若使用者選的是「撤回」，active 不會真刪列，而是將該列標成 `voided=true`。  
@@ -251,6 +251,7 @@ Vite 設定的 GitHub Pages base 是 `/hukeep-accounts/`；預覽正式產物時
 |----|------|
 | `gasRows_daily_v2` | 日常相關列快取 |
 | `gasRows_trip_v2` | 出遊相關列快取 |
+| `gasRows_notes_v1` | 共享記事列快取 |
 | `ledger_sync_last_at_v1` | 上次成功自 GAS 拉取並寫入的時間（ms） |
 | `ledger_api_url_v1` | 覆寫 API URL |
 | `ledger_post_outbox_v1` | POST 離線佇列 |
@@ -345,8 +346,8 @@ Vite 設定的 GitHub Pages base 是 `/hukeep-accounts/`；預覽正式產物時
 
 重點摘要：
 
-- **Active 工作表**（current-state）：`日常消費`、`日常還款`、`行程`、`出遊消費`、`出遊還款`、`成員`、`頭像`。日常消費與日常還款為**不同分頁**；新增還款請在 `日常還款` 查看，勿與舊版 append-only 的 `日常` 分頁混淆。
-- **Archive 工作表**：`封存_日常事件`、`封存_出遊事件`、`封存_人物事件`。
+- **Active 工作表**（current-state）：`日常消費`、`日常還款`、`行程`、`出遊消費`、`出遊還款`、`記事`、`成員`、`頭像`。日常消費與日常還款為**不同分頁**；新增還款請在 `日常還款` 查看，勿與舊版 append-only 的 `日常` 分頁混淆。
+- **Archive 工作表**：`封存_日常事件`、`封存_出遊事件`、`封存_人物事件`、`封存_記事事件`。
 - 工作表分成 **active current-state** 與 **archive 封存事件** 兩層，細節見 [docs/gas程式碼.md](docs/gas程式碼.md)。
 - **doGet**：預設只回傳 active current-state；`?mode=history` 可查單筆歷史，也可只帶 `type` 查該類 archive。
 - **doPost**：新增寫入 active 並同步封存；編輯直接覆寫 active；歷史紀錄內的帳務資料只會「撤回」不會真刪除。

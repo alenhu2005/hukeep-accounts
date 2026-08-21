@@ -50,6 +50,16 @@ describe('allRowsToHumanCSV', () => {
         voidReason: '重複記帳',
         date: '2026-04-03',
       },
+      {
+        type: 'note',
+        action: 'add',
+        id: 'n1',
+        title: '行前清單',
+        body: '護照,充電器',
+        pinned: true,
+        createdAt: new Date('2026-04-04T01:00:00Z').getTime(),
+        updatedAt: new Date('2026-04-04T02:00:00Z').getTime(),
+      },
     ];
 
     const csv = allRowsToHumanCSV();
@@ -60,5 +70,7 @@ describe('allRowsToHumanCSV', () => {
     expect(csv).toContain('2026-04-02,出遊,台南,出遊消費,新增,有效,早餐,120,80,5,胡 NT$70 ＋ 詹 NT$50,胡、詹,餐飲');
     expect(csv).toContain('"早餐,熱豆漿"');
     expect(csv).toContain('2026-04-03,日常,,日常消費,新增,已撤回,飲料,80,,,胡付款,各付一半,餐飲,,重複記帳');
+    expect(csv).toContain('2026-04-04,記事,,記事,新增,有效,行前清單');
+    expect(csv).toContain('"護照,充電器"');
   });
 });

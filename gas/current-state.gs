@@ -5,6 +5,7 @@ var ACTIVE_SHEETS = {
   trip: '行程',
   tripExpense: '出遊消費',
   tripSettlement: '出遊還款',
+  note: '記事',
   memberProfile: '成員',
   avatar: '頭像',
 };
@@ -13,6 +14,7 @@ var ARCHIVE_SHEETS = {
   daily: '封存_日常事件',
   trip: '封存_出遊事件',
   person: '封存_人物事件',
+  note: '封存_記事事件',
 };
 
 var LEGACY_SHEETS = ['日常', '出遊', '人物'];
@@ -23,11 +25,13 @@ var ACTIVE_HEADERS = {
   '行程': ['type', 'action', 'id', 'name', 'members', 'createdAt', 'closed', 'colorId', 'cnyMode'],
   '出遊消費': ['type', 'action', 'id', 'tripId', 'date', '_clientPostedAt', 'item', 'amount', 'paidBy', 'splitAmong', 'note', 'category', 'amountCny', 'fxFeeNtd', 'payers', 'splitDetails', 'photoUrl', 'photoFileId', 'voided', 'voidReason'],
   '出遊還款': ['type', 'action', 'id', 'tripId', 'date', '_clientPostedAt', 'from', 'to', 'amount', 'voided', 'voidReason'],
+  '記事': ['type', 'action', 'id', 'title', 'body', 'pinned', 'createdAt', 'updatedAt'],
   '成員': ['type', 'memberName', 'deleted', 'colorId'],
   '頭像': ['type', 'id', 'memberName', 'avatarScope', 'avatarUrl', 'avatarFileId'],
   '封存_日常事件': ['type', 'action', 'id', 'date', 'item', 'amount', 'paidBy', 'splitMode', 'note', 'paidHu', 'paidZhan', 'category', 'photoUrl', 'photoFileId', 'voidReason', '_archivedAt'],
   '封存_出遊事件': ['type', 'action', 'id', 'tripId', 'name', 'members', 'createdAt', 'memberName', 'newName', 'colorId', 'item', 'amount', 'paidBy', 'splitAmong', 'date', 'note', 'category', 'amountCny', 'fxFeeNtd', 'payers', 'splitDetails', 'from', 'to', 'photoUrl', 'photoFileId', 'closed', 'cnyMode', 'voidReason', '_archivedAt'],
   '封存_人物事件': ['type', 'action', 'id', 'memberName', 'newName', 'colorId', 'deleted', 'avatarScope', 'avatarUrl', 'avatarFileId', '_archivedAt'],
+  '封存_記事事件': ['type', 'action', 'id', 'title', 'body', 'pinned', 'createdAt', 'updatedAt', '_archivedAt'],
 };
 
 // === Row / sheet utils ======================================================
@@ -139,6 +143,7 @@ function activeSheetNameForType_(type) {
   if (type === 'trip') return ACTIVE_SHEETS.trip;
   if (type === 'tripExpense') return ACTIVE_SHEETS.tripExpense;
   if (type === 'tripSettlement') return ACTIVE_SHEETS.tripSettlement;
+  if (type === 'note') return ACTIVE_SHEETS.note;
   if (type === 'memberProfile') return ACTIVE_SHEETS.memberProfile;
   if (type === 'avatar') return ACTIVE_SHEETS.avatar;
   throw new Error('Unsupported type: ' + type);
@@ -148,6 +153,7 @@ function archiveSheetNameForType_(type) {
   if (type === 'daily' || type === 'settlement') return ARCHIVE_SHEETS.daily;
   if (type === 'trip' || type === 'tripExpense' || type === 'tripSettlement' || type === 'tripMember') return ARCHIVE_SHEETS.trip;
   if (type === 'memberProfile' || type === 'avatar') return ARCHIVE_SHEETS.person;
+  if (type === 'note') return ARCHIVE_SHEETS.note;
   throw new Error('Unsupported archive type: ' + type);
 }
 
@@ -184,6 +190,24 @@ function upsertActiveRow_(sheetName, key, value, patch) {
     });
   }
   writeObjectsToSheet_(sheetName, rows, ACTIVE_HEADERS[sheetName]);
+}
+
+function patchActiveNote_(data) {
+  var sheetName = ACTIVE_SHEETS.note;
+  var rows = sheetRowsToObjects_(sheetName);
+  for (var i = 0; i < rows.length; i++) {
+    if (!rowMatchesKey_(rows[i], 'id', data.id)) continue;
+    var title = data.title !== undefined ? trim_(data.title) : trim_(rows[i].title);
+    var body = data.body !== undefined ? trim_(data.body) : trim_(rows[i].body);
+    if (!title && !body) throw new Error('Note title or body is required');
+    if (data.title !== undefined) rows[i].title = title;
+    if (data.body !== undefined) rows[i].body = body;
+    if (data.pinned !== undefined) rows[i].pinned = isTrue_(data.pinned);
+    if (data.updatedAt !== undefined) rows[i].updatedAt = Number(data.updatedAt) || 0;
+    writeObjectsToSheet_(sheetName, rows, ACTIVE_HEADERS[sheetName]);
+    return;
+  }
+  throw new Error('Active row not found in ' + sheetName + ': ' + data.id);
 }
 
 function deleteActiveRow_(sheetName, key, value) {
@@ -379,6 +403,18 @@ function payloadToActiveRow_(data) {
       voidReason: data.voidReason || '',
     };
   }
+  if (data.type === 'note') {
+    return {
+      type: 'note',
+      action: 'add',
+      id: trim_(data.id),
+      title: trim_(data.title),
+      body: trim_(data.body),
+      pinned: isTrue_(data.pinned),
+      createdAt: Number(data.createdAt) || 0,
+      updatedAt: Number(data.updatedAt) || Number(data.createdAt) || 0,
+    };
+  }
   if (data.type === 'memberProfile') {
     return {
       type: 'memberProfile',
@@ -422,6 +458,27 @@ function ensureTripMemberMutation_(data) {
   writeObjectsToSheet_(ACTIVE_SHEETS.trip, rows, ACTIVE_HEADERS[ACTIVE_SHEETS.trip]);
 }
 
+function validateNotePayload_(data) {
+  var action = trim_(data.action || 'add');
+  var id = trim_(data.id);
+  var title = data.title == null ? '' : String(data.title).trim();
+  var body = data.body == null ? '' : String(data.body).trim();
+  if (!id) throw new Error('Note id is required');
+  if (['add', 'edit', 'delete'].indexOf(action) === -1) throw new Error('Unsupported note action: ' + action);
+  if (title.length > 80) throw new Error('Note title is too long');
+  if (body.length > 10000) throw new Error('Note body is too long');
+  if (action === 'add' && !title && !body) throw new Error('Note title or body is required');
+  if (
+    action === 'edit' &&
+    Object.prototype.hasOwnProperty.call(data, 'title') &&
+    Object.prototype.hasOwnProperty.call(data, 'body') &&
+    !title &&
+    !body
+  ) {
+    throw new Error('Note title or body is required');
+  }
+}
+
 function applyCurrentStateMutation_(data) {
   if (data.type === 'daily') {
     if (data.action === 'add') {
@@ -444,6 +501,18 @@ function applyCurrentStateMutation_(data) {
   if (data.type === 'settlement') {
     if (data.action === 'add') upsertActiveRow_(ACTIVE_SHEETS.settlement, 'id', data.id, payloadToActiveRow_(data));
     else if (data.action === 'void' || data.action === 'delete') markActiveRowVoided_(ACTIVE_SHEETS.settlement, 'id', data.id, true, data.voidReason || '');
+    return;
+  }
+
+  if (data.type === 'note') {
+    validateNotePayload_(data);
+    if (data.action === 'add') {
+      upsertActiveRow_(ACTIVE_SHEETS.note, 'id', data.id, payloadToActiveRow_(data));
+    } else if (data.action === 'edit') {
+      patchActiveNote_(data);
+    } else if (data.action === 'delete') {
+      deleteActiveRow_(ACTIVE_SHEETS.note, 'id', data.id);
+    }
     return;
   }
 
@@ -921,8 +990,14 @@ function doPost(e) {
       var catIn = data.category != null ? String(data.category).trim() : '';
       if (!catIn) data.category = getGeminiCategory(data.item);
     }
-    applyCurrentStateMutation_(data);
-    appendArchiveEvent_(data);
+    var lock = LockService.getScriptLock();
+    lock.waitLock(30000);
+    try {
+      applyCurrentStateMutation_(data);
+      appendArchiveEvent_(data);
+    } finally {
+      lock.releaseLock();
+    }
     return ContentService.createTextOutput(JSON.stringify({ result: 'success' })).setMimeType(ContentService.MimeType.JSON);
   } catch (error) {
     return ContentService.createTextOutput(JSON.stringify({ result: 'error', message: error.toString() })).setMimeType(ContentService.MimeType.JSON);
@@ -930,11 +1005,17 @@ function doPost(e) {
 }
 
 function doGet(e) {
-  var params = e && e.parameter ? e.parameter : {};
-  if (params.mode === 'history') {
-    var hasId = Object.prototype.hasOwnProperty.call(params, 'id');
-    var rows = historyRows_(params.type, hasId ? params.id : null);
-    return ContentService.createTextOutput(JSON.stringify(rows)).setMimeType(ContentService.MimeType.JSON);
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    var params = e && e.parameter ? e.parameter : {};
+    if (params.mode === 'history') {
+      var hasId = Object.prototype.hasOwnProperty.call(params, 'id');
+      var rows = historyRows_(params.type, hasId ? params.id : null);
+      return ContentService.createTextOutput(JSON.stringify(rows)).setMimeType(ContentService.MimeType.JSON);
+    }
+    return ContentService.createTextOutput(JSON.stringify(currentStateRows_())).setMimeType(ContentService.MimeType.JSON);
+  } finally {
+    lock.releaseLock();
   }
-  return ContentService.createTextOutput(JSON.stringify(currentStateRows_())).setMimeType(ContentService.MimeType.JSON);
 }

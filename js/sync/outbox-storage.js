@@ -4,7 +4,7 @@ import { pendingEventIdentity } from './pending.js';
 function entityLifecycleKey(payload) {
   if (!payload || payload.id == null) return '';
   const type = String(payload.type || '');
-  if (!['daily', 'settlement', 'tripExpense', 'tripSettlement'].includes(type)) return '';
+  if (!['daily', 'settlement', 'tripExpense', 'tripSettlement', 'note'].includes(type)) return '';
   return `${type}|${String(payload.id)}`;
 }
 

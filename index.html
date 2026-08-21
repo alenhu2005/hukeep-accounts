@@ -57,6 +57,7 @@
   <link rel="stylesheet" href="css/motion.css">
   <link rel="stylesheet" href="css/design-refresh.css">
   <link rel="stylesheet" href="css/mobile-polish.css">
+  <link rel="stylesheet" href="css/notes.css">
 </head>
 <body>
 <div id="app">
@@ -429,6 +430,74 @@
     </div>
   </div>
 
+  <!-- ═══════════════ PAGE: 記事 ═══════════════ -->
+  <div id="page-notes" class="page">
+    <header class="header">
+      <button type="button" class="header-icon" onclick="toggleAccentMenu(event)" title="主題色" aria-label="主題色">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm1 15H7v-2h8v2zm2-4H7v-2h10v2zm-4-4V3.5L18.5 9H13z"/></svg>
+      </button>
+      <h1>記事本</h1>
+      <div class="header-meta" id="notes-count">0 則</div>
+      <div class="header-tools">
+        <button type="button" class="btn btn-primary btn-sm" id="new-note-btn" onclick="openNewNoteEditor()">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+          新增記事
+        </button>
+      </div>
+    </header>
+    <div class="main notes-main">
+      <section class="card card--workspace note-editor-card" id="note-editor-card" hidden aria-labelledby="note-editor-title">
+        <div class="card-header">
+          <div class="card-title-block">
+            <div class="card-kicker">快速記錄</div>
+            <div class="card-title" id="note-editor-title">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.03 0-1.42l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.82z"/></svg>
+              新增記事
+            </div>
+          </div>
+          <button type="button" class="note-icon-btn" onclick="closeNoteEditor()" title="關閉編輯器" aria-label="關閉編輯器">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.41 4.29 19.71 2.88 18.3 9.17 12 2.88 5.7 4.29 4.29 10.59 10.59 16.89 4.29z"/></svg>
+          </button>
+        </div>
+        <div class="card-body note-editor-body">
+          <div class="form-group">
+            <label class="form-label" for="note-title-input">標題</label>
+            <input type="text" id="note-title-input" class="form-input" maxlength="80" autocomplete="off" placeholder="輸入標題">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="note-body-input">內容</label>
+            <textarea id="note-body-input" class="form-input note-body-input" maxlength="10000" placeholder="寫下要記住的事情" onkeydown="saveNoteFromShortcut(event)"></textarea>
+          </div>
+          <div class="note-editor-footer">
+            <label class="note-pin-checkbox">
+              <input type="checkbox" id="note-pinned-input">
+              <span>置頂</span>
+            </label>
+            <div class="note-editor-actions">
+              <button type="button" class="btn btn-outline" onclick="closeNoteEditor()">取消</button>
+              <button type="button" class="btn btn-primary" id="save-note-btn" onclick="saveNote()">儲存</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card notes-toolbar" aria-label="記事工具">
+        <div class="record-search notes-search" role="search" aria-label="搜尋記事">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 3a6.5 6.5 0 0 1 5.18 10.43l4.16 4.16-1.41 1.41-4.16-4.16A6.5 6.5 0 1 1 9.5 3zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9z"/></svg>
+          <input type="search" id="notes-search-input" class="record-search-input" placeholder="搜尋標題或內容" autocomplete="off" oninput="setNotesSearch(this.value)">
+          <button type="button" id="notes-search-clear" class="record-search-clear" onclick="clearNotesSearch()" aria-label="清除搜尋" hidden>&times;</button>
+        </div>
+        <div class="notes-filter" role="group" aria-label="篩選記事">
+          <button type="button" class="notes-filter-btn active" id="notes-filter-all" onclick="setNotesFilter('all')" aria-pressed="true">全部</button>
+          <button type="button" class="notes-filter-btn" id="notes-filter-pinned" onclick="setNotesFilter('pinned')" aria-pressed="false">置頂</button>
+        </div>
+        <div class="notes-storage-note">記事會與帳本同步</div>
+      </section>
+
+      <section id="notes-list" class="notes-list" aria-live="polite"></section>
+    </div>
+  </div>
+
   <!-- ═══════════════ PAGE: 出遊列表 ═══════════════ -->
   <div id="page-trips" class="page">
     <header class="header">
@@ -734,6 +803,10 @@
     <button class="nav-btn active" id="nav-home" onclick="navigate('home')">
       <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
       日常
+    </button>
+    <button class="nav-btn" id="nav-notes" onclick="navigate('notes')">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm1 15H7v-2h8v2zm2-4H7v-2h10v2zm-4-4V3.5L18.5 9H13z"/></svg>
+      記事
     </button>
     <button class="nav-btn" id="nav-trips" onclick="navigate('trips')">
       <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>

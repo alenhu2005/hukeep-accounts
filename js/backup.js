@@ -79,6 +79,7 @@ const TYPE_LABEL = {
   tripMember: '行程成員',
   tripExpense: '出遊消費',
   tripSettlement: '出遊還款結清',
+  note: '記事',
 };
 
 /**
@@ -184,6 +185,13 @@ function humanSummaryForRow(r, tripNames, opts = {}) {
     return `「${tname}」${r.from} 付給 ${r.to} NT$${amt}（結清）`;
   }
 
+  if (r.type === 'note') {
+    const title = r.title || '未命名記事';
+    const pin = r.pinned ? ' · 已置頂' : '';
+    const body = !forCsv && r.body ? `\n   ${r.body}` : '';
+    return `記事「${title}」${pin}${body}`;
+  }
+
   return `${TYPE_LABEL[r.type] || r.type} · ${act}（id：${r.id || '—'}）`;
 }
 
@@ -217,6 +225,7 @@ function rowFxFeeForDisplay(r) {
 function rowBookLabel(r) {
   if (r.type === 'daily' || r.type === 'settlement') return '日常';
   if (r.type === 'trip' || r.type === 'tripMember' || r.type === 'tripExpense' || r.type === 'tripSettlement') return '出遊';
+  if (r.type === 'note') return '記事';
   return '其他';
 }
 
@@ -245,6 +254,7 @@ function rowSubjectLabel(r) {
   if (r.type === 'tripMember') return r.memberName || '行程成員';
   if (r.type === 'tripExpense') return r.item || '出遊消費';
   if (r.type === 'tripSettlement') return [r.from, r.to].filter(Boolean).join(' → ') || '出遊還款';
+  if (r.type === 'note') return r.title || '未命名記事';
   return r.item || r.name || r.id || '';
 }
 
@@ -291,7 +301,11 @@ function rowSplitLabel(r) {
 }
 
 function rowDateForSort(r) {
-  return (r.date || '').slice(0, 10) || '9999-12-31';
+  if (r.date) return String(r.date).slice(0, 10);
+  if (r.type === 'note' && Number.isFinite(Number(r.updatedAt))) {
+    return new Date(Number(r.updatedAt)).toLocaleDateString('en-CA', { timeZone: TZ });
+  }
+  return '9999-12-31';
 }
 
 export function buildOperationTimeline(rows = appState.allRows, limit = 12) {
@@ -305,13 +319,16 @@ export function buildOperationTimeline(rows = appState.allRows, limit = 12) {
       return b.i - a.i;
     })
     .slice(0, Math.max(1, limit))
-    .map(({ r }) => ({
-      id: r.id || '',
-      date: (r.date || '（無日期）').slice(0, 10),
-      typeLabel: TYPE_LABEL[r.type] || r.type || '資料',
-      actionLabel: ACTION_LABEL[r.action] || r.action || '更新',
-      summary: humanSummaryForRow(r, tripNames),
-    }));
+    .map(({ r }) => {
+      const sortDate = rowDateForSort(r);
+      return {
+        id: r.id || '',
+        date: sortDate === '9999-12-31' ? '（無日期）' : sortDate,
+        typeLabel: TYPE_LABEL[r.type] || r.type || '資料',
+        actionLabel: ACTION_LABEL[r.action] || r.action || '更新',
+        summary: humanSummaryForRow(r, tripNames),
+      };
+    });
 }
 
 export function operationTimelineToText(rows = appState.allRows, limit = 30) {
@@ -387,8 +404,8 @@ export function allRowsToHumanCSV() {
     const summary = humanSummaryForRow(r, tripNames, { forCsv: true });
     const typeLabel = TYPE_LABEL[r.type] || r.type;
     const actionLabel = ACTION_LABEL[r.action] || r.action;
-    const noteCol = (r.note || '').trim();
-    const dateStr = (r.date || '').slice(0, 10) || '';
+    const noteCol = String(r.type === 'note' ? r.body || '' : r.note || '').trim();
+    const dateStr = rowDateForSort(r) === '9999-12-31' ? '' : rowDateForSort(r);
     const vals = [
       dateStr,
       rowBookLabel(r),
@@ -438,6 +455,11 @@ export function allRowsToTechnicalCSV() {
     'settlementFrom',
     'settlementTo',
     'voidReason',
+    'title',
+    'body',
+    'pinned',
+    'createdAt',
+    'updatedAt',
   ];
   const lines = [headers.join(',')];
   for (const r of appState.allRows) {
@@ -469,6 +491,11 @@ export function allRowsToTechnicalCSV() {
       r.from ?? '',
       r.to ?? '',
       r.voidReason ?? '',
+      r.title ?? '',
+      r.body ?? '',
+      r.pinned ?? '',
+      r.createdAt ?? '',
+      r.updatedAt ?? '',
     ];
     lines.push(vals.map(csvEscape).join(','));
   }
@@ -502,6 +529,7 @@ export function allRowsToBackupText() {
   const tripExp = rows.filter(r => r.type === 'tripExpense');
   const tripSet = rows.filter(r => r.type === 'tripSettlement');
   const tripMem = rows.filter(r => r.type === 'tripMember');
+  const notes = rows.filter(r => r.type === 'note');
 
   const balanceInfo = describeDailyBalanceExact(computeBalance(getDailyRecordsFromRows(rows)));
 
@@ -514,7 +542,7 @@ export function allRowsToBackupText() {
     balanceInfo.exact === 0
       ? '日常帳精確欠款：NT$ 0（帳目已清）'
       : `日常帳精確欠款：NT$ ${balanceInfo.exactText}（${balanceInfo.whoText}；進位還款 NT$ ${balanceInfo.ceilText}）`,
-    `事件總筆數：${rows.length}（日常／還款相關 ${dailyLike.length} · 行程 ${tripOnly.length} · 出遊消費 ${tripExp.length} · 出遊結清 ${tripSet.length} · 成員異動 ${tripMem.length}）`,
+    `事件總筆數：${rows.length}（日常／還款相關 ${dailyLike.length} · 行程 ${tripOnly.length} · 出遊消費 ${tripExp.length} · 出遊結清 ${tripSet.length} · 成員異動 ${tripMem.length} · 記事 ${notes.length}）`,
     '',
     '以下依「日期」排序；同一日多筆時維持原本順序。',
     '',
@@ -529,7 +557,8 @@ export function allRowsToBackupText() {
     });
 
   const body = sorted.map(({ r }, idx) => {
-    const dateStr = (r.date || '（無日期）').slice(0, 10);
+    const sortDate = rowDateForSort(r);
+    const dateStr = sortDate === '9999-12-31' ? '（無日期）' : sortDate;
     const typeLabel = TYPE_LABEL[r.type] || r.type;
     const actionLabel = ACTION_LABEL[r.action] || r.action;
     const line = humanSummaryForRow(r, tripNames);

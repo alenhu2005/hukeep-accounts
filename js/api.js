@@ -2,6 +2,7 @@ import {
   API_URL,
   CACHE_DAILY,
   CACHE_TRIP,
+  CACHE_NOTES,
   CACHE_LEGACY_KEYS,
   CLIENT_DATA_SCHEMA_KEY,
   CLIENT_DATA_SCHEMA_VERSION,
@@ -18,7 +19,7 @@ import {
   TIMEZONE,
 } from './config.js';
 import { appState } from './state.js';
-import { isDailyRow, isTripRow, normalizeRows } from './model.js';
+import { isDailyRow, isNoteRow, isTripRow, normalizeRows } from './model.js';
 import { abortSignalAfter, toast } from './utils.js';
 import { updateSyncUI } from './sync-ui.js';
 import { getClientDeviceSummary } from './device-info.js';
@@ -120,9 +121,11 @@ export function loadCache() {
   try {
     const daily = localStorage.getItem(CACHE_DAILY);
     const trip = localStorage.getItem(CACHE_TRIP);
+    const notes = localStorage.getItem(CACHE_NOTES);
     const cachedRows = [
       ...(daily ? JSON.parse(daily) : []),
       ...(trip ? JSON.parse(trip) : []),
+      ...(notes ? JSON.parse(notes) : []),
     ];
     appState.allRows = normalizeRows(cachedRows, {
       onWarnings: warnings => rememberSchemaWarnings('cache', warnings),
@@ -154,6 +157,7 @@ export function saveCache() {
   try {
     localStorage.setItem(CACHE_DAILY, JSON.stringify(appState.allRows.filter(isDailyRow).map(stripBase64Fields)));
     localStorage.setItem(CACHE_TRIP, JSON.stringify(appState.allRows.filter(isTripRow).map(stripBase64Fields)));
+    localStorage.setItem(CACHE_NOTES, JSON.stringify(appState.allRows.filter(isNoteRow).map(stripBase64Fields)));
   } catch (e) {
     if (e && e.name === 'QuotaExceededError') {
       toast('儲存空間已滿，快取寫入失敗');
@@ -166,6 +170,7 @@ export function clearLedgerLocalStorage() {
   try {
     localStorage.removeItem(CACHE_DAILY);
     localStorage.removeItem(CACHE_TRIP);
+    localStorage.removeItem(CACHE_NOTES);
     for (const k of CACHE_LEGACY_KEYS) {
       localStorage.removeItem(k);
     }

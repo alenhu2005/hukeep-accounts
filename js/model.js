@@ -70,18 +70,34 @@ import { normalizeDate, normalizeTimeOnly } from './time.js';
  */
 
 /**
- * @typedef {DailyLedgerRow|SettlementLedgerRow|TripLedgerRow|TripMemberLedgerRow|TripExpenseLedgerRow} LedgerRow
+ * @typedef {Object} NoteLedgerRow
+ * @property {'note'} type
+ * @property {string} id
+ * @property {'add'|'edit'|'delete'} [action]
+ * @property {string} [title]
+ * @property {string} [body]
+ * @property {boolean} [pinned]
+ * @property {number|string} [createdAt]
+ * @property {number|string} [updatedAt]
+ */
+
+/**
+ * @typedef {DailyLedgerRow|SettlementLedgerRow|TripLedgerRow|TripMemberLedgerRow|TripExpenseLedgerRow|NoteLedgerRow} LedgerRow
  */
 
 export const TRIP_TYPES = new Set(['trip', 'tripMember', 'tripExpense', 'tripSettlement', 'avatar', 'memberProfile']);
 export const DAILY_TYPES = new Set(['daily', 'settlement']);
-export const LEDGER_TYPES = new Set([...DAILY_TYPES, ...TRIP_TYPES]);
+export const NOTE_TYPES = new Set(['note']);
+export const LEDGER_TYPES = new Set([...DAILY_TYPES, ...TRIP_TYPES, ...NOTE_TYPES]);
 
 export function isDailyRow(r) {
   return r && DAILY_TYPES.has(r.type);
 }
 export function isTripRow(r) {
   return r && TRIP_TYPES.has(r.type);
+}
+export function isNoteRow(r) {
+  return r && NOTE_TYPES.has(r.type);
 }
 
 /**
@@ -140,6 +156,17 @@ export function normalizeRow(r) {
       r.createdAt = r.createdAt ?? (r.date || '');
       r.members = r.members ?? (r.splitMode || '[]');
     }
+  } else if (r.type === 'note') {
+    r.action = r.action ?? 'add';
+    r.id = String(r.id || '').trim();
+    r.title = String(r.title || '').trim();
+    r.body = String(r.body || '').trim();
+    const pinned = String(r.pinned || '').trim().toLowerCase();
+    r.pinned = r.pinned === true || ['true', '1', 'yes', 'y'].includes(pinned);
+    const createdAt = Number(r.createdAt);
+    const updatedAt = Number(r.updatedAt);
+    r.createdAt = Number.isFinite(createdAt) && createdAt >= 0 ? createdAt : 0;
+    r.updatedAt = Number.isFinite(updatedAt) && updatedAt >= 0 ? updatedAt : r.createdAt;
   } else if (r.type === 'tripMember') {
     r.tripId = r.tripId ?? (r.id || '');
     r.memberName = r.memberName ?? (r.date || '');

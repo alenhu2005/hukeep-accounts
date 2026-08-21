@@ -54,6 +54,26 @@ describe('mergeFreshWithOutboxBackedPending', () => {
     expect(merged.find(r => r.id === 'a1')?.voided).toBe(true);
     expect(merged.find(r => r.id === 'a1')?.voidReason).toBe('輸入錯誤');
   });
+
+  it('applies queued note edits and deletes to fresh current-state rows', () => {
+    const server = [
+      { type: 'note', action: 'add', id: 'n1', title: '舊標題', body: '內容', pinned: false, createdAt: 1, updatedAt: 1 },
+      { type: 'note', action: 'add', id: 'n2', title: '要刪除', body: '', pinned: false, createdAt: 1, updatedAt: 1 },
+    ];
+    const merged = mergeFreshWithOutboxBackedPending(server, server, [
+      { type: 'note', action: 'edit', id: 'n1', title: '新標題', pinned: true, updatedAt: 2 },
+      { type: 'note', action: 'delete', id: 'n2' },
+    ]);
+
+    expect(merged.find(row => row.id === 'n1')).toMatchObject({
+      title: '新標題',
+      body: '內容',
+      pinned: true,
+      updatedAt: 2,
+      _pendingSync: true,
+    });
+    expect(merged.find(row => row.id === 'n2')).toBeUndefined();
+  });
 });
 
 describe('pruneStalePendingSyncFlags', () => {
@@ -134,6 +154,13 @@ describe('enqueuePostOutbox (coalesce)', () => {
   it('compacts queued add+void for the same unsynced entity', () => {
     enqueuePostOutbox({ type: 'settlement', action: 'add', id: 's1', amount: 1 });
     enqueuePostOutbox({ type: 'settlement', action: 'void', id: 's1' });
+    expect(readPostOutbox()).toEqual([]);
+  });
+
+  it('compacts a queued note that is deleted before its first sync', () => {
+    enqueuePostOutbox({ type: 'note', action: 'add', id: 'n1', title: '暫存' });
+    enqueuePostOutbox({ type: 'note', action: 'edit', id: 'n1', title: '修改過' });
+    enqueuePostOutbox({ type: 'note', action: 'delete', id: 'n1' });
     expect(readPostOutbox()).toEqual([]);
   });
 });

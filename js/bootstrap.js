@@ -104,7 +104,7 @@ function tryRestoreSessionFromStorage() {
     navigate('tripDetail', s.tripId, { restoreScrollY: scrollY });
     return true;
   }
-  if (s.page === 'trips' || s.page === 'analysis' || s.page === 'home') {
+  if (s.page === 'trips' || s.page === 'analysis' || s.page === 'notes' || s.page === 'home') {
     navigate(s.page, null, { restoreScrollY: scrollY });
     return true;
   }
@@ -122,6 +122,7 @@ function syncOnNavigate() {
 function initBottomNavTouchNavigate() {
   const pairs = [
     ['nav-home', 'home'],
+    ['nav-notes', 'notes'],
     ['nav-trips', 'trips'],
     ['nav-analysis', 'analysis'],
   ];

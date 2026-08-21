@@ -4,7 +4,7 @@
 
 實際要部署到 Google Apps Script 的來源檔，請以：
 
-- [gas/current-state.gs](/Users/alen/Documents/Codex/2026-04-22-github-plugin-github-openai-curated-gthub/hukeep-accounts/gas/current-state.gs)
+- [gas/current-state.gs](../gas/current-state.gs)
 
 為主。這份文件主要說明工作表結構、行為規則與部署流程，避免文件和實作再次分岐。
 
@@ -17,6 +17,7 @@
 - `行程`
 - `出遊消費`
 - `出遊還款`
+- `記事`
 - `成員`
 - `頭像`
 
@@ -34,6 +35,7 @@
 - `封存_日常事件`
 - `封存_出遊事件`
 - `封存_人物事件`
+- `封存_記事事件`
 
 這些工作表保留完整事件歷程。
 
@@ -76,6 +78,15 @@
 
 - `trip`：刪除整個行程，並級聯刪除 active 中關聯的出遊消費與出遊還款
 - `memberProfile`：以 `deleted=true` 標記成員已移除
+- `note`：從 active「記事」移除，刪除事件仍保留在 `封存_記事事件`
+
+### 記事
+
+- `note + add`：新增共享記事
+- `note + edit`：更新標題、內文、置頂狀態與更新時間
+- `note + delete`：從 active 刪除記事並保留 archive 事件
+- 標題上限 80 字，內文上限 10,000 字
+- 前端可離線暫存操作，恢復連線後由 outbox 自動同步
 
 ## 歷史查詢
 
@@ -96,7 +107,7 @@ GET ?mode=history&type=tripExpense&id=<id>
 如果舊試算表還是 append-only 的：
 
 1. 保留舊工作表 `日常`、`出遊`、`人物`
-2. 將 [gas/current-state.gs](/Users/alen/Documents/Codex/2026-04-22-github-plugin-github-openai-curated-gthub/hukeep-accounts/gas/current-state.gs) 貼到 Apps Script
+2. 將 [gas/current-state.gs](../gas/current-state.gs) 貼到 Apps Script
 3. 執行 `migrateLegacyEventsToCurrentState()`
 
 結果：
@@ -120,14 +131,16 @@ GAS 仍支援把 `photoDataUrl` / `avatarDataUrl` 上傳到 Google Drive，再�
 ## 部署方式
 
 1. 建立或打開綁定試算表的 Apps Script 專案
-2. 將 [gas/current-state.gs](/Users/alen/Documents/Codex/2026-04-22-github-plugin-github-openai-curated-gthub/hukeep-accounts/gas/current-state.gs) 內容貼上
+2. 將 [gas/current-state.gs](../gas/current-state.gs) 內容貼上
 3. 視需要設定 Script Properties：
    - `GEMINI_API_KEY`
    - `PHOTO_FOLDER_ID`
 4. 部署為 Web App
-5. 把新 URL 更新到 [js/config.js](/Users/alen/Documents/Codex/2026-04-22-github-plugin-github-openai-curated-gthub/hukeep-accounts/js/config.js)
+5. 把新 URL 更新到 [js/config.js](../js/config.js)
+
+更新既有部署時，請建立「新版本」後重新部署；第一次寫入記事時，GAS 會自動建立 `記事` 與 `封存_記事事件` 工作表及欄位標題。
 
 ## 維護原則
 
-- 文件與實作若有差異，以 [gas/current-state.gs](/Users/alen/Documents/Codex/2026-04-22-github-plugin-github-openai-curated-gthub/hukeep-accounts/gas/current-state.gs) 為準
+- 文件與實作若有差異，以 [gas/current-state.gs](../gas/current-state.gs) 為準
 - 後續若再改 GAS，記得同步更新這份文件與 README 的後端摘要

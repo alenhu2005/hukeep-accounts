@@ -30,6 +30,7 @@ export const API_URL_SOURCE = WINDOW_API ? 'window' : LOCAL_API ? 'localStorage'
 
 export const CACHE_DAILY = 'gasRows_daily_v2';
 export const CACHE_TRIP = 'gasRows_trip_v2';
+export const CACHE_NOTES = 'gasRows_notes_v1';
 export const CLIENT_DATA_SCHEMA_KEY = 'ledger_data_schema_v1';
 export const CLIENT_DATA_SCHEMA_VERSION = 2;
 
