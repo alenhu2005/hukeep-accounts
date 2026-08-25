@@ -282,6 +282,12 @@ input.form-input-amount {
 
 #page-home .home-history-card > .record-search {
   margin-top: 12px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+#page-home .home-history-card > .record-search .record-search-input {
+  height: 30px;
 }
 
 .record-search--trip {

@@ -86,13 +86,17 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   await expect(page.locator('#bottom-nav')).toBeVisible();
   await expect(page.locator('#nav-home')).toContainText('日常');
   await expect(page.locator('#nav-notes')).toContainText('記事');
-  const homeSearchTopGap = await page.evaluate(() => {
+  const homeSearchLayout = await page.evaluate(() => {
     const card = document.querySelector('#page-home .home-history-card');
     const search = card?.querySelector('.record-search');
-    if (!card || !search) return -1;
-    return search.getBoundingClientRect().top - card.getBoundingClientRect().top;
+    if (!card || !search) return { topGap: -1, height: -1 };
+    return {
+      topGap: search.getBoundingClientRect().top - card.getBoundingClientRect().top,
+      height: search.getBoundingClientRect().height,
+    };
   });
-  expect(homeSearchTopGap).toBeGreaterThanOrEqual(10);
+  expect(homeSearchLayout.topGap).toBeGreaterThanOrEqual(10);
+  expect(homeSearchLayout.height).toBeLessThanOrEqual(44);
 
   await page.locator('#nav-notes').click();
   await expect(page.locator('#nav-notes')).toHaveClass(/active/);
@@ -174,6 +178,10 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   expect(scrollBeforeEdit).toBeGreaterThan(0);
   await restoredNote.getByRole('button', { name: '編輯記事' }).click();
   await expect(page.locator('#note-editor-card')).toBeVisible();
+  const noteEditorBodyFits = await page.locator('#note-body-input').evaluate(
+    element => element.scrollHeight <= element.clientHeight + 1,
+  );
+  expect(noteEditorBodyFits).toBe(true);
   const editorUsesOriginalNoteCard = await page.evaluate(() => {
     const card = document.querySelector('.note-card[data-note-id]');
     const editor = document.getElementById('note-editor-card');

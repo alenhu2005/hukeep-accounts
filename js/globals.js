@@ -34,6 +34,7 @@ import {
   clearTripRecordSearch,
 } from './views-trip-detail.js';
 import {
+  autoResizeNoteBody,
   clearNotesSearch,
   closeNoteEditor,
   deleteNote,
@@ -228,6 +229,7 @@ Object.assign(window, {
   toggleNotePin,
   setNotesSearch,
   clearNotesSearch,
+  autoResizeNoteBody,
   setNotesFilter,
   closeEditRecord: actions.closeEditRecord,
   submitEditRecord: actions.submitEditRecord,

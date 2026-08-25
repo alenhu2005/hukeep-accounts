@@ -205,6 +205,17 @@ function resetNotePhotoDraft() {
   if (input) input.value = '';
 }
 
+export function autoResizeNoteBody(input = document.getElementById('note-body-input')) {
+  if (!(input instanceof HTMLTextAreaElement)) return;
+  input.style.height = 'auto';
+  const style = getComputedStyle(input);
+  const minHeight = Number.parseFloat(style.minHeight) || 132;
+  const borderHeight =
+    (Number.parseFloat(style.borderTopWidth) || 0) +
+    (Number.parseFloat(style.borderBottomWidth) || 0);
+  input.style.height = `${Math.max(minHeight, input.scrollHeight + borderHeight)}px`;
+}
+
 function syncNoteEditor() {
   const card = document.getElementById('note-editor-card');
   if (!card) return;
@@ -228,6 +239,8 @@ function syncNoteEditor() {
     const icon = editorTitle.querySelector('svg')?.outerHTML || '';
     editorTitle.innerHTML = `${icon}${note ? '編輯記事' : '新增記事'}`;
   }
+  autoResizeNoteBody(body);
+  requestAnimationFrame(() => autoResizeNoteBody(body));
 }
 
 export function renderNotes() {
@@ -260,6 +273,7 @@ export function editNote(id) {
   syncExpandedNoteCards({ animate: true });
   syncNoteEditor();
   positionNoteEditor();
+  autoResizeNoteBody(document.getElementById('note-body-input'));
   const editor = document.getElementById('note-editor-card');
   if (targetCard && editor && startHeight > 0) {
     const endHeight = targetCard.getBoundingClientRect().height;

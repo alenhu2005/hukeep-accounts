@@ -56,9 +56,11 @@
   display: block;
   min-height: 156px;
   height: 156px;
+  max-height: none;
   padding: 12px;
   line-height: 1.55;
-  resize: vertical;
+  overflow-y: hidden;
+  resize: none;
 }
 
 .note-photo-editor-row {

@@ -479,7 +479,7 @@
           </div>
           <div class="form-group">
             <label class="form-label" for="note-body-input">內容</label>
-            <textarea id="note-body-input" class="form-input note-body-input" maxlength="10000" placeholder="寫下要記住的事情" onkeydown="saveNoteFromShortcut(event)"></textarea>
+            <textarea id="note-body-input" class="form-input note-body-input" maxlength="10000" placeholder="寫下要記住的事情" oninput="autoResizeNoteBody(this)" onkeydown="saveNoteFromShortcut(event)"></textarea>
           </div>
           <div class="form-group note-photo-field">
             <label class="form-label" for="note-photo-input">圖片（選填）</label>
