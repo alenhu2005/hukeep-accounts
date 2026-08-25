@@ -20,6 +20,8 @@ export function normalizeNote(value) {
   const id = cleanText(value.id);
   const title = cleanText(value.title);
   const body = cleanText(value.body);
+  const photoUrl = cleanText(value.photoUrl);
+  const photoFileId = cleanText(value.photoFileId);
   if (!id || (!title && !body)) return null;
   const createdAt = validTimestamp(value.createdAt);
   const updatedAt = validTimestamp(value.updatedAt, createdAt);
@@ -32,6 +34,7 @@ export function normalizeNote(value) {
     pinned: toBool(value.pinned),
     createdAt,
     updatedAt,
+    ...(photoUrl ? { photoUrl, photoFileId } : {}),
     ...(value._pendingSync ? { _pendingSync: true } : {}),
   };
 }
@@ -73,6 +76,11 @@ export function updateNote(notes, id, patch, now = Date.now()) {
       title,
       body,
       pinned: 'pinned' in patch ? Boolean(patch.pinned) : note.pinned,
+      ...('photoUrl' in patch
+        ? cleanText(patch.photoUrl)
+          ? { photoUrl: cleanText(patch.photoUrl), photoFileId: cleanText(patch.photoFileId) }
+          : { photoUrl: '', photoFileId: '' }
+        : {}),
       updatedAt: validTimestamp(now, note.updatedAt),
     };
   });

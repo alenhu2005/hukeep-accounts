@@ -90,4 +90,24 @@ describe('notes store', () => {
       },
     ]);
   });
+
+  it('保留同步自 GAS 的記事圖片資料', () => {
+    const [note] = getNotesFromRows([
+      {
+        type: 'note',
+        id: 'with-photo',
+        title: '租屋紀錄',
+        body: '客廳現況',
+        photoUrl: 'https://lh3.googleusercontent.com/d/photo-1',
+        photoFileId: 'photo-1',
+        createdAt: 10,
+        updatedAt: 20,
+      },
+    ]);
+
+    expect(note).toMatchObject({
+      photoUrl: 'https://lh3.googleusercontent.com/d/photo-1',
+      photoFileId: 'photo-1',
+    });
+  });
 });

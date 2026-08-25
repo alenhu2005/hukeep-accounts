@@ -468,6 +468,22 @@
             <label class="form-label" for="note-body-input">內容</label>
             <textarea id="note-body-input" class="form-input note-body-input" maxlength="10000" placeholder="寫下要記住的事情" onkeydown="saveNoteFromShortcut(event)"></textarea>
           </div>
+          <div class="form-group note-photo-field">
+            <label class="form-label" for="note-photo-input">圖片（選填）</label>
+            <input type="file" id="note-photo-input" accept="image/*" hidden onchange="handleNotePhotoSelected(event)">
+            <div class="note-photo-editor-row">
+              <button type="button" class="btn btn-outline note-photo-pick-btn" onclick="openNotePhotoPicker()">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 19V5c0-1.1-.9-2-2-2H5C3.9 3 3 3.9 3 5v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 11.5l2.5 3.01L14.5 10l4.5 6H5l3.5-4.5z"/></svg>
+                <span id="note-photo-action-label">加入圖片</span>
+              </button>
+              <div class="note-photo-preview-wrap" id="note-photo-preview-wrap" hidden>
+                <img id="note-photo-preview" class="note-photo-preview" alt="記事圖片預覽" onclick="openPhotoLightbox(this.src)">
+                <button type="button" class="note-photo-remove-btn" onclick="removeNotePhoto()" title="移除圖片" aria-label="移除圖片">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.41 4.29 19.71 2.88 18.3 9.17 12 2.88 5.7 4.29 4.29 10.59 10.59 16.89 4.29z"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
           <div class="note-editor-footer">
             <label class="note-pin-checkbox">
               <input type="checkbox" id="note-pinned-input">

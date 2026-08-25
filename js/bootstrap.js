@@ -206,7 +206,6 @@ export async function initApp() {
     closeFn: () => actions.closeTripClosureReportModal(),
     panelSelector: '.member-preview-panel',
   });
-
   initAmountInputs();
   refreshMotion(document.getElementById('app') || document);
 

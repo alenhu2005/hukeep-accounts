@@ -399,6 +399,7 @@ async function postRowSingleAttempt(data) {
   if (gasBody && gasBody.result === 'error') {
     throw new Error('GAS_ERR:' + (gasBody.message || '未知伺服器錯誤'));
   }
+  return gasBody;
 }
 
 function shouldRetryPostAttempt(err, attempt) {
@@ -418,7 +419,7 @@ function shouldRetryPostAttempt(err, attempt) {
  *   syncTarget?: object | null,
  * }} [opts]
  * - `syncTarget`: 與畫面綁定的列物件（成功時清除其 `_pendingSync`）；`null` 表示不清除（例如 flush 佇列）
- * @returns {Promise<{ status: 'sent' | 'queued' }>}
+ * @returns {Promise<{ status: 'sent' | 'queued', media?: { photoUrl?: string, photoFileId?: string } }>}
  */
 export async function postRow(data, opts = {}) {
   const allowQueue = opts.allowQueue !== false;
@@ -435,7 +436,7 @@ export async function postRow(data, opts = {}) {
   let lastErr;
   for (let attempt = 0; attempt < POST_MAX_RETRIES; attempt++) {
     try {
-      await postRowSingleAttempt(data);
+      const response = await postRowSingleAttempt(data);
       if (syncTarget != null && typeof syncTarget === 'object' && syncTarget._pendingSync) {
         delete syncTarget._pendingSync;
       }
@@ -445,7 +446,7 @@ export async function postRow(data, opts = {}) {
       persistSyncTimestamp(now);
       appState.syncStatus = postOutboxLength() > 0 ? 'cache_only' : 'synced';
       if (updateSyncUi) updateSyncUI();
-      return { status: 'sent' };
+      return { status: 'sent', ...(response?.media ? { media: response.media } : {}) };
     } catch (e) {
       lastErr = e;
       if (shouldRetryPostAttempt(e, attempt)) {

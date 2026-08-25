@@ -60,6 +60,7 @@ export const appState = {
   notesFilter: 'all',
   noteEditorOpen: false,
   editingNoteId: null,
+  expandedNoteId: null,
 
   analysisPeriod: 'month',
   /** 分析頁：相對於「本週／本月／本年」的位移（上一段為負） */

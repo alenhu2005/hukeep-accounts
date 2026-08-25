@@ -61,7 +61,16 @@ describe('mergeFreshWithOutboxBackedPending', () => {
       { type: 'note', action: 'add', id: 'n2', title: '要刪除', body: '', pinned: false, createdAt: 1, updatedAt: 1 },
     ];
     const merged = mergeFreshWithOutboxBackedPending(server, server, [
-      { type: 'note', action: 'edit', id: 'n1', title: '新標題', pinned: true, updatedAt: 2 },
+      {
+        type: 'note',
+        action: 'edit',
+        id: 'n1',
+        title: '新標題',
+        pinned: true,
+        photoDataUrl: 'data:image/jpeg;base64,dGVzdA==',
+        photoFileId: '',
+        updatedAt: 2,
+      },
       { type: 'note', action: 'delete', id: 'n2' },
     ]);
 
@@ -69,10 +78,40 @@ describe('mergeFreshWithOutboxBackedPending', () => {
       title: '新標題',
       body: '內容',
       pinned: true,
+      photoUrl: 'data:image/jpeg;base64,dGVzdA==',
+      photoFileId: '',
       updatedAt: 2,
       _pendingSync: true,
     });
     expect(merged.find(row => row.id === 'n2')).toBeUndefined();
+  });
+
+  it('將離線編輯中的記事圖片移除套用到快取', () => {
+    const server = [
+      {
+        type: 'note',
+        action: 'add',
+        id: 'n-photo',
+        title: '圖片記事',
+        body: '內容',
+        photoUrl: 'https://lh3.googleusercontent.com/d/old-photo',
+        photoFileId: 'old-photo',
+        createdAt: 1,
+        updatedAt: 1,
+      },
+    ];
+    const merged = mergeFreshWithOutboxBackedPending(server, server, [
+      {
+        type: 'note',
+        action: 'edit',
+        id: 'n-photo',
+        photoDataUrl: '',
+        photoFileId: '',
+        updatedAt: 2,
+      },
+    ]);
+
+    expect(merged[0]).toMatchObject({ photoUrl: '', photoFileId: '', _pendingSync: true });
   });
 });
 

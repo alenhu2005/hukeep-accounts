@@ -8,8 +8,25 @@ import {
 } from './notes-store.js';
 import { esc, jqAttr, toast } from './utils.js';
 import { linkifyNoteText } from './note-links.js';
-import { formatPostError, postRow } from './api.js';
-import { applyOptimisticPayload, restoreRowsSnapshot, snapshotRows } from './actions/shared.js';
+import { formatPostError, postRow, saveCache } from './api.js';
+import {
+  applyOptimisticPayload,
+  fileToJpegDataUrl,
+  restoreRowsSnapshot,
+  snapshotRows,
+} from './actions/shared.js';
+
+const MAX_NOTE_PHOTO_BYTES = 8_000_000;
+const MAX_NOTE_PHOTO_UPLOAD_BYTES = 4_000_000;
+let notePhotoPendingChange = null;
+
+function dataUrlByteLength(dataUrl) {
+  const comma = String(dataUrl || '').indexOf(',');
+  if (comma < 0) return 0;
+  const base64 = dataUrl.slice(comma + 1);
+  const padding = base64.endsWith('==') ? 2 : base64.endsWith('=') ? 1 : 0;
+  return Math.max(0, Math.floor((base64.length * 3) / 4) - padding);
+}
 
 function formatNoteTime(timestamp) {
   const date = new Date(timestamp);
@@ -34,10 +51,16 @@ function formatNoteTime(timestamp) {
 function noteCardHTML(note) {
   const noteId = jqAttr(note.id);
   const title = note.title || '未命名記事';
+  const expanded = appState.expandedNoteId === note.id;
   const body = note.body
     ? `<div class="note-card-body">${linkifyNoteText(note.body)}</div>`
     : '<div class="note-card-body note-card-body--empty">只有標題</div>';
-  return `<article class="note-card${note.pinned ? ' is-pinned' : ''}" data-note-id="${esc(note.id)}">
+  const photo = note.photoUrl
+    ? `<button type="button" class="note-card-photo-button" onclick="event.stopPropagation();openPhotoLightbox(${jqAttr(note.photoUrl)})" aria-label="放大記事圖片">
+        <img class="note-card-photo" src="${esc(note.photoUrl)}" alt="${esc(title)}的圖片" loading="lazy">
+      </button>`
+    : '';
+  return `<article class="note-card${note.pinned ? ' is-pinned' : ''}${expanded ? ' is-expanded' : ''}" data-note-id="${esc(note.id)}" tabindex="0" aria-expanded="${expanded}" aria-label="${expanded ? '收合' : '展開完整'}記事：${esc(title)}" onclick="if(!event.target.closest('button,a'))toggleNoteExpanded(${noteId})" onkeydown="handleNoteCardKey(event,${noteId})">
     <div class="note-card-topline">
       <div class="note-card-heading">
         ${note.pinned ? '<span class="note-pinned-badge">置頂</span>' : ''}
@@ -45,20 +68,23 @@ function noteCardHTML(note) {
         <h2 class="note-card-title">${esc(title)}</h2>
       </div>
       <div class="note-card-actions">
-        <button type="button" class="note-icon-btn${note.pinned ? ' active' : ''}" onclick="toggleNotePin(${noteId})" title="${note.pinned ? '取消置頂' : '置頂'}" aria-label="${note.pinned ? '取消置頂' : '置頂'}" aria-pressed="${note.pinned}">
+        <button type="button" class="note-icon-btn${note.pinned ? ' active' : ''}" onclick="event.stopPropagation();toggleNotePin(${noteId})" title="${note.pinned ? '取消置頂' : '置頂'}" aria-label="${note.pinned ? '取消置頂' : '置頂'}" aria-pressed="${note.pinned}">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5v6h2v-6h5v-2l-2-2z"/></svg>
         </button>
-        <button type="button" class="note-icon-btn" onclick="editNote(${noteId})" title="編輯記事" aria-label="編輯記事">
+        <button type="button" class="note-icon-btn" onclick="event.stopPropagation();editNote(${noteId})" title="編輯記事" aria-label="編輯記事">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm17.71-10.21a.996.996 0 0 0 0-1.41l-2.34-2.34a.996.996 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
         </button>
-        <button type="button" class="note-icon-btn note-icon-btn--danger" onclick="deleteNote(${noteId})" title="刪除記事" aria-label="刪除記事">
+        <button type="button" class="note-icon-btn note-icon-btn--danger" onclick="event.stopPropagation();deleteNote(${noteId})" title="刪除記事" aria-label="刪除記事">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zm3.46-7.12 1.41-1.41L12 11.59l1.12-1.12 1.41 1.41L13.41 13l1.12 1.12-1.41 1.41L12 14.41l-1.12 1.12-1.41-1.41L10.59 13l-1.13-1.12zM15.5 4l-1-1h-5l-1 1H5v2h14V4z"/></svg>
         </button>
       </div>
     </div>
-    <div class="note-card-content">
-      ${body}
-      <span class="note-card-time">更新於 ${esc(formatNoteTime(note.updatedAt))}</span>
+    <div class="note-card-content${photo ? ' has-photo' : ''}">
+      <div class="note-card-content-main">
+        ${body}
+        <span class="note-card-time">更新於 ${esc(formatNoteTime(note.updatedAt))}</span>
+      </div>
+      ${photo}
     </div>
   </article>`;
 }
@@ -105,6 +131,36 @@ function renderNotesList() {
   pinnedButton?.setAttribute('aria-pressed', String(!allActive));
 }
 
+function editingNote() {
+  if (!appState.editingNoteId) return null;
+  return getNotes().find(note => note.id === appState.editingNoteId) || null;
+}
+
+function editorPhotoUrl(note) {
+  if (notePhotoPendingChange?.kind === 'replace') return notePhotoPendingChange.dataUrl;
+  if (notePhotoPendingChange?.kind === 'remove') return '';
+  return note?.photoUrl || '';
+}
+
+function syncNotePhotoEditor(note) {
+  const previewWrap = document.getElementById('note-photo-preview-wrap');
+  const preview = document.getElementById('note-photo-preview');
+  const actionLabel = document.getElementById('note-photo-action-label');
+  const photoUrl = editorPhotoUrl(note);
+  if (preview) {
+    if (photoUrl) preview.src = photoUrl;
+    else preview.removeAttribute('src');
+  }
+  if (previewWrap) previewWrap.hidden = !photoUrl;
+  if (actionLabel) actionLabel.textContent = photoUrl ? '更換圖片' : '加入圖片';
+}
+
+function resetNotePhotoDraft() {
+  notePhotoPendingChange = null;
+  const input = document.getElementById('note-photo-input');
+  if (input) input.value = '';
+}
+
 function syncNoteEditor() {
   const card = document.getElementById('note-editor-card');
   if (!card) return;
@@ -123,6 +179,7 @@ function syncNoteEditor() {
   if (title) title.value = note?.title || '';
   if (body) body.value = note?.body || '';
   if (pinned) pinned.checked = Boolean(note?.pinned);
+  syncNotePhotoEditor(note);
   if (editorTitle) {
     const icon = editorTitle.querySelector('svg')?.outerHTML || '';
     editorTitle.innerHTML = `${icon}${note ? '編輯記事' : '新增記事'}`;
@@ -137,6 +194,8 @@ export function renderNotes() {
 }
 
 export function openNewNoteEditor() {
+  resetNotePhotoDraft();
+  appState.expandedNoteId = null;
   appState.editingNoteId = null;
   appState.noteEditorOpen = true;
   renderNotes();
@@ -145,6 +204,8 @@ export function openNewNoteEditor() {
 
 export function editNote(id) {
   if (!getNotes().some(note => note.id === id)) return;
+  resetNotePhotoDraft();
+  appState.expandedNoteId = null;
   appState.editingNoteId = id;
   appState.noteEditorOpen = true;
   renderNotes();
@@ -155,7 +216,98 @@ export function editNote(id) {
 export function closeNoteEditor() {
   appState.noteEditorOpen = false;
   appState.editingNoteId = null;
+  resetNotePhotoDraft();
   syncNoteEditor();
+}
+
+export function openNotePhotoPicker() {
+  document.getElementById('note-photo-input')?.click();
+}
+
+export async function handleNotePhotoSelected(event) {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    toast('離線狀態無法上傳圖片，請連上網路後再試');
+    return;
+  }
+  const input = event?.target;
+  const file = input?.files?.[0];
+  if (!file) return;
+  if (!String(file.type || '').startsWith('image/')) {
+    toast('請選擇圖片檔');
+    input.value = '';
+    return;
+  }
+  if (file.size > MAX_NOTE_PHOTO_BYTES) {
+    toast('圖片檔案過大，請改選較小的照片');
+    input.value = '';
+    return;
+  }
+
+  try {
+    const dataUrl = await fileToJpegDataUrl(file, { maxDim: 1600, quality: 0.82 });
+    if (dataUrlByteLength(dataUrl) > MAX_NOTE_PHOTO_UPLOAD_BYTES) {
+      toast('圖片壓縮後仍過大，請改選較小的照片');
+      return;
+    }
+    notePhotoPendingChange = { kind: 'replace', dataUrl };
+    syncNotePhotoEditor(editingNote());
+  } catch {
+    toast('圖片讀取失敗，請再試一次');
+  } finally {
+    input.value = '';
+  }
+}
+
+export function removeNotePhoto() {
+  notePhotoPendingChange = editingNote()?.photoUrl ? { kind: 'remove' } : null;
+  syncNotePhotoEditor(editingNote());
+}
+
+export function toggleNoteExpanded(id) {
+  const notes = getNotes();
+  if (!notes.some(note => note.id === id)) return;
+  appState.expandedNoteId = appState.expandedNoteId === id ? null : id;
+  const noteById = new Map(notes.map(note => [note.id, note]));
+  for (const card of document.querySelectorAll('#notes-list .note-card[data-note-id]')) {
+    const note = noteById.get(card.dataset.noteId);
+    const expanded = card.dataset.noteId === appState.expandedNoteId;
+    card.classList.toggle('is-expanded', expanded);
+    card.setAttribute('aria-expanded', String(expanded));
+    card.setAttribute(
+      'aria-label',
+      `${expanded ? '收合' : '展開完整'}記事：${note?.title || '未命名記事'}`,
+    );
+  }
+}
+
+export function handleNoteCardKey(event, id) {
+  if (event.target !== event.currentTarget || !['Enter', ' '].includes(event.key)) return;
+  event.preventDefault();
+  toggleNoteExpanded(id);
+}
+
+function pendingNotePhotoFields() {
+  if (notePhotoPendingChange?.kind === 'replace') {
+    return { photoDataUrl: notePhotoPendingChange.dataUrl, photoFileId: '' };
+  }
+  if (notePhotoPendingChange?.kind === 'remove') {
+    return { photoDataUrl: '', photoFileId: '' };
+  }
+  return {};
+}
+
+function patchSyncedNotePhoto(id, photoUrl, photoFileId) {
+  applyOptimisticPayload(
+    {
+      type: 'note',
+      action: 'edit',
+      id,
+      photoUrl: photoUrl || '',
+      photoFileId: photoFileId || '',
+    },
+    { pending: false },
+  );
+  saveCache();
 }
 
 export async function saveNote() {
@@ -170,7 +322,12 @@ export async function saveNote() {
 
   const editing = Boolean(appState.editingNoteId);
   const editingId = appState.editingNoteId;
-  const payload = editing
+  const hasPhotoChange = Boolean(notePhotoPendingChange);
+  if (hasPhotoChange && typeof navigator !== 'undefined' && navigator.onLine === false) {
+    toast('離線狀態無法上傳圖片，請連上網路後再試');
+    return;
+  }
+  const basePayload = editing
     ? {
         type: 'note',
         action: 'edit',
@@ -181,14 +338,32 @@ export async function saveNote() {
         updatedAt: Date.now(),
       }
     : createNote({ title, body, pinned });
+  const payload = { ...basePayload, ...pendingNotePhotoFields() };
   const snapshot = snapshotRows();
+  const originalNote = snapshot.find(row => row?.type === 'note' && row.id === payload.id);
+  const saveButton = document.getElementById('save-note-btn');
+  if (saveButton) {
+    saveButton.disabled = true;
+    saveButton.textContent = hasPhotoChange ? '上傳中…' : '儲存中…';
+  }
   applyOptimisticPayload(payload);
   appState.noteEditorOpen = false;
   appState.editingNoteId = null;
   renderNotes();
   try {
     const syncTarget = appState.allRows.find(row => row && row.type === 'note' && row.id === payload.id) || null;
-    const result = await postRow(payload, { syncTarget });
+    const result = await postRow(payload, { syncTarget, allowQueue: !hasPhotoChange });
+    if (hasPhotoChange && result.status === 'sent') {
+      if (!result.media || !Object.prototype.hasOwnProperty.call(result.media, 'photoUrl')) {
+        patchSyncedNotePhoto(payload.id, originalNote?.photoUrl, originalNote?.photoFileId);
+        resetNotePhotoDraft();
+        renderNotesList();
+        toast('記事文字已儲存，但圖片需要先更新 GAS 後再試');
+        return;
+      }
+      patchSyncedNotePhoto(payload.id, result.media.photoUrl, result.media.photoFileId);
+    }
+    resetNotePhotoDraft();
     renderNotesList();
     toast(
       result.status === 'queued'
@@ -203,6 +378,11 @@ export async function saveNote() {
     appState.editingNoteId = editingId;
     renderNotes();
     toast(formatPostError(error));
+  } finally {
+    if (saveButton) {
+      saveButton.disabled = false;
+      saveButton.textContent = '儲存';
+    }
   }
 }
 
@@ -224,6 +404,7 @@ export async function deleteNote(id) {
     appState.noteEditorOpen = false;
     appState.editingNoteId = null;
   }
+  if (appState.expandedNoteId === id) appState.expandedNoteId = null;
   renderNotes();
   try {
     const result = await postRow(payload, { syncTarget: null });

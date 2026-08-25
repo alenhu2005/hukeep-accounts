@@ -70,6 +70,12 @@ function normalizeActiveRow(row, { pending = false } = {}) {
     next.pinned = toBool(next.pinned);
     next.createdAt = Number.isFinite(Number(next.createdAt)) ? Number(next.createdAt) : 0;
     next.updatedAt = Number.isFinite(Number(next.updatedAt)) ? Number(next.updatedAt) : next.createdAt;
+    if (next.photoDataUrl !== undefined && next.photoUrl === undefined) {
+      next.photoUrl = next.photoDataUrl;
+    }
+    delete next.photoDataUrl;
+    next.photoUrl = trimString(next.photoUrl);
+    next.photoFileId = trimString(next.photoFileId);
   } else if (next.type === 'memberProfile') {
     next.memberName = trimString(next.memberName);
     next.colorId = trimString(next.colorId);
@@ -360,6 +366,9 @@ function editNote(rows, payload, { pending = false } = {}) {
     ...(payload.title !== undefined ? { title: payload.title } : {}),
     ...(payload.body !== undefined ? { body: payload.body } : {}),
     ...(payload.pinned !== undefined ? { pinned: payload.pinned } : {}),
+    ...(payload.photoUrl !== undefined ? { photoUrl: payload.photoUrl } : {}),
+    ...(payload.photoDataUrl !== undefined ? { photoUrl: payload.photoDataUrl } : {}),
+    ...(payload.photoFileId !== undefined ? { photoFileId: payload.photoFileId } : {}),
     ...(payload.updatedAt !== undefined ? { updatedAt: payload.updatedAt } : {}),
   };
   patchRow(rows[idx], patch, { pending });

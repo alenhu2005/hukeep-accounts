@@ -1,4 +1,7 @@
 import { expect, test } from '@playwright/test';
+import { fileURLToPath } from 'node:url';
+
+const NOTE_PHOTO_FIXTURE = fileURLToPath(new URL('../../icons/icon-512.png', import.meta.url));
 
 test('loads built app, navigates tabs, and registers service worker', async ({ page }, testInfo) => {
   const consoleErrors = [];
@@ -44,6 +47,11 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   await page.route(/https:\/\/script\.google(?:usercontent)?\.com\/.*/, async route => {
     if (route.request().method() === 'POST') {
       const payload = JSON.parse(route.request().postData() || '{}');
+      if (payload.type === 'note' && payload.photoDataUrl !== undefined) {
+        payload.photoUrl = payload.photoDataUrl;
+        payload.photoFileId = payload.photoDataUrl ? 'note-photo-test' : '';
+        delete payload.photoDataUrl;
+      }
       if (payload.type === 'note' && payload.action === 'add') {
         serverRows = [...serverRows, { ...payload, action: 'add' }];
       } else if (payload.type === 'note' && payload.action === 'edit') {
@@ -56,7 +64,12 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ result: 'success' }),
+        body: JSON.stringify({
+          result: 'success',
+          ...(payload.type === 'note' && Object.prototype.hasOwnProperty.call(payload, 'photoUrl')
+            ? { media: { photoUrl: payload.photoUrl, photoFileId: payload.photoFileId } }
+            : {}),
+        }),
       });
       return;
     }
@@ -79,7 +92,11 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   await expect(page.locator('#page-notes')).toHaveClass(/active/);
   await page.locator('#new-note-btn').click();
   await page.locator('#note-title-input').fill('東京行前清單');
-  await page.locator('#note-body-input').fill('護照\n充電器\nhttps://example.com/guide');
+  await page.locator('#note-body-input').fill(
+    '護照\n充電器\n轉接頭\n交通卡\n雨傘\n常備藥\n第七行完整內容\nhttps://example.com/guide',
+  );
+  await page.locator('#note-photo-input').setInputFiles(NOTE_PHOTO_FIXTURE);
+  await expect(page.locator('#note-photo-preview')).toBeVisible();
   await page.locator('#save-note-btn').click();
   await expect(page.locator('.note-card', { hasText: '東京行前清單' })).toBeVisible();
   await expect.poll(() => serverRows.some(row => row.type === 'note' && row.title === '東京行前清單')).toBe(true);
@@ -89,6 +106,7 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   const restoredNote = page.locator('.note-card', { hasText: '東京行前清單' });
   await expect(restoredNote).toHaveCount(1);
   await expect(restoredNote).toContainText('充電器');
+  await expect(restoredNote.locator('.note-card-photo')).toBeVisible();
   await expect(restoredNote.locator('.note-link')).toHaveAttribute('href', 'https://example.com/guide');
   await expect(restoredNote.locator('.note-link')).toHaveAttribute('target', '_blank');
   await page.context().route('https://example.com/**', route =>
@@ -100,6 +118,19 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   await linkedPage.waitForURL('https://example.com/guide');
   expect(linkedPage.url()).toBe('https://example.com/guide');
   await linkedPage.close();
+
+  await restoredNote.click({ position: { x: 24, y: 24 } });
+  await expect(restoredNote).toHaveClass(/is-expanded/);
+  await expect(restoredNote).toHaveAttribute('aria-expanded', 'true');
+  await expect(restoredNote.locator('.note-card-body')).toContainText('第七行完整內容');
+  await expect(restoredNote.locator('.note-card-photo')).toBeVisible();
+  const expandedBodyFits = await restoredNote.locator('.note-card-body').evaluate(element =>
+    element.scrollHeight <= element.clientHeight + 1,
+  );
+  expect(expandedBodyFits).toBe(true);
+  await restoredNote.click({ position: { x: 24, y: 24 } });
+  await expect(restoredNote).not.toHaveClass(/is-expanded/);
+  await expect(restoredNote).toHaveAttribute('aria-expanded', 'false');
 
   await page.locator('#nav-trips').click();
   await expect(page.locator('#nav-trips')).toHaveClass(/active/);
@@ -117,6 +148,13 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   await page.locator('#nav-notes').click();
   await expect(page.locator('#page-notes')).toHaveClass(/active/);
   await expect(page.locator('.note-card', { hasText: '東京行前清單' })).toHaveCount(1);
+  const mobileNote = page.locator('.note-card', { hasText: '東京行前清單' });
+  await mobileNote.click({ position: { x: 24, y: 24 } });
+  await expect(mobileNote).toHaveClass(/is-expanded/);
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: testInfo.outputPath('note-expanded-mobile.png'), fullPage: true });
+  await mobileNote.click({ position: { x: 24, y: 24 } });
+  await expect(mobileNote).not.toHaveClass(/is-expanded/);
   await page.locator('#new-note-btn').click();
   await expect(page.locator('#note-editor-card')).toBeVisible();
 
@@ -149,6 +187,11 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   await page.evaluate(() => document.documentElement.classList.add('dark'));
   await expect(page.locator('.note-card')).toHaveCSS('background-color', 'rgb(30, 35, 41)');
   await page.screenshot({ path: testInfo.outputPath('notes-mobile-dark.png'), fullPage: true });
+  await page.locator('.note-card', { hasText: '東京行前清單' }).click({ position: { x: 24, y: 24 } });
+  await expect(page.locator('.note-card', { hasText: '東京行前清單' })).toHaveClass(/is-expanded/);
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: testInfo.outputPath('note-expanded-mobile-dark.png'), fullPage: true });
+  await page.locator('.note-card', { hasText: '東京行前清單' }).click({ position: { x: 24, y: 24 } });
 
   const serviceWorkerScope = await page.evaluate(async () => {
     if (!('serviceWorker' in navigator)) return '';
