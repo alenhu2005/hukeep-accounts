@@ -13,7 +13,7 @@ import {
   prefersReducedMotion,
   bindScrollReveal,
 } from '../utils.js';
-import { postRow, formatPostError, saveCache } from '../api.js';
+import { postRow, formatPostError, saveCache, loadData } from '../api.js';
 import { APPEND_POSTED_AT_TO_POST } from '../config.js';
 import {
   getDailyRecords,
@@ -134,6 +134,18 @@ export async function recordTripSettlementOneAction(el) {
 }
 
 export async function recordSettlement() {
+  let unchanged = true;
+  try {
+    unchanged = await loadData();
+  } catch {
+    appState.syncStatus = 'error';
+  }
+  if (appState.syncStatus !== 'synced') {
+    toast('還款前無法取得最新帳本，請確認網路後再試');
+    return;
+  }
+  if (!unchanged) renderHome();
+
   const records = getDailyRecords();
   const balance = computeBalance(records);
   if (balance === 0) return;

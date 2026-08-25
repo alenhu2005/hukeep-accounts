@@ -49,12 +49,21 @@ describe('computeBalance', () => {
     expect(net).toBeCloseTo(50.5);
   });
 
-  it('還款列扣當下精確欠款，不以紀錄金額（進位）相減', () => {
+  it('還款列照紀錄金額扣款，僅消除不到 1 元的進位尾差', () => {
     const net = computeBalance([
       { type: 'settlement', _voided: false, paidBy: '詹', amount: 51 },
       { type: 'daily', _voided: false, paidBy: '胡', splitMode: '均分', amount: 101 },
     ]);
     expect(net).toBe(0);
+  });
+
+  it('還款金額少於當下欠款時保留差額，不得直接歸零', () => {
+    const net = computeBalance([
+      { type: 'settlement', _voided: false, paidBy: '詹', amount: 5737 },
+      { type: 'daily', _voided: false, paidBy: '胡', splitMode: '均分', amount: 321 },
+      { type: 'daily', _voided: false, paidBy: '胡', splitMode: '均分', amount: 11473 },
+    ]);
+    expect(net).toBe(160);
   });
 
   it('進位還款只扣精確尾差，不因多付產生反向欠款', () => {

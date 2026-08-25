@@ -73,19 +73,20 @@ function isLedgerRecordVoided(r) {
 export function nextDailyLedgerBalance(running, r) {
   if (isLedgerRecordVoided(r)) return running;
   if (r.type === 'settlement') {
-    const applied = Math.abs(running);
-    const recorded = parseFloat(r.amount) || 0;
-    if (r.paidBy === USER_B) {
-      if (applied >= 1e-9) return running - applied;
-      if (recorded >= 1e-9) return running - recorded;
-      return running;
-    }
-    if (r.paidBy === USER_A) {
-      if (applied >= 1e-9) return running + applied;
-      if (recorded >= 1e-9) return running + recorded;
-      return running;
-    }
-    return running;
+    const recorded = Math.abs(parseFloat(r.amount) || 0);
+    if (recorded < 1e-9) return running;
+
+    const next =
+      r.paidBy === USER_B
+        ? running - recorded
+        : r.paidBy === USER_A
+          ? running + recorded
+          : running;
+    const crossedZero = Math.abs(running) >= 1e-9 && Math.sign(next) !== Math.sign(running);
+
+    // UI 還款金額會無條件進位到整數，只消除這個不到 1 元的尾差。
+    if (crossedZero && Math.abs(next) < 1) return 0;
+    return next;
   }
   return running + dailyExpenseBalanceDeltaForUserA(r);
 }
