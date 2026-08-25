@@ -62,7 +62,7 @@ function noteCardHTML(note) {
         <img class="note-card-photo" src="${esc(note.photoUrl)}" alt="${esc(title)}的圖片" loading="lazy">
       </button>`
     : '';
-  return `<article class="note-card${note.pinned ? ' is-pinned' : ''}${expanded ? ' is-expanded' : ''}" data-note-id="${esc(note.id)}" tabindex="0" aria-expanded="${expanded}" aria-label="${expanded ? '收合' : '展開完整'}記事：${esc(title)}" onclick="if(!event.target.closest('button,a'))toggleNoteExpanded(${noteId})" onkeydown="handleNoteCardKey(event,${noteId})">
+  return `<article class="note-card${note.pinned ? ' is-pinned' : ''}${expanded ? ' is-expanded' : ''}" data-note-id="${esc(note.id)}" tabindex="0" aria-expanded="${expanded}" aria-label="${expanded ? '收合' : '展開完整'}記事：${esc(title)}" onclick="if(!this.classList.contains('is-editing')&&!event.target.closest('button,a,input,textarea,label,.note-editor-card'))toggleNoteExpanded(${noteId})" onkeydown="handleNoteCardKey(event,${noteId})">
     <div class="note-card-topline">
       <div class="note-card-heading">
         ${note.pinned ? '<span class="note-pinned-badge">置頂</span>' : ''}
@@ -94,6 +94,10 @@ function noteCardHTML(note) {
 function restoreNoteEditorHome() {
   const editor = document.getElementById('note-editor-card');
   const toolbar = document.querySelector('#page-notes .notes-toolbar');
+  const host = editor?.closest('.note-card');
+  host?.classList.remove('is-editing');
+  editor?.classList.remove('note-editor-card--inline');
+  editor?.classList.add('card');
   if (editor && toolbar && editor.nextElementSibling !== toolbar) toolbar.before(editor);
 }
 
@@ -107,7 +111,15 @@ function positionNoteEditor() {
   const card = Array.from(document.querySelectorAll('#notes-list .note-card')).find(
     element => element.dataset.noteId === appState.editingNoteId,
   );
-  if (card) card.after(editor);
+  if (card) {
+    document.querySelectorAll('#notes-list .note-card.is-editing').forEach(element => {
+      if (element !== card) element.classList.remove('is-editing');
+    });
+    editor.classList.remove('card');
+    editor.classList.add('note-editor-card--inline');
+    card.classList.add('is-editing');
+    card.append(editor);
+  }
   else restoreNoteEditorHome();
 }
 
@@ -237,6 +249,10 @@ export function openNewNoteEditor() {
 export function editNote(id) {
   if (!getNotes().some(note => note.id === id)) return;
   const initialScrollTop = window.scrollY;
+  const targetCard = Array.from(document.querySelectorAll('#notes-list .note-card')).find(
+    element => element.dataset.noteId === id,
+  );
+  const startHeight = targetCard?.getBoundingClientRect().height || 0;
   resetNotePhotoDraft();
   appState.expandedNoteId = null;
   appState.editingNoteId = id;
@@ -244,26 +260,84 @@ export function editNote(id) {
   syncExpandedNoteCards({ animate: true });
   syncNoteEditor();
   positionNoteEditor();
+  const editor = document.getElementById('note-editor-card');
+  if (targetCard && editor && startHeight > 0) {
+    const endHeight = targetCard.getBoundingClientRect().height;
+    animateNoteCardHeight(targetCard, startHeight, endHeight);
+    if (shouldAnimateNoteCards()) {
+      editor.animate(
+        [
+          { opacity: 0, transform: 'translateY(-10px)' },
+          { opacity: 1, transform: 'translateY(0)' },
+        ],
+        {
+          duration: 520,
+          easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+        },
+      );
+    }
+  }
   requestAnimationFrame(() => {
     document.getElementById('note-title-input')?.focus({ preventScroll: true });
     restoreScrollTop(initialScrollTop);
-    const editor = document.getElementById('note-editor-card');
-    const rect = editor?.getBoundingClientRect();
+    const input = document.getElementById('note-title-input');
+    const rect = input?.getBoundingClientRect();
     if (!rect || (rect.top >= 12 && rect.bottom <= window.innerHeight - 12)) return;
-    const editorTop = window.scrollY + rect.top - 12;
-    window.scrollTo({
-      top: Math.max(initialScrollTop, editorTop),
-      behavior: 'smooth',
-    });
+    input.scrollIntoView({ behavior: shouldAnimateNoteCards() ? 'smooth' : 'auto', block: 'center' });
+  });
+}
+
+async function fadeInlineNoteEditorOut() {
+  const editor = document.getElementById('note-editor-card');
+  const card = editor?.closest('.note-card.is-editing');
+  if (!editor || !card) return null;
+  const snapshot = { id: card.dataset.noteId, height: card.getBoundingClientRect().height };
+  if (!shouldAnimateNoteCards()) return snapshot;
+  try {
+    await editor.animate(
+      [
+        { opacity: 1, transform: 'translateY(0)' },
+        { opacity: 0, transform: 'translateY(-8px)' },
+      ],
+      {
+        duration: 240,
+        easing: 'cubic-bezier(0.4, 0, 1, 1)',
+        fill: 'forwards',
+      },
+    ).finished;
+  } catch {
+    /* A replacement render can cancel this enhancement. */
+  }
+  return snapshot;
+}
+
+function animateNoteCardRestore(snapshot) {
+  if (!snapshot) return;
+  const card = Array.from(document.querySelectorAll('#notes-list .note-card')).find(
+    element => element.dataset.noteId === snapshot.id,
+  );
+  if (!card) return;
+  animateNoteCardHeight(card, snapshot.height, card.getBoundingClientRect().height);
+  if (!shouldAnimateNoteCards()) return;
+  card.querySelector('.note-card-content')?.animate([{ opacity: 0 }, { opacity: 1 }], {
+    duration: 380,
+    delay: 80,
+    easing: 'ease-out',
   });
 }
 
 export function closeNoteEditor() {
+  const editor = document.getElementById('note-editor-card');
+  const host = editor?.closest('.note-card.is-editing');
+  const transitionSnapshot = host
+    ? { id: host.dataset.noteId, height: host.getBoundingClientRect().height }
+    : null;
   appState.noteEditorOpen = false;
   appState.editingNoteId = null;
   resetNotePhotoDraft();
   syncNoteEditor();
   restoreNoteEditorHome();
+  animateNoteCardRestore(transitionSnapshot);
 }
 
 export function openNotePhotoPicker() {
@@ -318,7 +392,8 @@ function shouldAnimateNoteCards() {
   );
 }
 
-function animateNoteCardHeight(card, startHeight, endHeight, expanded) {
+function animateNoteCardHeight(card, startHeight, endHeight) {
+  if (!shouldAnimateNoteCards() || Math.abs(endHeight - startHeight) < 1) return;
   const previous = noteCardAnimations.get(card);
   previous?.cancel();
   const animation = card.animate(
@@ -334,38 +409,6 @@ function animateNoteCardHeight(card, startHeight, endHeight, expanded) {
   };
   animation.addEventListener('finish', clear, { once: true });
   animation.addEventListener('cancel', clear, { once: true });
-
-  const content = card.querySelector('.note-card-content');
-  content?.animate(
-    expanded
-      ? [
-          { opacity: 0.62, transform: 'translateY(-10px) scale(0.985)' },
-          { opacity: 1, transform: 'translateY(0) scale(1)' },
-        ]
-      : [
-          { opacity: 1, transform: 'translateY(0) scale(1)' },
-          { opacity: 0.72, transform: 'translateY(-6px) scale(0.99)' },
-        ],
-    {
-      duration: expanded ? NOTE_EXPAND_DURATION_MS + 80 : NOTE_EXPAND_DURATION_MS - 80,
-      delay: expanded ? 55 : 0,
-      easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
-    },
-  );
-
-  if (expanded) {
-    card.querySelector('.note-card-photo-button')?.animate(
-      [
-        { opacity: 0.45, transform: 'translateY(14px) scale(0.97)' },
-        { opacity: 1, transform: 'translateY(0) scale(1)' },
-      ],
-      {
-        duration: NOTE_EXPAND_DURATION_MS + 160,
-        delay: 110,
-        easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
-      },
-    );
-  }
 }
 
 function syncExpandedNoteCards({ animate = false } = {}) {
@@ -403,7 +446,7 @@ function syncExpandedNoteCards({ animate = false } = {}) {
     if (wasExpanded === expanded) continue;
     const endHeight = card.getBoundingClientRect().height;
     if (Math.abs(endHeight - startHeight) < 1) continue;
-    animateNoteCardHeight(card, startHeight, endHeight, expanded);
+    animateNoteCardHeight(card, startHeight, endHeight);
   }
 }
 
@@ -479,10 +522,12 @@ export async function saveNote() {
     saveButton.disabled = true;
     saveButton.textContent = hasPhotoChange ? '上傳中…' : '儲存中…';
   }
+  const transitionSnapshot = await fadeInlineNoteEditorOut();
   applyOptimisticPayload(payload);
   appState.noteEditorOpen = false;
   appState.editingNoteId = null;
   renderNotes();
+  animateNoteCardRestore(transitionSnapshot);
   try {
     const syncTarget = appState.allRows.find(row => row && row.type === 'note' && row.id === payload.id) || null;
     const result = await postRow(payload, { syncTarget, allowQueue: !hasPhotoChange });

@@ -280,6 +280,10 @@ input.form-input-amount {
   border-bottom: 1px solid var(--workspace-border-strong);
 }
 
+#page-home .home-history-card > .record-search {
+  margin-top: 12px;
+}
+
 .record-search--trip {
   margin-top: 2px;
   margin-right: 16px;

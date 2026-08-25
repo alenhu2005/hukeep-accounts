@@ -86,6 +86,13 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   await expect(page.locator('#bottom-nav')).toBeVisible();
   await expect(page.locator('#nav-home')).toContainText('日常');
   await expect(page.locator('#nav-notes')).toContainText('記事');
+  const homeSearchTopGap = await page.evaluate(() => {
+    const card = document.querySelector('#page-home .home-history-card');
+    const search = card?.querySelector('.record-search');
+    if (!card || !search) return -1;
+    return search.getBoundingClientRect().top - card.getBoundingClientRect().top;
+  });
+  expect(homeSearchTopGap).toBeGreaterThanOrEqual(10);
 
   await page.locator('#nav-notes').click();
   await expect(page.locator('#nav-notes')).toHaveClass(/active/);
@@ -119,6 +126,11 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   expect(linkedPage.url()).toBe('https://example.com/guide');
   await linkedPage.close();
 
+  const collapsedBodyStyle = await restoredNote.locator('.note-card-body').evaluate(element => ({
+    color: getComputedStyle(element).color,
+    fontSize: getComputedStyle(element).fontSize,
+    lineHeight: getComputedStyle(element).lineHeight,
+  }));
   await restoredNote.click({ position: { x: 24, y: 24 } });
   await expect(restoredNote).toHaveClass(/is-expanded/);
   await expect(restoredNote).toHaveAttribute('aria-expanded', 'true');
@@ -130,6 +142,20 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
     element.getAnimations({ subtree: true }).map(animation => Number(animation.effect?.getTiming().duration) || 0),
   );
   expect(Math.max(...expandAnimationDurations)).toBeGreaterThanOrEqual(440);
+  const expandedBodyStyle = await restoredNote.locator('.note-card-body').evaluate(element => ({
+    color: getComputedStyle(element).color,
+    fontSize: getComputedStyle(element).fontSize,
+    lineHeight: getComputedStyle(element).lineHeight,
+  }));
+  expect(expandedBodyStyle).toEqual(collapsedBodyStyle);
+  const expansionContentTransforms = await restoredNote.locator('.note-card-content').evaluate(element =>
+    element
+      .getAnimations()
+      .flatMap(animation => animation.effect?.getKeyframes?.() || [])
+      .map(frame => frame.transform)
+      .filter(Boolean),
+  );
+  expect(expansionContentTransforms).toEqual([]);
   await expect(restoredNote.locator('.note-card-body')).toContainText('第七行完整內容');
   await expect(restoredNote.locator('.note-card-photo')).toBeVisible();
   const expandedBodyFits = await restoredNote.locator('.note-card-body').evaluate(element =>
@@ -148,14 +174,24 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   expect(scrollBeforeEdit).toBeGreaterThan(0);
   await restoredNote.getByRole('button', { name: '編輯記事' }).click();
   await expect(page.locator('#note-editor-card')).toBeVisible();
-  const editorFollowsEditedNote = await page.evaluate(() => {
+  const editorUsesOriginalNoteCard = await page.evaluate(() => {
     const card = document.querySelector('.note-card[data-note-id]');
-    return card?.nextElementSibling?.id === 'note-editor-card';
+    const editor = document.getElementById('note-editor-card');
+    return {
+      insideOriginalCard: Boolean(card && editor && card.contains(editor)),
+      originalCardEditing: Boolean(card?.classList.contains('is-editing')),
+      editorIsNotNestedCard: Boolean(editor && !editor.classList.contains('card')),
+    };
   });
-  expect(editorFollowsEditedNote).toBe(true);
+  expect(editorUsesOriginalNoteCard).toEqual({
+    insideOriginalCard: true,
+    originalCardEditing: true,
+    editorIsNotNestedCard: true,
+  });
   await page.waitForTimeout(400);
   expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
   await page.getByRole('button', { name: '關閉編輯器' }).click();
+  await expect(restoredNote).not.toHaveClass(/is-editing/);
 
   await page.locator('#nav-trips').click();
   await expect(page.locator('#nav-trips')).toHaveClass(/active/);
@@ -206,6 +242,10 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
 
   await page.locator('#nav-notes').click();
   await expect(page.locator('#page-notes')).toHaveClass(/active/);
+  const mobileNotesSearchHeight = await page.locator('.notes-search').evaluate(
+    element => element.getBoundingClientRect().height,
+  );
+  expect(mobileNotesSearchHeight).toBeLessThanOrEqual(44);
   await expect(page.locator('.note-card', { hasText: '東京行前清單' })).toHaveCount(1);
   const mobileNote = page.locator('.note-card', { hasText: '東京行前清單' });
   const controlsWithTapHighlight = await page.evaluate(() =>
