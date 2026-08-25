@@ -92,6 +92,19 @@
     <span class="update-badge-dot" aria-hidden="true"></span>
     資料已更新
   </div>
+  <aside id="note-update-banner" class="note-update-banner" aria-hidden="true" hidden>
+    <span class="note-update-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm1 15H7v-2h8v2zm2-4H7v-2h10v2zm-4-4V3.5L18.5 9H13z"/></svg>
+    </span>
+    <span class="note-update-copy" role="status" aria-live="polite" aria-atomic="true">
+      <span id="note-update-summary" class="note-update-summary">記事有新資料</span>
+      <strong id="note-update-title" class="note-update-title"></strong>
+    </span>
+    <button id="note-update-view" class="note-update-view" type="button">查看</button>
+    <button id="note-update-close" class="note-update-close" type="button" aria-label="關閉新記事通知" title="關閉">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.3 5.7a1 1 0 0 0-1.4 0L12 10.6 7.1 5.7a1 1 0 0 0-1.4 1.4l4.9 4.9-4.9 4.9a1 1 0 1 0 1.4 1.4l4.9-4.9 4.9 4.9a1 1 0 0 0 1.4-1.4L13.4 12l4.9-4.9a1 1 0 0 0 0-1.4z"/></svg>
+    </button>
+  </aside>
 
   <!-- 主題色 -->
   <div id="accent-menu-overlay" onclick="if(event.target===this)closeAccentMenu()" aria-hidden="true">

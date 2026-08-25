@@ -136,7 +136,7 @@ function bindAutoAnimate(root = document) {
     if (!(el instanceof HTMLElement) || autoAnimated.has(el)) continue;
     try {
       autoAnimate(el, {
-        duration: 270,
+        duration: 420,
         easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
       });
       autoAnimated.add(el);
@@ -169,8 +169,8 @@ function animateAvatarFrames(root = document, { force = false } = {}) {
     opacity: [0, 1],
     scale: [0.82, 1],
     rotate: ['-5deg', '0deg'],
-    duration: 660,
-    delay: stagger(32),
+    duration: 760,
+    delay: stagger(42),
     ease: 'out(4)',
   });
 }
@@ -198,8 +198,8 @@ export function initMotionSystem() {
       const target = event.target?.closest?.(TAP_SELECTOR);
       if (!target || target.closest('[aria-hidden="true"]')) return;
       runAnimation(target, {
-        scale: 0.965,
-        duration: 105,
+        scale: 0.97,
+        duration: 140,
         ease: 'out(2)',
       });
     },
@@ -211,7 +211,7 @@ export function initMotionSystem() {
     if (!target) return;
     runAnimation(target, {
       scale: 1,
-      duration: 230,
+      duration: 340,
       ease: 'out(4)',
     });
     const avatar = event.target?.closest?.(AVATAR_SELECTOR);
@@ -246,25 +246,27 @@ export function animatePageEnter(pageEl, opts = {}) {
       );
       runAnimation(analysisBlocks, {
         opacity: [0, 1],
-        translateY: [6, 0],
-        duration: 360,
-        delay: stagger(22),
-        ease: 'out(3)',
+        translateY: [16, 0],
+        scale: [0.985, 1],
+        duration: 580,
+        delay: stagger(42),
+        ease: 'out(4)',
       });
       return;
     }
 
     const pageTone =
       opts.page === 'trips'
-        ? ['-18px', '0px']
-        : ['14px', '0px'];
+        ? ['-22px', '0px']
+        : ['18px', '0px'];
     const blocks = visibleTargets(pageEl, PAGE_TARGETS, 16);
     runAnimation(blocks, {
       opacity: [0, 1],
       translateY: pageTone,
-      filter: ['blur(7px)', 'blur(0px)'],
-      duration: 620,
-      delay: stagger(48),
+      scale: [0.985, 1],
+      filter: ['blur(3px)', 'blur(0px)'],
+      duration: 650,
+      delay: stagger(58),
       ease: 'out(4)',
     });
 
@@ -276,8 +278,8 @@ export function animatePageEnter(pageEl, opts = {}) {
     runAnimation(icons, {
       scale: [0.78, 1],
       rotate: ['-8deg', '0deg'],
-      duration: 720,
-      delay: stagger(52, { start: 80 }),
+      duration: 780,
+      delay: stagger(58, { start: 110 }),
       ease: 'out(5)',
     });
   });
@@ -326,18 +328,18 @@ export function revealOnScroll(root, selector, { enabled = true } = {}) {
     });
     runAnimation(targets, {
       opacity: [0, 1],
-      translateY: [14, 0],
-      scale: [0.985, 1],
-      duration: 500,
-      delay: stagger(30),
+      translateY: [18, 0],
+      scale: [0.98, 1],
+      duration: 620,
+      delay: stagger(42),
       ease: 'out(4)',
     });
     const children = targets.flatMap(t => visibleTargets(t, REVEAL_CHILD_TARGETS, 4));
     runAnimation(children, {
       opacity: [0, 1],
       scale: [0.82, 1],
-      duration: 430,
-      delay: stagger(18, { start: 90 }),
+      duration: 560,
+      delay: stagger(28, { start: 120 }),
       ease: 'out(5)',
     });
   };
@@ -375,8 +377,8 @@ export function animateOverlayIn(overlay, panelSelector = '.dialog', itemSelecto
         opacity: [0, 1],
         translateY: [32, 0],
         scale: [0.955, 1],
-        filter: ['blur(8px)', 'blur(0px)'],
-        duration: 560,
+        filter: ['blur(4px)', 'blur(0px)'],
+        duration: 660,
         ease: 'out(4)',
       });
     }
@@ -385,8 +387,8 @@ export function animateOverlayIn(overlay, panelSelector = '.dialog', itemSelecto
       opacity: [0, 1],
       translateY: [16, 0],
       scale: [0.98, 1],
-      duration: 520,
-      delay: stagger(38, { start: 90 }),
+      duration: 580,
+      delay: stagger(46, { start: 120 }),
       ease: 'out(4)',
     });
     animateAvatarFrames(overlay, { force: true });
@@ -401,8 +403,8 @@ export function animatePanelEnter(panel, itemSelector = '') {
       opacity: [0, 1],
       translateY: [22, 0],
       scale: [0.97, 1],
-      filter: ['blur(7px)', 'blur(0px)'],
-      duration: 540,
+      filter: ['blur(4px)', 'blur(0px)'],
+      duration: 640,
       ease: 'out(4)',
     });
     const items = itemSelector ? visibleTargets(panel, itemSelector, 18) : [];
@@ -410,8 +412,8 @@ export function animatePanelEnter(panel, itemSelector = '') {
       opacity: [0, 1],
       translateY: [14, 0],
       scale: [0.985, 1],
-      duration: 480,
-      delay: stagger(34, { start: 90 }),
+      duration: 560,
+      delay: stagger(42, { start: 120 }),
       ease: 'out(4)',
     });
     animateAvatarFrames(panel, { force: true });
@@ -427,9 +429,9 @@ export function animateDetailsOpen(details, itemSelector = '') {
       runAnimation(body, {
         opacity: [0, 1],
         translateY: [-8, 0],
-        scaleY: [0.96, 1],
+        scaleY: [0.94, 1],
         transformOrigin: '50% 0%',
-        duration: 380,
+        duration: 520,
         ease: 'out(4)',
       });
     }
@@ -438,8 +440,8 @@ export function animateDetailsOpen(details, itemSelector = '') {
       opacity: [0, 1],
       translateY: [10, 0],
       scale: [0.98, 1],
-      duration: 420,
-      delay: stagger(28, { start: 70 }),
+      duration: 540,
+      delay: stagger(36, { start: 90 }),
       ease: 'out(4)',
     });
   });
@@ -454,16 +456,16 @@ export function bindDetailsReveal(details, itemSelector = '') {
 }
 
 export function animateToastItem(el) {
-  addAnimateCss(el, 'animate__fadeInUp', 360);
+  addAnimateCss(el, 'animate__fadeInUp', 520);
 }
 
 export function animateUpdateBadge(el) {
   if (!el) return;
-  addAnimateCss(el, 'animate__bounceIn', 560);
+  addAnimateCss(el, 'animate__bounceIn', 680);
   runAnimation(el, {
     translateY: [10, 0],
     scale: [0.92, 1],
-    duration: 520,
+    duration: 650,
     ease: 'out(5)',
   });
 }
@@ -475,7 +477,7 @@ export function animateThemeToggle(el) {
     rotate: ['-90deg', '0deg'],
     scale: [0.72, 1.08, 1],
     opacity: [0.45, 1],
-    duration: 620,
+    duration: 760,
     ease: 'out(5)',
   });
   addAnimateCss(el, 'animate__pulse', 420);
@@ -486,7 +488,7 @@ export function animateCountBadge(el) {
   runAnimation(el, {
     scale: [0.82, 1.12, 1],
     translateY: [-2, 0],
-    duration: 520,
+    duration: 620,
     ease: 'out(5)',
   });
 }
@@ -496,7 +498,7 @@ export function animateBalanceIcon(el) {
   runAnimation(el, {
     scale: [0.86, 1.12, 1],
     rotate: ['-7deg', '0deg'],
-    duration: 620,
+    duration: 720,
     ease: 'out(5)',
   });
 }
@@ -507,7 +509,7 @@ export function animateAvatarTap(el) {
     scale: [0.92, 1.08, 1],
     rotate: ['-4deg', '3deg', '0deg'],
     filter: ['brightness(1.08)', 'brightness(1)'],
-    duration: 520,
+    duration: 620,
     ease: 'out(5)',
   });
 }
@@ -518,8 +520,19 @@ export function animateSoftSwap(root, selector = '') {
   runAnimation(targets, {
     opacity: [0.2, 1],
     translateY: [8, 0],
-    duration: 380,
-    delay: stagger(22),
-    ease: 'out(3)',
+    duration: 520,
+    delay: stagger(32),
+    ease: 'out(4)',
+  });
+}
+
+export function animateSyncedNoteTarget(card) {
+  if (!card) return;
+  addAnimateCss(card, 'note-card--sync-focus', 1100);
+  runAnimation(card, {
+    translateY: [10, -3, 0],
+    scale: [0.985, 1.012, 1],
+    duration: 980,
+    ease: 'out(4)',
   });
 }

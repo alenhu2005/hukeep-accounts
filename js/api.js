@@ -35,6 +35,7 @@ import {
   pruneStalePendingSyncFlags,
 } from './offline-queue.js';
 import { upgradeClientStorageSchema } from './sync/storage-schema.js';
+import { emitRowsSynced } from './sync-events.js';
 
 function sleep(ms) {
   return new Promise(r => setTimeout(r, ms));
@@ -289,6 +290,7 @@ export async function loadData(opts = {}) {
     clearLedgerLocalStorage();
     appState.allRows = fresh;
     saveCache();
+    emitRowsSynced(localSnapshot, fresh);
 
     const unchanged = rowsDataEqual(localSnapshot, fresh);
     if (updateStatus && (!backgroundPoll || !unchanged)) {

@@ -126,6 +126,10 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
     element => element.getAnimations().filter(animation => animation.playState === 'running').length,
   );
   expect(expandAnimationCount).toBeGreaterThan(0);
+  const expandAnimationDurations = await restoredNote.evaluate(element =>
+    element.getAnimations({ subtree: true }).map(animation => Number(animation.effect?.getTiming().duration) || 0),
+  );
+  expect(Math.max(...expandAnimationDurations)).toBeGreaterThanOrEqual(440);
   await expect(restoredNote.locator('.note-card-body')).toContainText('第七行完整內容');
   await expect(restoredNote.locator('.note-card-photo')).toBeVisible();
   const expandedBodyFits = await restoredNote.locator('.note-card-body').evaluate(element =>
@@ -166,6 +170,40 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   await expect(page.locator('#nav-analysis')).toHaveClass(/active/);
 
   await page.setViewportSize({ width: 360, height: 800 });
+  serverRows = [
+    ...serverRows,
+    {
+      type: 'note',
+      action: 'add',
+      id: 'remote-note-seed-1',
+      title: '其他裝置新增的記事',
+      body: '這則記事應該在點擊通知後自動展開。',
+      pinned: false,
+      createdAt: Date.now() + 1000,
+      updatedAt: Date.now() + 1000,
+    },
+  ];
+  await page.reload({ waitUntil: 'networkidle' });
+  const noteUpdateBanner = page.locator('#note-update-banner');
+  await expect(noteUpdateBanner).toBeVisible();
+  await expect(page.locator('#note-update-title')).toHaveText('其他裝置新增的記事');
+  const noticeAnimationCount = await noteUpdateBanner.evaluate(element =>
+    element.getAnimations({ subtree: true }).filter(animation => animation.playState === 'running').length,
+  );
+  expect(noticeAnimationCount).toBeGreaterThan(0);
+  const noticeFitsViewport = await noteUpdateBanner.evaluate(element => {
+    const rect = element.getBoundingClientRect();
+    return rect.left >= -1 && rect.right <= window.innerWidth + 1;
+  });
+  expect(noticeFitsViewport).toBe(true);
+  await page.screenshot({ path: testInfo.outputPath('new-note-banner-mobile.png'), fullPage: false });
+  await page.locator('#note-update-view').click();
+  const syncedNote = page.locator('.note-card[data-note-id="remote-note-seed-1"]');
+  await expect(page.locator('#page-notes')).toHaveClass(/active/);
+  await expect(syncedNote).toBeVisible();
+  await expect(syncedNote).toHaveClass(/is-expanded/);
+  await expect(syncedNote).toHaveAttribute('aria-expanded', 'true');
+
   await page.locator('#nav-notes').click();
   await expect(page.locator('#page-notes')).toHaveClass(/active/);
   await expect(page.locator('.note-card', { hasText: '東京行前清單' })).toHaveCount(1);
@@ -182,13 +220,13 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   expect(controlsWithTapHighlight).toEqual([]);
   await mobileNote.click({ position: { x: 24, y: 24 } });
   await expect(mobileNote).toHaveClass(/is-expanded/);
-  await page.waitForTimeout(300);
+  await page.waitForTimeout(650);
   await page.screenshot({ path: testInfo.outputPath('note-expanded-mobile.png'), fullPage: true });
   await mobileNote.click({ position: { x: 24, y: 24 } });
   await expect(mobileNote).not.toHaveClass(/is-expanded/);
   await mobileNote.getByRole('button', { name: '編輯記事' }).click();
   await expect(page.locator('#note-editor-card')).toBeVisible();
-  await page.waitForTimeout(300);
+  await page.waitForTimeout(650);
   await page.screenshot({ path: testInfo.outputPath('note-editor-inline-mobile.png'), fullPage: true });
   await page.getByRole('button', { name: '關閉編輯器' }).click();
   await page.locator('#new-note-btn').click();
@@ -221,11 +259,11 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   await page.waitForTimeout(400);
   await page.screenshot({ path: testInfo.outputPath('notes-mobile.png'), fullPage: true });
   await page.evaluate(() => document.documentElement.classList.add('dark'));
-  await expect(page.locator('.note-card')).toHaveCSS('background-color', 'rgb(30, 35, 41)');
+  await expect(page.locator('.note-card').first()).toHaveCSS('background-color', 'rgb(30, 35, 41)');
   await page.screenshot({ path: testInfo.outputPath('notes-mobile-dark.png'), fullPage: true });
   await page.locator('.note-card', { hasText: '東京行前清單' }).click({ position: { x: 24, y: 24 } });
   await expect(page.locator('.note-card', { hasText: '東京行前清單' })).toHaveClass(/is-expanded/);
-  await page.waitForTimeout(300);
+  await page.waitForTimeout(650);
   await page.screenshot({ path: testInfo.outputPath('note-expanded-mobile-dark.png'), fullPage: true });
   await page.locator('.note-card', { hasText: '東京行前清單' }).click({ position: { x: 24, y: 24 } });
 

@@ -18,7 +18,7 @@ import {
 
 const MAX_NOTE_PHOTO_BYTES = 8_000_000;
 const MAX_NOTE_PHOTO_UPLOAD_BYTES = 4_000_000;
-const NOTE_EXPAND_DURATION_MS = 280;
+const NOTE_EXPAND_DURATION_MS = 440;
 const noteCardAnimations = new WeakMap();
 let notePhotoPendingChange = null;
 
@@ -335,15 +335,33 @@ function animateNoteCardHeight(card, startHeight, endHeight, expanded) {
   animation.addEventListener('finish', clear, { once: true });
   animation.addEventListener('cancel', clear, { once: true });
 
+  const content = card.querySelector('.note-card-content');
+  content?.animate(
+    expanded
+      ? [
+          { opacity: 0.62, transform: 'translateY(-10px) scale(0.985)' },
+          { opacity: 1, transform: 'translateY(0) scale(1)' },
+        ]
+      : [
+          { opacity: 1, transform: 'translateY(0) scale(1)' },
+          { opacity: 0.72, transform: 'translateY(-6px) scale(0.99)' },
+        ],
+    {
+      duration: expanded ? NOTE_EXPAND_DURATION_MS + 80 : NOTE_EXPAND_DURATION_MS - 80,
+      delay: expanded ? 55 : 0,
+      easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+    },
+  );
+
   if (expanded) {
-    card.querySelector('.note-card-content')?.animate(
+    card.querySelector('.note-card-photo-button')?.animate(
       [
-        { opacity: 0.76, transform: 'translateY(-4px)' },
-        { opacity: 1, transform: 'translateY(0)' },
+        { opacity: 0.45, transform: 'translateY(14px) scale(0.97)' },
+        { opacity: 1, transform: 'translateY(0) scale(1)' },
       ],
       {
-        duration: NOTE_EXPAND_DURATION_MS - 40,
-        delay: 40,
+        duration: NOTE_EXPAND_DURATION_MS + 160,
+        delay: 110,
         easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
       },
     );

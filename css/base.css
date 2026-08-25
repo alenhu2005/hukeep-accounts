@@ -22,6 +22,9 @@
   --ease-soft: cubic-bezier(0.25, 0.8, 0.25, 1);
   --ease-spring: cubic-bezier(0.34, 1.25, 0.52, 1);
   --dur: 0.32s;
+  --motion-fast: 180ms;
+  --motion-base: 420ms;
+  --motion-slow: 650ms;
 }
 
 html {

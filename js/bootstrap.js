@@ -13,6 +13,7 @@ import { syncPausedForUserInput } from './sync-pause.js';
 import { navigate } from './navigation.js';
 import { getTripById } from './data.js';
 import { initMotionSystem, refreshMotion, animateUpdateBadge } from './motion.js';
+import { initNoteUpdateNotifications } from './note-updates.js';
 import {
   persistSessionSnapshot,
   readSessionSnapshot,
@@ -179,6 +180,7 @@ export async function initApp() {
   initMotionSystem();
   ensureClientStorageSchema();
   loadCache();
+  initNoteUpdateNotifications(appState.allRows);
   updateSyncUI();
 
   if (!tryRestoreSessionFromStorage()) {
