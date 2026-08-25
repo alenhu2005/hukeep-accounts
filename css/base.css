@@ -70,6 +70,15 @@ select,
   -webkit-touch-callout: default;
 }
 
+button,
+[role='button'],
+input[type='button'],
+input[type='submit'],
+input[type='reset'] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
 #app { max-width: 480px; margin: 0 auto; min-height: 100vh; position: relative; }
 
 /* UI refresh: shell palette and atmosphere */

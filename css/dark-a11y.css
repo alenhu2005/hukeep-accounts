@@ -38,17 +38,27 @@ html.dark .record-note--void-reason {
 html.dark .badge-settle { background: #064e3b; color: #6ee7b7; }
 html.dark .badge-void { background: #7f1d1d; color: #fca5a5; }
 html.dark .settle-btn { background: #064e3b; color: #6ee7b7; }
-html.dark .settle-btn:hover { background: #065f46; }
+@media (hover: hover) and (pointer: fine) {
+  html.dark .settle-btn:hover { background: #065f46;
+  }
+}
 html.dark .edit-photo-preview { background: #0f172a; }
-html.dark .show-more-btn:hover { background: color-mix(in srgb, var(--primary) 12%, transparent); }
+@media (hover: hover) and (pointer: fine) {
+  html.dark .show-more-btn:hover { background: color-mix(in srgb, var(--primary) 12%, transparent);
+  }
+}
 html.dark .home-cal-nav-btn {
   background: #1e293b;
 }
-html.dark .home-cal-nav-btn:hover {
-  background: rgba(148, 163, 184, 0.12);
+@media (hover: hover) and (pointer: fine) {
+  html.dark .home-cal-nav-btn:hover {
+    background: rgba(148, 163, 184, 0.12);
+  }
 }
-html.dark .home-cal-cell:hover:not(.home-cal-cell--empty) {
-  background: rgba(148, 163, 184, 0.1);
+@media (hover: hover) and (pointer: fine) {
+  html.dark .home-cal-cell:hover:not(.home-cal-cell--empty) {
+    background: rgba(148, 163, 184, 0.1);
+  }
 }
 html.dark .home-cal-cell--selected {
   background: rgba(148, 163, 184, 0.2);
@@ -84,25 +94,34 @@ html.dark .btn-toggle {
 }
 html.dark .btn-toggle.active { background: var(--primary); color: white; border-color: transparent; }
 html.dark .balance-content { background: var(--surface); }
-html.dark .toggle-btn:hover { background: rgba(255,255,255,.06); }
+@media (hover: hover) and (pointer: fine) {
+  html.dark .toggle-btn:hover { background: rgba(255,255,255,.06);
+  }
+}
 html.dark .update-badge {
   background: linear-gradient(145deg, #2563eb 0%, #1d4ed8 50%, #1e3a8a 100%);
   box-shadow: 0 8px 28px rgba(37, 99, 235, 0.45), 0 1px 2px rgba(0, 0, 0, 0.2);
 }
-html.dark .analysis-stat-card:hover {
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
+@media (hover: hover) and (pointer: fine) {
+  html.dark .analysis-stat-card:hover {
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
+  }
 }
 html.dark .analysis-nav-btn {
   background: #1e293b;
 }
-html.dark .analysis-nav-btn:hover {
-  background: rgba(148, 163, 184, 0.12);
+@media (hover: hover) and (pointer: fine) {
+  html.dark .analysis-nav-btn:hover {
+    background: rgba(148, 163, 184, 0.12);
+  }
 }
 html.dark button.analysis-week-cell {
   background: #1e293b;
 }
-html.dark button.analysis-week-cell:hover {
-  background: rgba(148, 163, 184, 0.1);
+@media (hover: hover) and (pointer: fine) {
+  html.dark button.analysis-week-cell:hover {
+    background: rgba(148, 163, 184, 0.1);
+  }
 }
 html.dark .analysis-week-cell--selected {
   background: rgba(148, 163, 184, 0.18);
@@ -118,8 +137,10 @@ html.dark .analysis-week-cell--selected .analysis-week-day {
 html.dark button.analysis-cal-cell {
   background: #1e293b;
 }
-html.dark button.analysis-cal-cell:hover {
-  background: rgba(148, 163, 184, 0.1);
+@media (hover: hover) and (pointer: fine) {
+  html.dark button.analysis-cal-cell:hover {
+    background: rgba(148, 163, 184, 0.1);
+  }
 }
 html.dark .analysis-cal-cell--selected {
   background: rgba(148, 163, 184, 0.2);
@@ -197,26 +218,38 @@ html.dark button.home-cal-cell.analysis-period-dir--hu-owes.home-cal-cell--selec
 html.dark button.home-cal-cell.analysis-period-dir--neutral.home-cal-cell--selected .cal-cell-delta {
   color: #94a3b8;
 }
-html.dark button.analysis-week-cell.analysis-period-dir--zhan-owes:hover {
-  background: rgba(16, 185, 129, 0.18);
+@media (hover: hover) and (pointer: fine) {
+  html.dark button.analysis-week-cell.analysis-period-dir--zhan-owes:hover {
+    background: rgba(16, 185, 129, 0.18);
+  }
 }
-html.dark button.analysis-week-cell.analysis-period-dir--hu-owes:hover {
-  background: rgba(239, 68, 68, 0.16);
+@media (hover: hover) and (pointer: fine) {
+  html.dark button.analysis-week-cell.analysis-period-dir--hu-owes:hover {
+    background: rgba(239, 68, 68, 0.16);
+  }
 }
-html.dark button.analysis-week-cell.analysis-period-dir--neutral:hover {
-  background: rgba(148, 163, 184, 0.16);
+@media (hover: hover) and (pointer: fine) {
+  html.dark button.analysis-week-cell.analysis-period-dir--neutral:hover {
+    background: rgba(148, 163, 184, 0.16);
+  }
 }
-html.dark button.analysis-cal-cell.analysis-period-dir--zhan-owes:hover,
-html.dark button.home-cal-cell.analysis-period-dir--zhan-owes:hover {
-  background: rgba(16, 185, 129, 0.18);
+@media (hover: hover) and (pointer: fine) {
+  html.dark button.analysis-cal-cell.analysis-period-dir--zhan-owes:hover,
+  html.dark button.home-cal-cell.analysis-period-dir--zhan-owes:hover {
+    background: rgba(16, 185, 129, 0.18);
+  }
 }
-html.dark button.analysis-cal-cell.analysis-period-dir--hu-owes:hover,
-html.dark button.home-cal-cell.analysis-period-dir--hu-owes:hover {
-  background: rgba(239, 68, 68, 0.16);
+@media (hover: hover) and (pointer: fine) {
+  html.dark button.analysis-cal-cell.analysis-period-dir--hu-owes:hover,
+  html.dark button.home-cal-cell.analysis-period-dir--hu-owes:hover {
+    background: rgba(239, 68, 68, 0.16);
+  }
 }
-html.dark button.analysis-cal-cell.analysis-period-dir--neutral:hover,
-html.dark button.home-cal-cell.analysis-period-dir--neutral:hover {
-  background: rgba(148, 163, 184, 0.16);
+@media (hover: hover) and (pointer: fine) {
+  html.dark button.analysis-cal-cell.analysis-period-dir--neutral:hover,
+  html.dark button.home-cal-cell.analysis-period-dir--neutral:hover {
+    background: rgba(148, 163, 184, 0.16);
+  }
 }
 html.dark button.analysis-week-cell.analysis-period-dir--zhan-owes.analysis-week-cell--today {
   background: rgba(16, 185, 129, 0.14);
@@ -239,27 +272,45 @@ html.dark button.analysis-cal-cell.analysis-period-dir--neutral.analysis-cal-cel
 html.dark button.home-cal-cell.analysis-period-dir--neutral.home-cal-cell--today {
   background: rgba(148, 163, 184, 0.14);
 }
-html.dark .payer-row-remove:hover {
-  background: rgba(255,255,255,.06);
-  color: var(--text);
+@media (hover: hover) and (pointer: fine) {
+  html.dark .payer-row-remove:hover {
+    background: rgba(255,255,255,.06);
+    color: var(--text);
+  }
 }
 html.dark .badge { background: #334155; color: #cbd5e1; }
-html.dark .trip-card-wrap:hover,
 html.dark .trip-card-wrap:focus-within {
   background: rgba(255,255,255,.04);
+}
+@media (hover: hover) and (pointer: fine) {
+  html.dark .trip-card-wrap:hover {
+    background: rgba(255,255,255,.04);
+  }
 }
 html.dark .trip-color-picker { background: var(--bg-tertiary); }
 html.dark .trip-color-dot.active { border-color: var(--surface); box-shadow: 0 0 0 2px #cbd5e1; }
 html.dark .known-member-bar-btn {
   background: var(--surface); border-color: var(--border); color: var(--text);
 }
-html.dark .known-member-bar-btn:hover { background: var(--bg-tertiary); border-color: var(--primary); }
+@media (hover: hover) and (pointer: fine) {
+  html.dark .known-member-bar-btn:hover { background: var(--bg-tertiary); border-color: var(--primary);
+  }
+}
 html.dark .member-dir-avatar-fallback { color: var(--text); }
 html.dark .member-dir-action-btn { background: var(--bg-tertiary); border-color: var(--border); color: var(--text-muted); }
-html.dark .member-dir-action-btn:hover { color: var(--primary); border-color: var(--primary); }
-html.dark .member-dir-action-btn--danger:hover { color: #f87171; border-color: #f87171; }
+@media (hover: hover) and (pointer: fine) {
+  html.dark .member-dir-action-btn:hover { color: var(--primary); border-color: var(--primary);
+  }
+}
+@media (hover: hover) and (pointer: fine) {
+  html.dark .member-dir-action-btn--danger:hover { color: #f87171; border-color: #f87171;
+  }
+}
 html.dark .member-dir-close { background: var(--bg-tertiary); color: var(--text-muted); }
-html.dark .member-dir-close:hover { background: var(--border); }
+@media (hover: hover) and (pointer: fine) {
+  html.dark .member-dir-close:hover { background: var(--border);
+  }
+}
 
 /* Backup sheet */
 .backup-dialog {
@@ -518,8 +569,14 @@ html.dark .member-dir-close:hover { background: var(--border); }
   font-size: 11px; color: var(--text-muted); opacity: .4;
   transition: opacity .15s;
 }
-.clear-cache-link:hover { opacity: .7; }
-html.dark .btn-ghost.backup-tech-btn:hover { background: var(--bg-tertiary); }
+@media (hover: hover) and (pointer: fine) {
+  .clear-cache-link:hover { opacity: .7;
+  }
+}
+@media (hover: hover) and (pointer: fine) {
+  html.dark .btn-ghost.backup-tech-btn:hover { background: var(--bg-tertiary);
+  }
+}
 html.dark .backup-health-summary {
   background: rgba(15, 23, 42, .72);
 }
@@ -691,11 +748,15 @@ html.dark .trip-stats-wallet-out-row {
   letter-spacing: 0.02em;
   color: var(--text-muted);
 }
-.trip-pie-fold-btn:hover {
-  background: rgba(0, 0, 0, 0.05);
+@media (hover: hover) and (pointer: fine) {
+  .trip-pie-fold-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+  }
 }
-html.dark .trip-pie-fold-btn:hover {
-  background: rgba(255, 255, 255, 0.06);
+@media (hover: hover) and (pointer: fine) {
+  html.dark .trip-pie-fold-btn:hover {
+    background: rgba(255, 255, 255, 0.06);
+  }
 }
 .trip-pie-fold-btn svg {
   display: block;
@@ -1173,11 +1234,15 @@ button.trip-history-cell {
   max-width: calc((100% - 36px) / 7);
   min-width: 0;
 }
-button.trip-history-cell:hover {
-  background: #f1f5f9;
+@media (hover: hover) and (pointer: fine) {
+  button.trip-history-cell:hover {
+    background: #f1f5f9;
+  }
 }
-button.trip-history-cell.trip-history-cell--selected:hover {
-  background: #94a3b8;
+@media (hover: hover) and (pointer: fine) {
+  button.trip-history-cell.trip-history-cell--selected:hover {
+    background: #94a3b8;
+  }
 }
 /* 須含 button，否則特異性低於 button.trip-history-cell，選取灰底永遠被蓋掉 */
 button.trip-history-cell.trip-history-cell--selected {
@@ -1233,8 +1298,10 @@ button.trip-history-cell.trip-history-cell--today:not(.trip-history-cell--select
 html.dark button.trip-history-cell {
   background: #1e293b;
 }
-html.dark button.trip-history-cell:hover {
-  background: rgba(148, 163, 184, 0.1);
+@media (hover: hover) and (pointer: fine) {
+  html.dark button.trip-history-cell:hover {
+    background: rgba(148, 163, 184, 0.1);
+  }
 }
 html.dark button.trip-history-cell.trip-history-cell--today:not(.trip-history-cell--selected) {
   border-color: rgba(148, 163, 184, 0.45);
@@ -1254,8 +1321,10 @@ html.dark button.trip-history-cell.trip-history-cell--selected .trip-history-day
   color: #f8fafc;
   font-weight: 700;
 }
-html.dark button.trip-history-cell.trip-history-cell--selected:hover {
-  background: #475569;
+@media (hover: hover) and (pointer: fine) {
+  html.dark button.trip-history-cell.trip-history-cell--selected:hover {
+    background: #475569;
+  }
 }
 html.dark button.trip-history-cell.trip-history-cell--selected.trip-history-cell--today {
   background: #475569;
@@ -1274,8 +1343,10 @@ html.dark #page-trip-detail #detail-expenses .trip-history-list {
 #page-trip-detail #detail-expenses button.trip-history-cell {
   background: var(--bg-secondary);
 }
-#page-trip-detail #detail-expenses button.trip-history-cell:hover {
-  background: #f1f5f9;
+@media (hover: hover) and (pointer: fine) {
+  #page-trip-detail #detail-expenses button.trip-history-cell:hover {
+    background: #f1f5f9;
+  }
 }
 #page-trip-detail #detail-expenses button.trip-history-cell.trip-history-cell--selected {
   background: #64748b;
@@ -1291,8 +1362,10 @@ html.dark #page-trip-detail #detail-expenses .trip-history-list {
   color: #f8fafc;
   font-weight: 700;
 }
-#page-trip-detail #detail-expenses button.trip-history-cell.trip-history-cell--selected:hover {
-  background: #475569;
+@media (hover: hover) and (pointer: fine) {
+  #page-trip-detail #detail-expenses button.trip-history-cell.trip-history-cell--selected:hover {
+    background: #475569;
+  }
 }
 #page-trip-detail #detail-expenses button.trip-history-cell.trip-history-cell--selected.trip-history-cell--today {
   background: #475569;
@@ -1304,8 +1377,10 @@ html.dark #page-trip-detail #detail-expenses .trip-history-list {
 html.dark #page-trip-detail #detail-expenses button.trip-history-cell {
   background: #1e293b;
 }
-html.dark #page-trip-detail #detail-expenses button.trip-history-cell:hover {
-  background: rgba(148, 163, 184, 0.1);
+@media (hover: hover) and (pointer: fine) {
+  html.dark #page-trip-detail #detail-expenses button.trip-history-cell:hover {
+    background: rgba(148, 163, 184, 0.1);
+  }
 }
 html.dark #page-trip-detail #detail-expenses button.trip-history-cell.trip-history-cell--today:not(.trip-history-cell--selected) {
   border-color: rgba(148, 163, 184, 0.45);
@@ -1315,8 +1390,10 @@ html.dark #page-trip-detail #detail-expenses button.trip-history-cell.trip-histo
   background: #64748b;
   color: #f8fafc;
 }
-html.dark #page-trip-detail #detail-expenses button.trip-history-cell.trip-history-cell--selected:hover {
-  background: #475569;
+@media (hover: hover) and (pointer: fine) {
+  html.dark #page-trip-detail #detail-expenses button.trip-history-cell.trip-history-cell--selected:hover {
+    background: #475569;
+  }
 }
 html.dark #page-trip-detail #detail-expenses button.trip-history-cell.trip-history-cell--selected.trip-history-cell--today {
   background: #475569;
@@ -1717,10 +1794,12 @@ html.dark .trip-section-label {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
-html.dark .header-icon-btn:hover,
-html.dark #theme-toggle:hover,
-html.dark .back-btn:hover {
-  background: rgba(22, 34, 53, 0.88);
+@media (hover: hover) and (pointer: fine) {
+  html.dark .header-icon-btn:hover,
+  html.dark #theme-toggle:hover,
+  html.dark .back-btn:hover {
+    background: rgba(22, 34, 53, 0.88);
+  }
 }
 
 html.dark .form-input,
@@ -1731,10 +1810,12 @@ html.dark .form-select {
   color: var(--text);
 }
 
-html.dark .form-input:hover,
-html.dark .form-select:hover {
-  background: rgba(12, 21, 36, 0.96);
-  border-color: rgba(96, 165, 250, 0.34);
+@media (hover: hover) and (pointer: fine) {
+  html.dark .form-input:hover,
+  html.dark .form-select:hover {
+    background: rgba(12, 21, 36, 0.96);
+    border-color: rgba(96, 165, 250, 0.34);
+  }
 }
 
 html.dark .form-input:focus,
@@ -1753,15 +1834,19 @@ html.dark .btn-toggle {
   color: var(--text);
 }
 
-html.dark .btn-outline:hover,
-html.dark .btn-toggle:hover {
-  background: linear-gradient(180deg, rgba(16, 28, 46, 0.92) 0%, rgba(12, 21, 36, 0.84) 100%);
-  border-color: rgba(96, 165, 250, 0.38);
-  color: #dbeafe;
+@media (hover: hover) and (pointer: fine) {
+  html.dark .btn-outline:hover,
+  html.dark .btn-toggle:hover {
+    background: linear-gradient(180deg, rgba(16, 28, 46, 0.92) 0%, rgba(12, 21, 36, 0.84) 100%);
+    border-color: rgba(96, 165, 250, 0.38);
+    color: #dbeafe;
+  }
 }
 
-html.dark .btn-ghost:hover {
-  background: rgba(22, 34, 53, 0.72);
+@media (hover: hover) and (pointer: fine) {
+  html.dark .btn-ghost:hover {
+    background: rgba(22, 34, 53, 0.72);
+  }
 }
 
 html.dark #balance-card {
@@ -1786,8 +1871,10 @@ html.dark .settle-btn {
   box-shadow: 0 12px 22px rgba(15, 118, 110, 0.26);
 }
 
-html.dark .settle-btn:hover {
-  background: linear-gradient(135deg, #129187 0%, #14b8a6 100%);
+@media (hover: hover) and (pointer: fine) {
+  html.dark .settle-btn:hover {
+    background: linear-gradient(135deg, #129187 0%, #14b8a6 100%);
+  }
 }
 
 html.dark .trip-card-wrap,
@@ -1800,10 +1887,16 @@ html.dark .trip-card {
   background: linear-gradient(180deg, rgba(10, 19, 34, 0.86) 0%, rgba(8, 15, 28, 0.74) 100%);
 }
 
-html.dark .trip-card-wrap:hover,
 html.dark .trip-card-wrap:focus-within {
   background: rgba(12, 21, 36, 0.9);
   box-shadow: 0 18px 34px rgba(2, 6, 23, 0.36);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  html.dark .trip-card-wrap:hover {
+    background: rgba(12, 21, 36, 0.9);
+    box-shadow: 0 18px 34px rgba(2, 6, 23, 0.36);
+  }
 }
 
 html.dark .trip-color-picker,
@@ -1825,11 +1918,13 @@ html.dark .home-cal-cell {
   color: var(--text);
 }
 
-html.dark button.analysis-week-cell:hover,
-html.dark button.analysis-cal-cell:hover,
-html.dark .home-cal-nav-btn:hover,
-html.dark .home-cal-cell:hover:not(.home-cal-cell--empty) {
-  background: rgba(16, 28, 46, 0.94);
+@media (hover: hover) and (pointer: fine) {
+  html.dark button.analysis-week-cell:hover,
+  html.dark button.analysis-cal-cell:hover,
+  html.dark .home-cal-nav-btn:hover,
+  html.dark .home-cal-cell:hover:not(.home-cal-cell--empty) {
+    background: rgba(16, 28, 46, 0.94);
+  }
 }
 
 html.dark .analysis-week-cell--selected,

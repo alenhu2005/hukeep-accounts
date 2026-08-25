@@ -31,7 +31,10 @@
   display: flex; align-items: center; justify-content: center;
   backdrop-filter: blur(4px);
 }
-.photo-lightbox-close:hover { background: rgba(255,255,255,.25); }
+@media (hover: hover) and (pointer: fine) {
+  .photo-lightbox-close:hover { background: rgba(255,255,255,.25);
+  }
+}
 
 /* ── 成員頭像放大預覽（成員管理） ── */
 .member-avatar-preview-overlay {
@@ -64,7 +67,10 @@
   font-size: 22px; cursor: pointer; line-height: 1;
   display: flex; align-items: center; justify-content: center;
 }
-.member-avatar-preview-close:hover { background: var(--border); color: var(--text); }
+@media (hover: hover) and (pointer: fine) {
+  .member-avatar-preview-close:hover { background: var(--border); color: var(--text);
+  }
+}
 .member-avatar-preview-inner {
   display: flex; justify-content: center;
   margin-top: 4px;
@@ -127,7 +133,10 @@ html.dark .member-avatar-preview-ring.member-tone {
   padding: 0; opacity: .45; transition: opacity .15s, transform .12s;
 }
 .record-photo-btn svg { width: 18px; height: 18px; fill: var(--text-muted); }
-.record-photo-btn:hover { opacity: .7; }
+@media (hover: hover) and (pointer: fine) {
+  .record-photo-btn:hover { opacity: .7;
+  }
+}
 .record-photo-btn:active { transform: scale(0.85); opacity: .8; }
 
 /* ── Toast ── */
@@ -360,10 +369,12 @@ html.dark .member-avatar-preview-ring.member-tone {
     background .16s var(--ease-out),
     box-shadow .16s var(--ease-out);
 }
-.dialog-reason-option:hover {
-  transform: translateY(-1px);
-  border-color: color-mix(in srgb, var(--primary) 36%, var(--border));
-  box-shadow: 0 8px 18px rgba(59, 130, 246, .12);
+@media (hover: hover) and (pointer: fine) {
+  .dialog-reason-option:hover {
+    transform: translateY(-1px);
+    border-color: color-mix(in srgb, var(--primary) 36%, var(--border));
+    box-shadow: 0 8px 18px rgba(59, 130, 246, .12);
+  }
 }
 .dialog-reason-option.is-selected {
   border-color: color-mix(in srgb, var(--primary) 68%, transparent);
@@ -403,7 +414,10 @@ html.dark .member-avatar-preview-ring.member-tone {
 .dialog-actions { display: flex; gap: 8px; }
 .dialog-actions .btn { flex: 1; height: 42px; font-size: 14px; }
 .btn-destructive { background: var(--danger); color: white; }
-.btn-destructive:hover { background: #dc2626; }
+@media (hover: hover) and (pointer: fine) {
+  .btn-destructive:hover { background: #dc2626;
+  }
+}
 
 /* ── Settle button ── */
 .settle-btn {
@@ -411,7 +425,10 @@ html.dark .member-avatar-preview-ring.member-tone {
   border: none; border-radius: 99px; padding: 5px 14px;
   font-size: 12px; font-weight: 600; cursor: pointer; letter-spacing: .01em;
 }
-.settle-btn:hover { background: #a7f3d0; }
+@media (hover: hover) and (pointer: fine) {
+  .settle-btn:hover { background: #a7f3d0;
+  }
+}
 .settle-btn--inline {
   margin-top: 0;
   padding: 4px 11px;
@@ -447,6 +464,9 @@ html.dark .member-avatar-preview-ring.member-tone {
   line-height: 0;
   transition: background 0.2s ease, transform 0.15s ease;
 }
-#theme-toggle:hover { background: var(--border); }
+@media (hover: hover) and (pointer: fine) {
+  #theme-toggle:hover { background: var(--border);
+  }
+}
 #theme-toggle:active { transform: scale(0.92); }
 #theme-toggle svg { width: 18px; height: 18px; fill: currentColor; display: block; margin: auto; }

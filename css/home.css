@@ -109,8 +109,10 @@ html.dark .settlement-list--visual .settlement-row--visual {
   border-radius: 12px;
   transition: background 0.2s ease;
 }
-.settlement-collapse-trigger:hover {
-  background: var(--bg-secondary);
+@media (hover: hover) and (pointer: fine) {
+  .settlement-collapse-trigger:hover {
+    background: var(--bg-secondary);
+  }
 }
 .settlement-collapse-trigger:focus-visible {
   outline: 2px solid var(--primary);

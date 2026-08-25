@@ -57,14 +57,18 @@ html.dark .member-chip.member-tone .member-chip-avatar {
   border-color: color-mix(in srgb, var(--member-fg) 28%, var(--border));
   background: color-mix(in srgb, var(--member-bg) 14%, var(--surface));
 }
-.known-member-bar-btn.member-tone:hover {
-  background: color-mix(in srgb, var(--member-bg) 22%, var(--primary-light));
+@media (hover: hover) and (pointer: fine) {
+  .known-member-bar-btn.member-tone:hover {
+    background: color-mix(in srgb, var(--member-bg) 22%, var(--primary-light));
+  }
 }
 html.dark .known-member-bar-btn.member-tone {
   background: color-mix(in srgb, var(--member-bg) 12%, rgba(30, 41, 59, 0.65));
 }
-html.dark .known-member-bar-btn.member-tone:hover {
-  border-color: var(--primary);
+@media (hover: hover) and (pointer: fine) {
+  html.dark .known-member-bar-btn.member-tone:hover {
+    border-color: var(--primary);
+  }
 }
 .known-member-bar-btn.member-tone .known-member-bar-dot {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--member-fg) 55%, transparent);
@@ -121,8 +125,10 @@ html.dark .record-avatar.member-tone:not(.record-avatar--rare) {
 html.dark .record-avatar.member-tone.other {
   background: color-mix(in srgb, var(--member-bg) 26%, #374151);
 }
-.record-avatar.member-tone.record-avatar-clickable:hover {
-  box-shadow: 0 0 0 2px var(--primary);
+@media (hover: hover) and (pointer: fine) {
+  .record-avatar.member-tone.record-avatar-clickable:hover {
+    box-shadow: 0 0 0 2px var(--primary);
+  }
 }
 
 .settlement-pill.member-tone {
@@ -136,7 +142,10 @@ html.dark .settlement-pill.member-tone {
   background: none; border: none; cursor: pointer; color: inherit;
   opacity: .7; padding: 0; line-height: 1; display: flex; align-items: center;
 }
-.member-chip-remove:hover { opacity: 1; }
+@media (hover: hover) and (pointer: fine) {
+  .member-chip-remove:hover { opacity: 1;
+  }
+}
 .member-chip-remove svg { width: 12px; height: 12px; fill: currentColor; }
 
 /* 稀有／隱藏成員色：漸層框、光暈、微微閃（不要條紋） */

@@ -447,8 +447,10 @@ html.dark .record-amount--settle {
   justify-content: center;
   transition: background 0.15s ease;
 }
-.home-cal-nav-btn:hover {
-  background: #f0f9ff;
+@media (hover: hover) and (pointer: fine) {
+  .home-cal-nav-btn:hover {
+    background: #f0f9ff;
+  }
 }
 .home-cal-nav-btn svg {
   fill: currentColor;
@@ -536,8 +538,10 @@ html.dark .record-amount--settle {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.home-cal-cell:hover:not(.home-cal-cell--empty) {
-  background: #f1f5f9;
+@media (hover: hover) and (pointer: fine) {
+  .home-cal-cell:hover:not(.home-cal-cell--empty) {
+    background: #f1f5f9;
+  }
 }
 .home-cal-cell--empty {
   cursor: default;
@@ -569,7 +573,10 @@ html.dark .record-amount--settle {
   border-top: 1px solid var(--border); display: flex; align-items: center;
   justify-content: center; gap: 4px; border-radius: 0 0 12px 12px;
 }
-.show-more-btn:hover { background: #f0f9ff; }
+@media (hover: hover) and (pointer: fine) {
+  .show-more-btn:hover { background: #f0f9ff;
+  }
+}
 
 /* ── Voided group ── */
 
@@ -584,7 +591,10 @@ html.dark .record-amount--settle {
   background: none; border: none; cursor: pointer; padding: 4px;
   color: var(--text-muted); border-radius: 4px; flex-shrink: 0;
 }
-.record-delete:hover { color: var(--danger); }
+@media (hover: hover) and (pointer: fine) {
+  .record-delete:hover { color: var(--danger);
+  }
+}
 .record-delete svg { width: 14px; height: 14px; fill: currentColor; display: block; }
 
 /* ── Badge ── */

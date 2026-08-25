@@ -31,8 +31,10 @@
   justify-content: center;
   transition: background 0.15s ease;
 }
-.analysis-nav-btn:hover {
-  background: #f1f5f9;
+@media (hover: hover) and (pointer: fine) {
+  .analysis-nav-btn:hover {
+    background: #f1f5f9;
+  }
 }
 .analysis-nav-btn svg {
   fill: currentColor;
@@ -64,8 +66,10 @@ button.analysis-week-cell {
   font-family: inherit;
   width: 100%;
 }
-button.analysis-week-cell:hover {
-  background: #f1f5f9;
+@media (hover: hover) and (pointer: fine) {
+  button.analysis-week-cell:hover {
+    background: #f1f5f9;
+  }
 }
 .analysis-week-cell--selected {
   background: rgba(71, 85, 105, 0.14);
@@ -154,8 +158,10 @@ button.analysis-cal-cell:has(.cal-cell-delta) .analysis-cal-cell-day {
   font-size: 11px;
   line-height: 1.2;
 }
-button.analysis-cal-cell:hover {
-  background: #f1f5f9;
+@media (hover: hover) and (pointer: fine) {
+  button.analysis-cal-cell:hover {
+    background: #f1f5f9;
+  }
 }
 .analysis-cal-cell--selected {
   background: rgba(71, 85, 105, 0.14);
@@ -244,26 +250,38 @@ button.home-cal-cell.analysis-period-dir--neutral {
   border: 1px solid rgba(148, 163, 184, 0.55);
   background: rgba(148, 163, 184, 0.08);
 }
-button.analysis-week-cell.analysis-period-dir--zhan-owes:hover {
-  background: rgba(16, 185, 129, 0.1);
+@media (hover: hover) and (pointer: fine) {
+  button.analysis-week-cell.analysis-period-dir--zhan-owes:hover {
+    background: rgba(16, 185, 129, 0.1);
+  }
 }
-button.analysis-week-cell.analysis-period-dir--hu-owes:hover {
-  background: rgba(239, 68, 68, 0.1);
+@media (hover: hover) and (pointer: fine) {
+  button.analysis-week-cell.analysis-period-dir--hu-owes:hover {
+    background: rgba(239, 68, 68, 0.1);
+  }
 }
-button.analysis-week-cell.analysis-period-dir--neutral:hover {
-  background: rgba(148, 163, 184, 0.12);
+@media (hover: hover) and (pointer: fine) {
+  button.analysis-week-cell.analysis-period-dir--neutral:hover {
+    background: rgba(148, 163, 184, 0.12);
+  }
 }
-button.analysis-cal-cell.analysis-period-dir--zhan-owes:hover,
-button.home-cal-cell.analysis-period-dir--zhan-owes:hover {
-  background: rgba(16, 185, 129, 0.1);
+@media (hover: hover) and (pointer: fine) {
+  button.analysis-cal-cell.analysis-period-dir--zhan-owes:hover,
+  button.home-cal-cell.analysis-period-dir--zhan-owes:hover {
+    background: rgba(16, 185, 129, 0.1);
+  }
 }
-button.analysis-cal-cell.analysis-period-dir--hu-owes:hover,
-button.home-cal-cell.analysis-period-dir--hu-owes:hover {
-  background: rgba(239, 68, 68, 0.1);
+@media (hover: hover) and (pointer: fine) {
+  button.analysis-cal-cell.analysis-period-dir--hu-owes:hover,
+  button.home-cal-cell.analysis-period-dir--hu-owes:hover {
+    background: rgba(239, 68, 68, 0.1);
+  }
 }
-button.analysis-cal-cell.analysis-period-dir--neutral:hover,
-button.home-cal-cell.analysis-period-dir--neutral:hover {
-  background: rgba(148, 163, 184, 0.12);
+@media (hover: hover) and (pointer: fine) {
+  button.analysis-cal-cell.analysis-period-dir--neutral:hover,
+  button.home-cal-cell.analysis-period-dir--neutral:hover {
+    background: rgba(148, 163, 184, 0.12);
+  }
 }
 button.analysis-week-cell.analysis-period-dir--zhan-owes.analysis-week-cell--selected,
 button.analysis-week-cell.analysis-period-dir--hu-owes.analysis-week-cell--selected,
@@ -344,9 +362,11 @@ button.home-cal-cell.analysis-period-dir--neutral.home-cal-cell--today {
 }
 .analysis-stat-card:nth-child(1) { animation-delay: 0.06s; }
 .analysis-stat-card:nth-child(2) { animation-delay: 0.12s; }
-.analysis-stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+@media (hover: hover) and (pointer: fine) {
+  .analysis-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+  }
 }
 .analysis-stat-label {
   font-size: 11px;

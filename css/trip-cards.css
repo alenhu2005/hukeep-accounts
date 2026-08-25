@@ -16,9 +16,13 @@
   border-bottom: 1px solid var(--border);
 }
 /* hover 整列含收合色盤區：色盤 opacity:0 時會透出底層，只染 .trip-card 會上灰下白 */
-.trip-card-wrap:hover,
 .trip-card-wrap:focus-within {
   background: var(--bg-secondary);
+}
+@media (hover: hover) and (pointer: fine) {
+  .trip-card-wrap:hover {
+    background: var(--bg-secondary);
+  }
 }
 .trip-card:active { transform: scale(0.992); }
 @keyframes tripCardIn {
@@ -63,7 +67,10 @@
   border: 2.5px solid transparent; cursor: pointer; padding: 0;
   transition: transform .12s, border-color .15s, box-shadow .15s;
 }
-.trip-color-dot:hover { transform: scale(1.18); }
+@media (hover: hover) and (pointer: fine) {
+  .trip-color-dot:hover { transform: scale(1.18);
+  }
+}
 .trip-color-dot:active { transform: scale(0.92); }
 .trip-color-dot.active {
   border-color: var(--surface);
@@ -114,10 +121,16 @@
   margin-bottom: 0;
 }
 
-.trip-card-wrap:hover,
 .trip-card-wrap:focus-within {
   background: rgba(255, 255, 255, 0.9);
   box-shadow: 0 16px 34px rgba(15, 23, 42, 0.08);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .trip-card-wrap:hover {
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 16px 34px rgba(15, 23, 42, 0.08);
+  }
 }
 
 .trip-card {

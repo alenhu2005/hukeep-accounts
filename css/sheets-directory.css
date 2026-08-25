@@ -46,9 +46,11 @@
   flex-shrink: 0;
   transition: background 0.15s ease, transform 0.15s ease;
 }
-.edit-dialog-close:hover {
-  background: var(--bg-secondary);
-  border-color: var(--border);
+@media (hover: hover) and (pointer: fine) {
+  .edit-dialog-close:hover {
+    background: var(--bg-secondary);
+    border-color: var(--border);
+  }
 }
 .edit-dialog-close:active { transform: scale(0.96); }
 .edit-dialog-close:focus,
@@ -113,10 +115,17 @@ html.dark .edit-summary {
   transition: box-shadow .2s, transform .15s;
 }
 .record-avatar-clickable:active { transform: scale(0.9); }
-.record-avatar-clickable:hover { box-shadow: 0 0 0 2px var(--primary); }
-#page-home .record-avatar-clickable:hover,
+@media (hover: hover) and (pointer: fine) {
+  .record-avatar-clickable:hover { box-shadow: 0 0 0 2px var(--primary);
+  }
+}
 #page-home .record-avatar-clickable:focus-visible {
   box-shadow: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  #page-home .record-avatar-clickable:hover {
+    box-shadow: none;
+  }
 }
 #page-home .record-avatar-clickable:focus-visible {
   outline: 2px solid var(--primary);
@@ -139,7 +148,10 @@ html.dark .edit-summary {
   cursor: pointer; font-size: 12px; font-weight: 500;
   color: var(--text); transition: border-color .15s, background .15s;
 }
-.known-member-bar-btn:hover { border-color: var(--primary); background: var(--primary-light); }
+@media (hover: hover) and (pointer: fine) {
+  .known-member-bar-btn:hover { border-color: var(--primary); background: var(--primary-light);
+  }
+}
 .known-member-bar-btn:active { transform: scale(0.96); }
 .known-member-bar-dot {
   width: 20px; height: 20px; border-radius: 50%;
@@ -159,7 +171,10 @@ html.dark .edit-summary {
 }
 .member-dir-fab svg { width: 24px; height: 24px; }
 .member-dir-fab:active { transform: scale(0.9); }
-.member-dir-fab:hover { box-shadow: 0 6px 20px rgba(0,0,0,.3); }
+@media (hover: hover) and (pointer: fine) {
+  .member-dir-fab:hover { box-shadow: 0 6px 20px rgba(0,0,0,.3);
+  }
+}
 
 .member-dir-overlay {
   position: fixed; inset: 0; z-index: 998;
@@ -300,10 +315,15 @@ html.dark .edit-summary {
 }
 /* Hidden trigger on title: keep interactive behavior but no visible tap feedback. */
 .member-dir-header h2:active,
-.member-dir-header h2:hover,
 .member-dir-header h2:focus-visible {
   color: var(--text);
   outline: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .member-dir-header h2:hover {
+    color: var(--text);
+    outline: none;
+  }
 }
 .member-dir-close {
   width: 32px; height: 32px; border-radius: 50%;
@@ -311,7 +331,10 @@ html.dark .edit-summary {
   display: flex; align-items: center; justify-content: center;
   color: var(--text-muted); transition: background .15s;
 }
-.member-dir-close:hover { background: var(--border); }
+@media (hover: hover) and (pointer: fine) {
+  .member-dir-close:hover { background: var(--border);
+  }
+}
 .member-dir-close svg { width: 18px; height: 18px; }
 
 .member-dir-body {
@@ -362,8 +385,14 @@ html.dark .edit-summary {
   color: var(--text-muted); transition: all .15s;
 }
 .member-dir-action-btn svg { width: 16px; height: 16px; }
-.member-dir-action-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--surface); }
-.member-dir-action-btn--danger:hover { border-color: #ef4444; color: #ef4444; }
+@media (hover: hover) and (pointer: fine) {
+  .member-dir-action-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--surface);
+  }
+}
+@media (hover: hover) and (pointer: fine) {
+  .member-dir-action-btn--danger:hover { border-color: #ef4444; color: #ef4444;
+  }
+}
 
 /* ── Edit record photo picker ── */
 .hidden { display: none !important; }
@@ -378,7 +407,10 @@ html.dark .edit-summary {
   color: var(--text-muted); flex-shrink: 0;
   transition: transform .12s ease, background .2s ease;
 }
-.edit-photo-btn:hover { background: var(--border); }
+@media (hover: hover) and (pointer: fine) {
+  .edit-photo-btn:hover { background: var(--border);
+  }
+}
 .edit-photo-btn:active { transform: scale(0.94); }
 .edit-photo-btn svg { width: 18px; height: 18px; fill: currentColor; display: block; }
 .edit-photo-preview-row {
@@ -441,9 +473,11 @@ html.dark .edit-summary {
   align-items: center;
   justify-content: center;
 }
-.accent-menu-close:hover {
-  background: var(--border);
-  color: var(--text);
+@media (hover: hover) and (pointer: fine) {
+  .accent-menu-close:hover {
+    background: var(--border);
+    color: var(--text);
+  }
 }
 .accent-menu-grid {
   display: grid;
@@ -466,8 +500,10 @@ html.dark .edit-summary {
   transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
   -webkit-tap-highlight-color: transparent;
 }
-.accent-menu-btn:hover {
-  border-color: color-mix(in srgb, var(--primary) 35%, var(--border));
+@media (hover: hover) and (pointer: fine) {
+  .accent-menu-btn:hover {
+    border-color: color-mix(in srgb, var(--primary) 35%, var(--border));
+  }
 }
 .accent-menu-btn:active {
   transform: scale(0.97);
@@ -513,9 +549,11 @@ html.dark .accent-menu-btn.is-current {
   z-index: 120;
 }
 
-.member-dir-fab:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 24px 38px color-mix(in srgb, var(--primary) 26%, transparent);
+@media (hover: hover) and (pointer: fine) {
+  .member-dir-fab:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 24px 38px color-mix(in srgb, var(--primary) 26%, transparent);
+  }
 }
 
 .member-dir-fab[hidden] {

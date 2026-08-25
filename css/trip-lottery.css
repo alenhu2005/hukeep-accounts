@@ -174,9 +174,11 @@ html.dark #page-trip-detail.trip-detail--cny-mode input.detail-amount-input.form
   -webkit-tap-highlight-color: transparent;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 12px 24px rgba(113, 135, 190, 0.16);
 }
-#page-trip-detail .detail-currency-toggle:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 16px 28px rgba(113, 135, 190, 0.2);
+@media (hover: hover) and (pointer: fine) {
+  #page-trip-detail .detail-currency-toggle:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 16px 28px rgba(113, 135, 190, 0.2);
+  }
 }
 #page-trip-detail .detail-currency-toggle:active {
   transform: translateY(0);
@@ -647,9 +649,11 @@ html.dark .trip-lottery-display--reveal {
   -webkit-tap-highlight-color: transparent;
   transition: background 0.15s ease, color 0.15s ease;
 }
-.trip-lottery-pool-remove:hover {
-  background: rgba(239, 68, 68, 0.12);
-  color: var(--danger);
+@media (hover: hover) and (pointer: fine) {
+  .trip-lottery-pool-remove:hover {
+    background: rgba(239, 68, 68, 0.12);
+    color: var(--danger);
+  }
 }
 .trip-lottery-pool-add {
   display: flex;

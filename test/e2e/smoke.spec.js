@@ -122,6 +122,10 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   await restoredNote.click({ position: { x: 24, y: 24 } });
   await expect(restoredNote).toHaveClass(/is-expanded/);
   await expect(restoredNote).toHaveAttribute('aria-expanded', 'true');
+  const expandAnimationCount = await restoredNote.evaluate(
+    element => element.getAnimations().filter(animation => animation.playState === 'running').length,
+  );
+  expect(expandAnimationCount).toBeGreaterThan(0);
   await expect(restoredNote.locator('.note-card-body')).toContainText('第七行完整內容');
   await expect(restoredNote.locator('.note-card-photo')).toBeVisible();
   const expandedBodyFits = await restoredNote.locator('.note-card-body').evaluate(element =>
@@ -131,6 +135,23 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   await restoredNote.click({ position: { x: 24, y: 24 } });
   await expect(restoredNote).not.toHaveClass(/is-expanded/);
   await expect(restoredNote).toHaveAttribute('aria-expanded', 'false');
+
+  await restoredNote.click({ position: { x: 24, y: 24 } });
+  await expect(restoredNote).toHaveClass(/is-expanded/);
+  await page.waitForTimeout(320);
+  await page.evaluate(() => window.scrollTo(0, 100));
+  const scrollBeforeEdit = await page.evaluate(() => window.scrollY);
+  expect(scrollBeforeEdit).toBeGreaterThan(0);
+  await restoredNote.getByRole('button', { name: '編輯記事' }).click();
+  await expect(page.locator('#note-editor-card')).toBeVisible();
+  const editorFollowsEditedNote = await page.evaluate(() => {
+    const card = document.querySelector('.note-card[data-note-id]');
+    return card?.nextElementSibling?.id === 'note-editor-card';
+  });
+  expect(editorFollowsEditedNote).toBe(true);
+  await page.waitForTimeout(400);
+  expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+  await page.getByRole('button', { name: '關閉編輯器' }).click();
 
   await page.locator('#nav-trips').click();
   await expect(page.locator('#nav-trips')).toHaveClass(/active/);
@@ -149,12 +170,27 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   await expect(page.locator('#page-notes')).toHaveClass(/active/);
   await expect(page.locator('.note-card', { hasText: '東京行前清單' })).toHaveCount(1);
   const mobileNote = page.locator('.note-card', { hasText: '東京行前清單' });
+  const controlsWithTapHighlight = await page.evaluate(() =>
+    Array.from(document.querySelectorAll('button, [role="button"]'))
+      .filter(
+        element =>
+          getComputedStyle(element).webkitTapHighlightColor !== 'rgba(0, 0, 0, 0)',
+      )
+      .map(element => element.id || element.getAttribute('aria-label') || element.className)
+      .slice(0, 10),
+  );
+  expect(controlsWithTapHighlight).toEqual([]);
   await mobileNote.click({ position: { x: 24, y: 24 } });
   await expect(mobileNote).toHaveClass(/is-expanded/);
   await page.waitForTimeout(300);
   await page.screenshot({ path: testInfo.outputPath('note-expanded-mobile.png'), fullPage: true });
   await mobileNote.click({ position: { x: 24, y: 24 } });
   await expect(mobileNote).not.toHaveClass(/is-expanded/);
+  await mobileNote.getByRole('button', { name: '編輯記事' }).click();
+  await expect(page.locator('#note-editor-card')).toBeVisible();
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: testInfo.outputPath('note-editor-inline-mobile.png'), fullPage: true });
+  await page.getByRole('button', { name: '關閉編輯器' }).click();
   await page.locator('#new-note-btn').click();
   await expect(page.locator('#note-editor-card')).toBeVisible();
 

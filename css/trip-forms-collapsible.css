@@ -77,7 +77,10 @@
   border-radius: 6px;
   transition: background 0.2s ease, transform 0.2s ease;
 }
-.toggle-btn:hover { background: rgba(0,0,0,.05); }
+@media (hover: hover) and (pointer: fine) {
+  .toggle-btn:hover { background: rgba(0,0,0,.05);
+  }
+}
 .toggle-btn:active { transform: scale(0.92); }
 .toggle-btn svg {
   width: 16px; height: 16px; fill: currentColor; display: block;

@@ -169,6 +169,9 @@
   background: var(--surface-solid);
   box-shadow: 0 8px 24px rgba(31, 41, 55, 0.07);
   cursor: pointer;
+  transition:
+    border-color 200ms ease,
+    box-shadow 200ms ease;
 }
 
 .note-card:focus-visible {
@@ -253,10 +256,16 @@
   cursor: pointer;
 }
 
-.note-icon-btn:hover,
 .note-icon-btn:focus-visible {
   color: var(--primary-dark);
   background: var(--primary-light);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .note-icon-btn:hover {
+    color: var(--primary-dark);
+    background: var(--primary-light);
+  }
 }
 
 .note-icon-btn.active {
@@ -264,10 +273,16 @@
   background: var(--primary-light);
 }
 
-.note-icon-btn--danger:hover,
 .note-icon-btn--danger:focus-visible {
   color: var(--danger);
   background: color-mix(in srgb, var(--danger) 10%, transparent);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .note-icon-btn--danger:hover {
+    color: var(--danger);
+    background: color-mix(in srgb, var(--danger) 10%, transparent);
+  }
 }
 
 .note-icon-btn svg {
@@ -416,12 +431,19 @@ html.dark .notes-filter {
 
 html.dark .notes-filter-btn.active,
 html.dark .note-icon-btn.active,
-html.dark .note-icon-btn:hover,
 html.dark .note-icon-btn:focus-visible,
 html.dark .note-pinned-badge {
   color: #fcd535;
   background: rgba(240, 185, 11, 0.14);
   box-shadow: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  html.dark .note-icon-btn:hover {
+    color: #fcd535;
+    background: rgba(240, 185, 11, 0.14);
+    box-shadow: none;
+  }
 }
 
 html.dark .note-pending-badge {

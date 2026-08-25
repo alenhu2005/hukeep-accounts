@@ -9,6 +9,7 @@
     "lint": "eslint js/*.js js/actions/*.js js/backup/*.js js/data/*.js js/sync/*.js js/views-trip-detail/*.js scripts/*.mjs test/**/*.js vite.config.js playwright.config.js eslint.config.js",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "styles:guard-hover": "node scripts/guard-hover-styles.mjs",
     "test": "vitest run",
     "test:e2e": "playwright test",
     "deploy:check": "node scripts/check-deploy-readiness.mjs && npm run lint && npm test && npm run build && npm run test:e2e",
@@ -20,9 +21,10 @@
     "@playwright/test": "^1.60.0",
     "eslint": "^10.4.1",
     "globals": "^17.6.0",
+    "postcss": "^8.5.26",
     "prettier": "^3.8.3",
-    "sharp": "^0.33.5",
-    "vite": "^7.3.5",
+    "sharp": "^0.35.3",
+    "vite": "^7.3.6",
     "vitest": "^4.1.8"
   }
 }

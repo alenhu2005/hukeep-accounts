@@ -312,8 +312,10 @@ input.form-input-amount {
   margin-top: 4px;
 }
 
-.record-item:hover {
-  background: rgba(59, 130, 246, 0.05);
+@media (hover: hover) and (pointer: fine) {
+  .record-item:hover {
+    background: rgba(59, 130, 246, 0.05);
+  }
 }
 
 .record-avatar {
@@ -744,12 +746,14 @@ html:not(.dark) .back-btn {
   box-shadow: none;
 }
 
-html:not(.dark) .header-icon-btn:hover,
-html:not(.dark) #theme-toggle:hover,
-html:not(.dark) .back-btn:hover {
-  background: #ffffff;
-  border-color: color-mix(in srgb, var(--primary) 28%, rgba(33, 49, 71, 0.16));
-  color: var(--finance-ink);
+@media (hover: hover) and (pointer: fine) {
+  html:not(.dark) .header-icon-btn:hover,
+  html:not(.dark) #theme-toggle:hover,
+  html:not(.dark) .back-btn:hover {
+    background: #ffffff;
+    border-color: color-mix(in srgb, var(--primary) 28%, rgba(33, 49, 71, 0.16));
+    color: var(--finance-ink);
+  }
 }
 
 html:not(.dark) .card,
@@ -835,8 +839,10 @@ html:not(.dark) .analysis-tab.active {
   box-shadow: 0 12px 24px color-mix(in srgb, var(--primary) 18%, transparent);
 }
 
-html:not(.dark) .btn-primary:hover {
-  box-shadow: 0 16px 30px color-mix(in srgb, var(--primary) 22%, transparent);
+@media (hover: hover) and (pointer: fine) {
+  html:not(.dark) .btn-primary:hover {
+    box-shadow: 0 16px 30px color-mix(in srgb, var(--primary) 22%, transparent);
+  }
 }
 
 html:not(.dark) .btn-outline,
@@ -859,14 +865,16 @@ html:not(.dark) .per-person-note {
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.86) inset;
 }
 
-html:not(.dark) .form-input:hover,
-html:not(.dark) .form-select:hover,
-html:not(.dark) .btn-toggle:hover,
-html:not(.dark) .split-chip:hover,
-html:not(.dark) button.analysis-week-cell:hover,
-html:not(.dark) button.analysis-cal-cell:hover {
-  background: #ffffff;
-  border-color: color-mix(in srgb, var(--primary) 24%, rgba(33, 49, 71, 0.14));
+@media (hover: hover) and (pointer: fine) {
+  html:not(.dark) .form-input:hover,
+  html:not(.dark) .form-select:hover,
+  html:not(.dark) .btn-toggle:hover,
+  html:not(.dark) .split-chip:hover,
+  html:not(.dark) button.analysis-week-cell:hover,
+  html:not(.dark) button.analysis-cal-cell:hover {
+    background: #ffffff;
+    border-color: color-mix(in srgb, var(--primary) 24%, rgba(33, 49, 71, 0.14));
+  }
 }
 
 html:not(.dark) .form-input:focus,
@@ -949,20 +957,24 @@ html:not(.dark) button.home-cal-cell.analysis-period-dir--neutral .cal-cell-delt
   color: #64748b;
 }
 
-html:not(.dark) button.analysis-week-cell.analysis-period-dir--zhan-owes:hover,
-html:not(.dark) button.analysis-cal-cell.analysis-period-dir--zhan-owes:hover,
-html:not(.dark) button.home-cal-cell.analysis-period-dir--zhan-owes:hover,
-html:not(.dark) .analysis-year-mo.analysis-period-dir--zhan-owes:hover {
-  border-color: color-mix(in srgb, #0ecb81 72%, rgba(33, 49, 71, 0.1));
-  background: color-mix(in srgb, #0ecb81 14%, white 86%);
+@media (hover: hover) and (pointer: fine) {
+  html:not(.dark) button.analysis-week-cell.analysis-period-dir--zhan-owes:hover,
+  html:not(.dark) button.analysis-cal-cell.analysis-period-dir--zhan-owes:hover,
+  html:not(.dark) button.home-cal-cell.analysis-period-dir--zhan-owes:hover,
+  html:not(.dark) .analysis-year-mo.analysis-period-dir--zhan-owes:hover {
+    border-color: color-mix(in srgb, #0ecb81 72%, rgba(33, 49, 71, 0.1));
+    background: color-mix(in srgb, #0ecb81 14%, white 86%);
+  }
 }
 
-html:not(.dark) button.analysis-week-cell.analysis-period-dir--hu-owes:hover,
-html:not(.dark) button.analysis-cal-cell.analysis-period-dir--hu-owes:hover,
-html:not(.dark) button.home-cal-cell.analysis-period-dir--hu-owes:hover,
-html:not(.dark) .analysis-year-mo.analysis-period-dir--hu-owes:hover {
-  border-color: color-mix(in srgb, #f6465d 72%, rgba(33, 49, 71, 0.1));
-  background: color-mix(in srgb, #f6465d 14%, white 86%);
+@media (hover: hover) and (pointer: fine) {
+  html:not(.dark) button.analysis-week-cell.analysis-period-dir--hu-owes:hover,
+  html:not(.dark) button.analysis-cal-cell.analysis-period-dir--hu-owes:hover,
+  html:not(.dark) button.home-cal-cell.analysis-period-dir--hu-owes:hover,
+  html:not(.dark) .analysis-year-mo.analysis-period-dir--hu-owes:hover {
+    border-color: color-mix(in srgb, #f6465d 72%, rgba(33, 49, 71, 0.1));
+    background: color-mix(in srgb, #f6465d 14%, white 86%);
+  }
 }
 
 html:not(.dark) button.analysis-week-cell.analysis-period-dir--zhan-owes.analysis-week-cell--selected,
@@ -1052,10 +1064,16 @@ html:not(.dark) .trip-card-wrap {
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9) inset;
 }
 
-html:not(.dark) .trip-card-wrap:hover,
 html:not(.dark) .trip-card-wrap:focus-within {
   background: #ffffff;
   box-shadow: 0 16px 28px rgba(31, 41, 55, 0.08);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  html:not(.dark) .trip-card-wrap:hover {
+    background: #ffffff;
+    box-shadow: 0 16px 28px rgba(31, 41, 55, 0.08);
+  }
 }
 
 html:not(.dark) .trip-card {
@@ -1102,8 +1120,10 @@ html:not(.dark) .record-item {
   border-bottom-color: rgba(33, 49, 71, 0.08);
 }
 
-html:not(.dark) .record-item:hover {
-  background: #f8fafc;
+@media (hover: hover) and (pointer: fine) {
+  html:not(.dark) .record-item:hover {
+    background: #f8fafc;
+  }
 }
 
 html:not(.dark) .record-avatar {
@@ -1248,16 +1268,21 @@ html.dark .back-btn {
   border-radius: 10px;
 }
 
-html.dark .header-icon-btn:hover,
-html.dark #theme-toggle:hover,
-html.dark .back-btn:hover,
-html.dark .analysis-nav-btn:hover,
-html.dark .btn-outline:hover,
-html.dark .record-item:hover,
-html.dark .trip-card-wrap:hover,
-html.dark .trip-card-wrap:focus-within,
-html.dark .btn-ghost:hover {
+html.dark .trip-card-wrap:focus-within {
   background: #232a32;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  html.dark .header-icon-btn:hover,
+  html.dark #theme-toggle:hover,
+  html.dark .back-btn:hover,
+  html.dark .analysis-nav-btn:hover,
+  html.dark .btn-outline:hover,
+  html.dark .record-item:hover,
+  html.dark .trip-card-wrap:hover,
+  html.dark .btn-ghost:hover {
+    background: #232a32;
+  }
 }
 
 html.dark .btn-primary,
@@ -1269,9 +1294,11 @@ html.dark .analysis-tab.active {
   box-shadow: 0 12px 22px rgba(240, 185, 11, 0.22);
 }
 
-html.dark .btn-primary:hover {
-  background: linear-gradient(135deg, #ffe37b 0%, #f0b90b 100%);
-  color: #0b0e11;
+@media (hover: hover) and (pointer: fine) {
+  html.dark .btn-primary:hover {
+    background: linear-gradient(135deg, #ffe37b 0%, #f0b90b 100%);
+    color: #0b0e11;
+  }
 }
 
 html.dark .btn-toggle,
@@ -1324,15 +1351,17 @@ html.dark .trip-color-picker {
   border-radius: 0 0 14px 14px;
 }
 
-html.dark .form-input:hover,
-html.dark .form-select:hover,
-html.dark .btn-toggle:hover,
-html.dark .split-chip:hover,
-html.dark button.analysis-week-cell:hover,
-html.dark button.analysis-cal-cell:hover,
-html.dark .analysis-year-mo:hover {
-  background: #232a32;
-  border-color: rgba(240, 185, 11, 0.28);
+@media (hover: hover) and (pointer: fine) {
+  html.dark .form-input:hover,
+  html.dark .form-select:hover,
+  html.dark .btn-toggle:hover,
+  html.dark .split-chip:hover,
+  html.dark button.analysis-week-cell:hover,
+  html.dark button.analysis-cal-cell:hover,
+  html.dark .analysis-year-mo:hover {
+    background: #232a32;
+    border-color: rgba(240, 185, 11, 0.28);
+  }
 }
 
 html.dark .analysis-year-mo.analysis-period-dir--zhan-owes,
@@ -1377,20 +1406,24 @@ html.dark button.home-cal-cell.analysis-period-dir--neutral .cal-cell-delta {
   color: #929aa5;
 }
 
-html.dark button.analysis-week-cell.analysis-period-dir--zhan-owes:hover,
-html.dark button.analysis-cal-cell.analysis-period-dir--zhan-owes:hover,
-html.dark button.home-cal-cell.analysis-period-dir--zhan-owes:hover,
-html.dark .analysis-year-mo.analysis-period-dir--zhan-owes:hover {
-  border-color: rgba(14, 203, 129, 0.74);
-  background: rgba(14, 203, 129, 0.18);
+@media (hover: hover) and (pointer: fine) {
+  html.dark button.analysis-week-cell.analysis-period-dir--zhan-owes:hover,
+  html.dark button.analysis-cal-cell.analysis-period-dir--zhan-owes:hover,
+  html.dark button.home-cal-cell.analysis-period-dir--zhan-owes:hover,
+  html.dark .analysis-year-mo.analysis-period-dir--zhan-owes:hover {
+    border-color: rgba(14, 203, 129, 0.74);
+    background: rgba(14, 203, 129, 0.18);
+  }
 }
 
-html.dark button.analysis-week-cell.analysis-period-dir--hu-owes:hover,
-html.dark button.analysis-cal-cell.analysis-period-dir--hu-owes:hover,
-html.dark button.home-cal-cell.analysis-period-dir--hu-owes:hover,
-html.dark .analysis-year-mo.analysis-period-dir--hu-owes:hover {
-  border-color: rgba(246, 70, 93, 0.74);
-  background: rgba(246, 70, 93, 0.18);
+@media (hover: hover) and (pointer: fine) {
+  html.dark button.analysis-week-cell.analysis-period-dir--hu-owes:hover,
+  html.dark button.analysis-cal-cell.analysis-period-dir--hu-owes:hover,
+  html.dark button.home-cal-cell.analysis-period-dir--hu-owes:hover,
+  html.dark .analysis-year-mo.analysis-period-dir--hu-owes:hover {
+    border-color: rgba(246, 70, 93, 0.74);
+    background: rgba(246, 70, 93, 0.18);
+  }
 }
 
 html.dark button.analysis-week-cell.analysis-period-dir--zhan-owes.analysis-week-cell--selected,
