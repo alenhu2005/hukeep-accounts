@@ -111,6 +111,14 @@ function positionNoteEditor() {
   else restoreNoteEditorHome();
 }
 
+function restoreScrollTop(scrollTop) {
+  const root = document.documentElement;
+  const inlineBehavior = root.style.scrollBehavior;
+  root.style.scrollBehavior = 'auto';
+  window.scrollTo({ top: scrollTop, behavior: 'auto' });
+  root.style.scrollBehavior = inlineBehavior;
+}
+
 function emptyNotesHTML(hasNotes, query, filter) {
   const title = hasNotes ? '找不到符合的記事' : '還沒有記事';
   const subtitle = query
@@ -228,6 +236,7 @@ export function openNewNoteEditor() {
 
 export function editNote(id) {
   if (!getNotes().some(note => note.id === id)) return;
+  const initialScrollTop = window.scrollY;
   resetNotePhotoDraft();
   appState.expandedNoteId = null;
   appState.editingNoteId = id;
@@ -237,9 +246,14 @@ export function editNote(id) {
   positionNoteEditor();
   requestAnimationFrame(() => {
     document.getElementById('note-title-input')?.focus({ preventScroll: true });
-    document.getElementById('note-editor-card')?.scrollIntoView({
+    restoreScrollTop(initialScrollTop);
+    const editor = document.getElementById('note-editor-card');
+    const rect = editor?.getBoundingClientRect();
+    if (!rect || (rect.top >= 12 && rect.bottom <= window.innerHeight - 12)) return;
+    const editorTop = window.scrollY + rect.top - 12;
+    window.scrollTo({
+      top: Math.max(initialScrollTop, editorTop),
       behavior: 'smooth',
-      block: 'nearest',
     });
   });
 }
