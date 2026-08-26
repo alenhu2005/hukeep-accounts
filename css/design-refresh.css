@@ -306,9 +306,17 @@ input.form-input-amount {
   padding-bottom: 8px;
 }
 
+#page-home .home-history-card {
+  padding-bottom: 0;
+}
+
 .home-records-wrap,
 #detail-expenses {
   padding: 0 8px 8px;
+}
+
+#page-home .home-records-wrap {
+  padding-bottom: 0;
 }
 
 .record-item {
@@ -320,6 +328,22 @@ input.form-input-amount {
 
 .record-item + .record-item {
   margin-top: 4px;
+}
+
+#page-home .home-records-wrap .record-item {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+#page-home .home-records-wrap .record-item + .record-item {
+  margin-top: 2px;
+}
+
+#page-home .home-records-wrap .show-more-btn {
+  width: calc(100% + 16px);
+  margin: 2px -8px 0;
+  padding: 8px 10px 6px;
+  border-radius: 0;
 }
 
 @media (hover: hover) and (pointer: fine) {

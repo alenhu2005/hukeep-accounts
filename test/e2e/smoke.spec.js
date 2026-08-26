@@ -8,6 +8,17 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   const requestFailures = [];
   const badResponses = [];
   const seedRows = [
+    ...Array.from({ length: 6 }, (_, index) => ({
+      type: 'daily',
+      action: 'add',
+      id: `daily-seed-${index + 1}`,
+      item: `日常測試 ${index + 1}`,
+      amount: 100 + index,
+      paidBy: '胡',
+      splitMode: '均分',
+      category: '生活',
+      date: '2026-08-25',
+    })),
     {
       type: 'trip',
       action: 'add',
@@ -53,7 +64,10 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
         delete payload.photoDataUrl;
       }
       if (payload.type === 'note' && payload.action === 'add') {
-        serverRows = [...serverRows, { ...payload, action: 'add' }];
+        serverRows = [
+          ...serverRows.filter(row => !(row.type === 'note' && row.id === payload.id)),
+          { ...payload, action: 'add' },
+        ];
       } else if (payload.type === 'note' && payload.action === 'edit') {
         serverRows = serverRows.map(row =>
           row.type === 'note' && row.id === payload.id ? { ...row, ...payload, action: 'add' } : row,
@@ -97,6 +111,29 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   });
   expect(homeSearchLayout.topGap).toBeGreaterThanOrEqual(10);
   expect(homeSearchLayout.height).toBeLessThanOrEqual(44);
+  const compactHomeHistory = await page.evaluate(() => {
+    const card = document.querySelector('#page-home .home-history-card');
+    const item = card?.querySelector('.record-item');
+    const more = card?.querySelector('.show-more-btn');
+    if (!card || !item || !more) return { itemPaddingTop: -1, itemPaddingBottom: -1, bottomGap: -1 };
+    const itemStyle = getComputedStyle(item);
+    return {
+      itemPaddingTop: Number.parseFloat(itemStyle.paddingTop),
+      itemPaddingBottom: Number.parseFloat(itemStyle.paddingBottom),
+      bottomGap: card.getBoundingClientRect().bottom - more.getBoundingClientRect().bottom,
+    };
+  });
+  expect(compactHomeHistory.itemPaddingTop).toBeLessThanOrEqual(10);
+  expect(compactHomeHistory.itemPaddingBottom).toBeLessThanOrEqual(10);
+  expect(compactHomeHistory.bottomGap).toBeLessThanOrEqual(2);
+  await page.setViewportSize({ width: 360, height: 800 });
+  const mobileHomeWidth = await page.evaluate(() => ({
+    viewport: window.innerWidth,
+    document: document.documentElement.scrollWidth,
+  }));
+  expect(mobileHomeWidth.document).toBeLessThanOrEqual(mobileHomeWidth.viewport + 1);
+  await page.screenshot({ path: testInfo.outputPath('home-history-mobile.png'), fullPage: true });
+  await page.setViewportSize({ width: 1280, height: 720 });
 
   await page.locator('#nav-notes').click();
   await expect(page.locator('#nav-notes')).toHaveClass(/active/);
@@ -104,7 +141,7 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   await page.locator('#new-note-btn').click();
   await page.locator('#note-title-input').fill('東京行前清單');
   await page.locator('#note-body-input').fill(
-    '護照\n充電器\n轉接頭\n交通卡\n雨傘\n常備藥\n第七行完整內容\nhttps://example.com/guide',
+    '**護照**\n*充電器*\n\n- 轉接頭\n- 交通卡\n\n雨傘\n常備藥\n第七行完整內容\nhttps://example.com/guide',
   );
   await page.locator('#note-photo-input').setInputFiles(NOTE_PHOTO_FIXTURE);
   await expect(page.locator('#note-photo-preview')).toBeVisible();
@@ -117,6 +154,9 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   const restoredNote = page.locator('.note-card', { hasText: '東京行前清單' });
   await expect(restoredNote).toHaveCount(1);
   await expect(restoredNote).toContainText('充電器');
+  await expect(restoredNote.locator('.note-card-body strong')).toHaveText('護照');
+  await expect(restoredNote.locator('.note-card-body em')).toHaveText('充電器');
+  await expect(restoredNote.locator('.note-card-body li')).toHaveCount(2);
   await expect(restoredNote.locator('.note-card-photo')).toBeVisible();
   await expect(restoredNote.locator('.note-link')).toHaveAttribute('href', 'https://example.com/guide');
   await expect(restoredNote.locator('.note-link')).toHaveAttribute('target', '_blank');
@@ -201,6 +241,41 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   await page.getByRole('button', { name: '關閉編輯器' }).click();
   await expect(restoredNote).not.toHaveClass(/is-editing/);
 
+  await page.locator('#new-note-btn').click();
+  await page.locator('#note-title-input').fill('固定展開記事');
+  await page.locator('#note-body-input').fill('這篇記事固定顯示完整內容。');
+  const noteOptionsLayout = await page.evaluate(() => {
+    const pinned = document.getElementById('note-pinned-input')?.closest('label');
+    const forced = document.getElementById('note-force-expanded-input')?.closest('label');
+    if (!pinned || !forced) return { sameRow: false, forcedOnRight: false };
+    const pinnedRect = pinned.getBoundingClientRect();
+    const forcedRect = forced.getBoundingClientRect();
+    return {
+      sameRow: Math.abs(pinnedRect.top - forcedRect.top) <= 2,
+      forcedOnRight: forcedRect.left > pinnedRect.right,
+    };
+  });
+  expect(noteOptionsLayout).toEqual({ sameRow: true, forcedOnRight: true });
+  await page.locator('#note-force-expanded-input').check();
+  await page.locator('#save-note-btn').click();
+  const forcedNote = page.locator('.note-card', { hasText: '固定展開記事' });
+  await expect(forcedNote).toHaveClass(/is-force-expanded/);
+  await expect(forcedNote).toHaveClass(/is-expanded/);
+  await expect(forcedNote).toHaveAttribute('aria-expanded', 'true');
+  await expect.poll(() =>
+    serverRows.some(row => row.type === 'note' && row.title === '固定展開記事' && row.forceExpanded === true),
+  ).toBe(true);
+  await forcedNote.click({ position: { x: 24, y: 24 } });
+  await expect(forcedNote).toHaveClass(/is-expanded/);
+  await expect(forcedNote).not.toHaveAttribute('tabindex');
+  await page.reload({ waitUntil: 'networkidle' });
+  await page.locator('#nav-notes').click();
+  const restoredForcedNote = page.locator('#notes-list .note-card', { hasText: '固定展開記事' }).first();
+  await expect(restoredForcedNote).toHaveClass(/is-force-expanded/);
+  await expect(restoredForcedNote).toHaveClass(/is-expanded/);
+  await restoredForcedNote.click({ position: { x: 24, y: 24 } });
+  await expect(restoredForcedNote).toHaveClass(/is-expanded/);
+
   await page.locator('#nav-trips').click();
   await expect(page.locator('#nav-trips')).toHaveClass(/active/);
   await expect(page.locator('.trip-card-wrap[data-trip-id="trip-seed-1"]')).toBeVisible();
@@ -274,6 +349,24 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   await expect(mobileNote).not.toHaveClass(/is-expanded/);
   await mobileNote.getByRole('button', { name: '編輯記事' }).click();
   await expect(page.locator('#note-editor-card')).toBeVisible();
+  const mobileNoteOptionsFit = await page.evaluate(() => {
+    const editor = document.getElementById('note-editor-card');
+    const options = document.querySelector('.note-editor-options');
+    const pinned = document.getElementById('note-pinned-input')?.closest('label');
+    const forced = document.getElementById('note-force-expanded-input')?.closest('label');
+    if (!editor || !options || !pinned || !forced) return false;
+    const editorRect = editor.getBoundingClientRect();
+    const optionsRect = options.getBoundingClientRect();
+    const pinnedRect = pinned.getBoundingClientRect();
+    const forcedRect = forced.getBoundingClientRect();
+    return (
+      optionsRect.left >= editorRect.left - 1 &&
+      optionsRect.right <= editorRect.right + 1 &&
+      Math.abs(pinnedRect.top - forcedRect.top) <= 2 &&
+      forcedRect.right <= editorRect.right + 1
+    );
+  });
+  expect(mobileNoteOptionsFit).toBe(true);
   await page.waitForTimeout(650);
   await page.screenshot({ path: testInfo.outputPath('note-editor-inline-mobile.png'), fullPage: true });
   await page.getByRole('button', { name: '關閉編輯器' }).click();

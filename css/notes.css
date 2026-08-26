@@ -130,6 +130,14 @@
   gap: 12px;
 }
 
+.note-editor-options {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+}
+
 .note-pin-checkbox {
   display: inline-flex;
   align-items: center;
@@ -225,6 +233,10 @@
     border-color var(--motion-base) ease,
     box-shadow var(--motion-slow) var(--ease-out),
     background-color var(--motion-base) ease;
+}
+
+.note-card.is-force-expanded {
+  cursor: default;
 }
 
 .note-card:focus-visible {
@@ -391,11 +403,120 @@
   color: var(--text-muted);
   font-size: 13px;
   line-height: 1.55;
-  white-space: pre-wrap;
+  white-space: normal;
   overflow-wrap: anywhere;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 5;
   line-clamp: 5;
+}
+
+.note-card-body > :first-child {
+  margin-top: 0;
+}
+
+.note-card-body > :last-child {
+  margin-bottom: 0;
+}
+
+.note-card-body p {
+  margin: 0 0 6px;
+}
+
+.note-card-body h1,
+.note-card-body h2,
+.note-card-body h3,
+.note-card-body h4,
+.note-card-body h5,
+.note-card-body h6 {
+  margin: 8px 0 4px;
+  color: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.4;
+  letter-spacing: 0;
+}
+
+.note-card-body h1 {
+  font-size: 16px;
+}
+
+.note-card-body h2 {
+  font-size: 15px;
+}
+
+.note-card-body ul,
+.note-card-body ol {
+  margin: 4px 0 7px;
+  padding-left: 20px;
+}
+
+.note-card-body li + li {
+  margin-top: 2px;
+}
+
+.note-card-body blockquote {
+  margin: 6px 0;
+  padding-left: 9px;
+  border-left: 3px solid var(--border-strong);
+  color: inherit;
+}
+
+.note-card-body code {
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: var(--bg-secondary);
+  color: inherit;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.92em;
+}
+
+.note-card-body pre {
+  max-width: 100%;
+  margin: 6px 0;
+  padding: 8px;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-secondary);
+}
+
+.note-card-body pre code {
+  padding: 0;
+  background: transparent;
+}
+
+.note-card-body hr {
+  margin: 8px 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+
+.note-card-body table {
+  display: block;
+  max-width: 100%;
+  margin: 6px 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+
+.note-card-body th,
+.note-card-body td {
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.note-card-body input[type='checkbox'] {
+  width: 14px;
+  height: 14px;
+  margin: 0 4px 0 0;
+  accent-color: var(--primary);
+}
+
+.note-markdown-image-alt {
+  font-style: italic;
+  opacity: 0.78;
 }
 
 .note-card-body--empty {
@@ -598,6 +719,10 @@ html.dark .note-card.is-expanded .note-card-photo {
   .note-editor-footer {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .note-editor-options {
+    width: 100%;
   }
 
   .note-editor-actions {

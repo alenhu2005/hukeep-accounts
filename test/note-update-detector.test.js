@@ -9,6 +9,7 @@ function note(id, title, updatedAt = 1) {
     title,
     body: '',
     pinned: false,
+    forceExpanded: false,
     createdAt: updatedAt,
     updatedAt,
   };
@@ -55,6 +56,15 @@ describe('note update sync detector', () => {
 
     const localEdit = note('shared', '自己修改', 30);
     expect(detector.inspect([localEdit], [localEdit])).toEqual([]);
+  });
+
+  it('reports a remote fixed-expansion setting change', () => {
+    const original = note('shared', '共享記事', 10);
+    const detector = createNoteUpdateDetector([original]);
+    detector.inspect([original], [original]);
+    const remoteEdit = { ...original, forceExpanded: true };
+
+    expect(detector.inspect([original], [remoteEdit]).map(item => item.id)).toEqual(['shared']);
   });
 
   it('sorts multiple new notes by update time and does not report them twice', () => {

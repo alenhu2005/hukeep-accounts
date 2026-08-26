@@ -25,13 +25,13 @@ var ACTIVE_HEADERS = {
   '行程': ['type', 'action', 'id', 'name', 'members', 'createdAt', 'closed', 'colorId', 'cnyMode'],
   '出遊消費': ['type', 'action', 'id', 'tripId', 'date', '_clientPostedAt', 'item', 'amount', 'paidBy', 'splitAmong', 'note', 'category', 'amountCny', 'fxFeeNtd', 'payers', 'splitDetails', 'photoUrl', 'photoFileId', 'voided', 'voidReason'],
   '出遊還款': ['type', 'action', 'id', 'tripId', 'date', '_clientPostedAt', 'from', 'to', 'amount', 'voided', 'voidReason'],
-  '記事': ['type', 'action', 'id', 'title', 'body', 'pinned', 'photoUrl', 'photoFileId', 'createdAt', 'updatedAt'],
+  '記事': ['type', 'action', 'id', 'title', 'body', 'pinned', 'forceExpanded', 'photoUrl', 'photoFileId', 'createdAt', 'updatedAt'],
   '成員': ['type', 'memberName', 'deleted', 'colorId'],
   '頭像': ['type', 'id', 'memberName', 'avatarScope', 'avatarUrl', 'avatarFileId'],
   '封存_日常事件': ['type', 'action', 'id', 'date', 'item', 'amount', 'paidBy', 'splitMode', 'note', 'paidHu', 'paidZhan', 'category', 'photoUrl', 'photoFileId', 'voidReason', '_archivedAt'],
   '封存_出遊事件': ['type', 'action', 'id', 'tripId', 'name', 'members', 'createdAt', 'memberName', 'newName', 'colorId', 'item', 'amount', 'paidBy', 'splitAmong', 'date', 'note', 'category', 'amountCny', 'fxFeeNtd', 'payers', 'splitDetails', 'from', 'to', 'photoUrl', 'photoFileId', 'closed', 'cnyMode', 'voidReason', '_archivedAt'],
   '封存_人物事件': ['type', 'action', 'id', 'memberName', 'newName', 'colorId', 'deleted', 'avatarScope', 'avatarUrl', 'avatarFileId', '_archivedAt'],
-  '封存_記事事件': ['type', 'action', 'id', 'title', 'body', 'pinned', 'photoUrl', 'photoFileId', 'createdAt', 'updatedAt', '_archivedAt'],
+  '封存_記事事件': ['type', 'action', 'id', 'title', 'body', 'pinned', 'forceExpanded', 'photoUrl', 'photoFileId', 'createdAt', 'updatedAt', '_archivedAt'],
 };
 
 // === Row / sheet utils ======================================================
@@ -203,6 +203,7 @@ function patchActiveNote_(data) {
     if (data.title !== undefined) rows[i].title = title;
     if (data.body !== undefined) rows[i].body = body;
     if (data.pinned !== undefined) rows[i].pinned = isTrue_(data.pinned);
+    if (data.forceExpanded !== undefined) rows[i].forceExpanded = isTrue_(data.forceExpanded);
     if (data.photoUrl !== undefined) rows[i].photoUrl = data.photoUrl || '';
     if (data.photoFileId !== undefined) rows[i].photoFileId = data.photoFileId || '';
     if (data.updatedAt !== undefined) rows[i].updatedAt = Number(data.updatedAt) || 0;
@@ -413,6 +414,7 @@ function payloadToActiveRow_(data) {
       title: trim_(data.title),
       body: trim_(data.body),
       pinned: isTrue_(data.pinned),
+      forceExpanded: isTrue_(data.forceExpanded),
       photoUrl: data.photoUrl || '',
       photoFileId: data.photoFileId || '',
       createdAt: Number(data.createdAt) || 0,

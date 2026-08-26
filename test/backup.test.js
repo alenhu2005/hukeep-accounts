@@ -1,5 +1,5 @@
 import { describe, expect, it, afterEach } from 'vitest';
-import { allRowsToHumanCSV } from '../js/backup.js';
+import { allRowsToHumanCSV, allRowsToTechnicalCSV } from '../js/backup.js';
 import { appState } from '../js/state.js';
 
 const originalRows = appState.allRows;
@@ -57,6 +57,7 @@ describe('allRowsToHumanCSV', () => {
         title: '行前清單',
         body: '護照,充電器',
         pinned: true,
+        forceExpanded: true,
         createdAt: new Date('2026-04-04T01:00:00Z').getTime(),
         updatedAt: new Date('2026-04-04T02:00:00Z').getTime(),
       },
@@ -72,5 +73,9 @@ describe('allRowsToHumanCSV', () => {
     expect(csv).toContain('2026-04-03,日常,,日常消費,新增,已撤回,飲料,80,,,胡付款,各付一半,餐飲,,重複記帳');
     expect(csv).toContain('2026-04-04,記事,,記事,新增,有效,行前清單');
     expect(csv).toContain('"護照,充電器"');
+
+    const technicalCsv = allRowsToTechnicalCSV();
+    expect(technicalCsv.split('\n')[0]).toContain('forceExpanded');
+    expect(technicalCsv).toContain(',true,true,');
   });
 });

@@ -5,6 +5,7 @@ function noteSignature(note) {
     title: note.title,
     body: note.body,
     pinned: note.pinned,
+    forceExpanded: note.forceExpanded,
     createdAt: note.createdAt,
     updatedAt: note.updatedAt,
     photoUrl: note.photoUrl || '',

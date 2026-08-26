@@ -498,10 +498,16 @@
             </div>
           </div>
           <div class="note-editor-footer">
-            <label class="note-pin-checkbox">
-              <input type="checkbox" id="note-pinned-input">
-              <span>置頂</span>
-            </label>
+            <div class="note-editor-options">
+              <label class="note-pin-checkbox">
+                <input type="checkbox" id="note-pinned-input">
+                <span>置頂</span>
+              </label>
+              <label class="note-pin-checkbox">
+                <input type="checkbox" id="note-force-expanded-input">
+                <span>強制展開</span>
+              </label>
+            </div>
             <div class="note-editor-actions">
               <button type="button" class="btn btn-outline" onclick="closeNoteEditor()">取消</button>
               <button type="button" class="btn btn-primary" id="save-note-btn" onclick="saveNote()">儲存</button>

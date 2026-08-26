@@ -32,6 +32,7 @@ export function normalizeNote(value) {
     title,
     body,
     pinned: toBool(value.pinned),
+    forceExpanded: toBool(value.forceExpanded),
     createdAt,
     updatedAt,
     ...(photoUrl ? { photoUrl, photoFileId } : {}),
@@ -59,6 +60,7 @@ export function createNote(input, options = {}) {
     title,
     body,
     pinned: Boolean(input?.pinned),
+    forceExpanded: Boolean(input?.forceExpanded),
     createdAt: now,
     updatedAt: now,
   };
@@ -76,6 +78,8 @@ export function updateNote(notes, id, patch, now = Date.now()) {
       title,
       body,
       pinned: 'pinned' in patch ? Boolean(patch.pinned) : note.pinned,
+      forceExpanded:
+        'forceExpanded' in patch ? Boolean(patch.forceExpanded) : Boolean(note.forceExpanded),
       ...('photoUrl' in patch
         ? cleanText(patch.photoUrl)
           ? { photoUrl: cleanText(patch.photoUrl), photoFileId: cleanText(patch.photoFileId) }

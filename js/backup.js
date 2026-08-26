@@ -188,8 +188,9 @@ function humanSummaryForRow(r, tripNames, opts = {}) {
   if (r.type === 'note') {
     const title = r.title || '未命名記事';
     const pin = r.pinned ? ' · 已置頂' : '';
+    const forceExpanded = r.forceExpanded ? ' · 固定展開' : '';
     const body = !forCsv && r.body ? `\n   ${r.body}` : '';
-    return `記事「${title}」${pin}${body}`;
+    return `記事「${title}」${pin}${forceExpanded}${body}`;
   }
 
   return `${TYPE_LABEL[r.type] || r.type} · ${act}（id：${r.id || '—'}）`;
@@ -458,6 +459,7 @@ export function allRowsToTechnicalCSV() {
     'title',
     'body',
     'pinned',
+    'forceExpanded',
     'createdAt',
     'updatedAt',
   ];
@@ -494,6 +496,7 @@ export function allRowsToTechnicalCSV() {
       r.title ?? '',
       r.body ?? '',
       r.pinned ?? '',
+      r.forceExpanded ?? '',
       r.createdAt ?? '',
       r.updatedAt ?? '',
     ];

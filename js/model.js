@@ -77,6 +77,7 @@ import { normalizeDate, normalizeTimeOnly } from './time.js';
  * @property {string} [title]
  * @property {string} [body]
  * @property {boolean} [pinned]
+ * @property {boolean} [forceExpanded]
  * @property {string} [photoUrl]
  * @property {string} [photoFileId]
  * @property {number|string} [createdAt]
@@ -167,6 +168,9 @@ export function normalizeRow(r) {
     r.photoFileId = String(r.photoFileId || '').trim();
     const pinned = String(r.pinned || '').trim().toLowerCase();
     r.pinned = r.pinned === true || ['true', '1', 'yes', 'y'].includes(pinned);
+    const forceExpanded = String(r.forceExpanded || '').trim().toLowerCase();
+    r.forceExpanded =
+      r.forceExpanded === true || ['true', '1', 'yes', 'y'].includes(forceExpanded);
     const createdAt = Number(r.createdAt);
     const updatedAt = Number(r.updatedAt);
     r.createdAt = Number.isFinite(createdAt) && createdAt >= 0 ? createdAt : 0;

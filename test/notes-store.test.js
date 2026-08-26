@@ -23,6 +23,7 @@ describe('notes store', () => {
       title: '採買清單',
       body: '牛奶\n雞蛋',
       pinned: false,
+      forceExpanded: false,
       createdAt: 1_723_456_789_000,
       updatedAt: 1_723_456_789_000,
     });
@@ -38,16 +39,27 @@ describe('notes store', () => {
       { now: 100, idFactory: () => 'note-1' },
     );
 
-    const notes = updateNote([original], 'note-1', { title: '新標題', pinned: true }, 200);
+    const notes = updateNote(
+      [original],
+      'note-1',
+      { title: '新標題', pinned: true, forceExpanded: true },
+      200,
+    );
 
     expect(notes[0]).toMatchObject({
       title: '新標題',
       body: '內容',
       pinned: true,
+      forceExpanded: true,
       createdAt: 100,
       updatedAt: 200,
     });
-    expect(original).toMatchObject({ title: '舊標題', pinned: false, updatedAt: 100 });
+    expect(original).toMatchObject({
+      title: '舊標題',
+      pinned: false,
+      forceExpanded: false,
+      updatedAt: 100,
+    });
   });
 
   it('pins, removes, and sorts pinned notes before recent notes', () => {
@@ -74,7 +86,16 @@ describe('notes store', () => {
 
   it('selects valid note rows and ignores unrelated or malformed rows', () => {
     expect(getNotesFromRows([
-      { type: 'note', id: 'ok', title: '保留', body: '', pinned: 1, createdAt: 10, updatedAt: 20 },
+      {
+        type: 'note',
+        id: 'ok',
+        title: '保留',
+        body: '',
+        pinned: 1,
+        forceExpanded: 'true',
+        createdAt: 10,
+        updatedAt: 20,
+      },
       { type: 'note', title: '沒有 id', body: '忽略' },
       { type: 'daily', id: 'daily-1', item: '不是記事' },
     ])).toEqual([
@@ -85,6 +106,7 @@ describe('notes store', () => {
         title: '保留',
         body: '',
         pinned: true,
+        forceExpanded: true,
         createdAt: 10,
         updatedAt: 20,
       },

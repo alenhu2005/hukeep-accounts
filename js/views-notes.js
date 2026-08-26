@@ -53,7 +53,8 @@ function formatNoteTime(timestamp) {
 function noteCardHTML(note) {
   const noteId = jqAttr(note.id);
   const title = note.title || '未命名記事';
-  const expanded = appState.expandedNoteId === note.id;
+  const forceExpanded = Boolean(note.forceExpanded);
+  const expanded = forceExpanded || appState.expandedNoteId === note.id;
   const body = note.body
     ? `<div class="note-card-body">${linkifyNoteText(note.body)}</div>`
     : '<div class="note-card-body note-card-body--empty">只有標題</div>';
@@ -62,7 +63,10 @@ function noteCardHTML(note) {
         <img class="note-card-photo" src="${esc(note.photoUrl)}" alt="${esc(title)}的圖片" loading="lazy">
       </button>`
     : '';
-  return `<article class="note-card${note.pinned ? ' is-pinned' : ''}${expanded ? ' is-expanded' : ''}" data-note-id="${esc(note.id)}" tabindex="0" aria-expanded="${expanded}" aria-label="${expanded ? '收合' : '展開完整'}記事：${esc(title)}" onclick="if(!this.classList.contains('is-editing')&&!event.target.closest('button,a,input,textarea,label,.note-editor-card'))toggleNoteExpanded(${noteId})" onkeydown="handleNoteCardKey(event,${noteId})">
+  const interactionAttributes = forceExpanded
+    ? `aria-expanded="true" aria-label="固定展開記事：${esc(title)}"`
+    : `tabindex="0" aria-expanded="${expanded}" aria-label="${expanded ? '收合' : '展開完整'}記事：${esc(title)}" onclick="if(!this.classList.contains('is-editing')&&!event.target.closest('button,a,input,textarea,label,.note-editor-card'))toggleNoteExpanded(${noteId})" onkeydown="handleNoteCardKey(event,${noteId})"`;
+  return `<article class="note-card${note.pinned ? ' is-pinned' : ''}${forceExpanded ? ' is-force-expanded' : ''}${expanded ? ' is-expanded' : ''}" data-note-id="${esc(note.id)}" ${interactionAttributes}>
     <div class="note-card-topline">
       <div class="note-card-heading">
         ${note.pinned ? '<span class="note-pinned-badge">置頂</span>' : ''}
@@ -230,10 +234,12 @@ function syncNoteEditor() {
   const title = document.getElementById('note-title-input');
   const body = document.getElementById('note-body-input');
   const pinned = document.getElementById('note-pinned-input');
+  const forceExpanded = document.getElementById('note-force-expanded-input');
   const editorTitle = document.getElementById('note-editor-title');
   if (title) title.value = note?.title || '';
   if (body) body.value = note?.body || '';
   if (pinned) pinned.checked = Boolean(note?.pinned);
+  if (forceExpanded) forceExpanded.checked = Boolean(note?.forceExpanded);
   syncNotePhotoEditor(note);
   if (editorTitle) {
     const icon = editorTitle.querySelector('svg')?.outerHTML || '';
@@ -441,18 +447,26 @@ function syncExpandedNoteCards({ animate = false } = {}) {
       card,
       startHeight,
       wasExpanded,
-      expanded: card.dataset.noteId === appState.expandedNoteId,
+      expanded:
+        Boolean(noteById.get(card.dataset.noteId)?.forceExpanded) ||
+        card.dataset.noteId === appState.expandedNoteId,
     };
   });
 
   for (const { card, expanded } of cards) {
     const note = noteById.get(card.dataset.noteId);
+    const forceExpanded = Boolean(note?.forceExpanded);
     card.classList.toggle('is-expanded', expanded);
+    card.classList.toggle('is-force-expanded', forceExpanded);
     card.setAttribute('aria-expanded', String(expanded));
     card.setAttribute(
       'aria-label',
-      `${expanded ? '收合' : '展開完整'}記事：${note?.title || '未命名記事'}`,
+      forceExpanded
+        ? `固定展開記事：${note?.title || '未命名記事'}`
+        : `${expanded ? '收合' : '展開完整'}記事：${note?.title || '未命名記事'}`,
     );
+    if (forceExpanded) card.removeAttribute('tabindex');
+    else card.setAttribute('tabindex', '0');
   }
 
   if (!animate || !shouldAnimateNoteCards()) return;
@@ -465,7 +479,8 @@ function syncExpandedNoteCards({ animate = false } = {}) {
 }
 
 export function toggleNoteExpanded(id) {
-  if (!getNotes().some(note => note.id === id)) return;
+  const note = getNotes().find(item => item.id === id);
+  if (!note || note.forceExpanded) return;
   appState.expandedNoteId = appState.expandedNoteId === id ? null : id;
   syncExpandedNoteCards({ animate: true });
 }
@@ -504,6 +519,7 @@ export async function saveNote() {
   const title = document.getElementById('note-title-input')?.value || '';
   const body = document.getElementById('note-body-input')?.value || '';
   const pinned = Boolean(document.getElementById('note-pinned-input')?.checked);
+  const forceExpanded = Boolean(document.getElementById('note-force-expanded-input')?.checked);
   if (!title.trim() && !body.trim()) {
     toast('請輸入標題或內容');
     document.getElementById('note-title-input')?.focus();
@@ -525,9 +541,10 @@ export async function saveNote() {
         title: title.trim(),
         body: body.trim(),
         pinned,
+        forceExpanded,
         updatedAt: Date.now(),
       }
-    : createNote({ title, body, pinned });
+    : createNote({ title, body, pinned, forceExpanded });
   const payload = { ...basePayload, ...pendingNotePhotoFields() };
   const snapshot = snapshotRows();
   const originalNote = snapshot.find(row => row?.type === 'note' && row.id === payload.id);

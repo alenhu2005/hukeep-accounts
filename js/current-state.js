@@ -68,6 +68,7 @@ function normalizeActiveRow(row, { pending = false } = {}) {
     next.title = trimString(next.title);
     next.body = trimString(next.body);
     next.pinned = toBool(next.pinned);
+    next.forceExpanded = toBool(next.forceExpanded);
     next.createdAt = Number.isFinite(Number(next.createdAt)) ? Number(next.createdAt) : 0;
     next.updatedAt = Number.isFinite(Number(next.updatedAt)) ? Number(next.updatedAt) : next.createdAt;
     if (next.photoDataUrl !== undefined && next.photoUrl === undefined) {
@@ -366,6 +367,7 @@ function editNote(rows, payload, { pending = false } = {}) {
     ...(payload.title !== undefined ? { title: payload.title } : {}),
     ...(payload.body !== undefined ? { body: payload.body } : {}),
     ...(payload.pinned !== undefined ? { pinned: payload.pinned } : {}),
+    ...(payload.forceExpanded !== undefined ? { forceExpanded: payload.forceExpanded } : {}),
     ...(payload.photoUrl !== undefined ? { photoUrl: payload.photoUrl } : {}),
     ...(payload.photoDataUrl !== undefined ? { photoUrl: payload.photoDataUrl } : {}),
     ...(payload.photoFileId !== undefined ? { photoFileId: payload.photoFileId } : {}),
