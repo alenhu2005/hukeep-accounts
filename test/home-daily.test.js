@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => ({
   applyOptimisticPayload: vi.fn(),
   renderHome: vi.fn(),
   toast: vi.fn(),
+  toggleCollapsible: vi.fn(),
 }));
 
 vi.mock('../js/api.js', () => ({
@@ -96,10 +97,45 @@ vi.mock('../js/views-trip-detail.js', () => ({
   syncDetailTripFormLabels: vi.fn(),
 }));
 vi.mock('../js/trip-stats.js', () => ({ buildTripSettlementSummaryText: vi.fn(() => '') }));
-vi.mock('../js/ui-collapsible.js', () => ({ toggleCollapsible: vi.fn() }));
+vi.mock('../js/ui-collapsible.js', () => ({ toggleCollapsible: mocks.toggleCollapsible }));
 
-import { recordSettlement } from '../js/actions/home-daily.js';
+import {
+  homeEntryFormHeaderClick,
+  homeEntryFormHeaderKeydown,
+  recordSettlement,
+} from '../js/actions/home-daily.js';
 import { appState } from '../js/state.js';
+
+describe('home entry form header', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('toggles from the header surface but ignores nested controls', () => {
+    homeEntryFormHeaderClick({ target: { closest: vi.fn(() => null) } });
+    expect(mocks.toggleCollapsible).toHaveBeenCalledWith(
+      'home-form',
+      'home-toggle-icon',
+      'home-form-header-toggle',
+    );
+
+    homeEntryFormHeaderClick({ target: { closest: vi.fn(() => ({})) } });
+    expect(mocks.toggleCollapsible).toHaveBeenCalledTimes(1);
+  });
+
+  it('supports Enter and Space once while ignoring repeated or unrelated keys', () => {
+    const enter = { key: 'Enter', repeat: false, preventDefault: vi.fn() };
+    const space = { key: ' ', repeat: false, preventDefault: vi.fn() };
+    homeEntryFormHeaderKeydown(enter);
+    homeEntryFormHeaderKeydown(space);
+    homeEntryFormHeaderKeydown({ key: ' ', repeat: true, preventDefault: vi.fn() });
+    homeEntryFormHeaderKeydown({ key: 'Escape', repeat: false, preventDefault: vi.fn() });
+
+    expect(enter.preventDefault).toHaveBeenCalledOnce();
+    expect(space.preventDefault).toHaveBeenCalledOnce();
+    expect(mocks.toggleCollapsible).toHaveBeenCalledTimes(2);
+  });
+});
 
 describe('recordSettlement', () => {
   beforeEach(() => {

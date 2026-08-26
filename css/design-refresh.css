@@ -149,6 +149,58 @@ button {
   padding-bottom: 10px;
 }
 
+#home-entry-card > .card-header {
+  align-items: center;
+  padding-top: 14px;
+}
+
+#home-entry-card .card-title-block {
+  gap: 0;
+}
+
+#home-form .collapsible-panel__inner.card-body {
+  padding: 12px 16px 14px;
+}
+
+#home-form .form-group {
+  margin-bottom: 12px;
+}
+
+#home-form .form-label {
+  margin-bottom: 5px;
+}
+
+#home-form .form-input {
+  min-height: 40px;
+  height: 40px;
+}
+
+#home-form .btn-group {
+  gap: 8px;
+}
+
+#home-form .btn-toggle {
+  height: 38px;
+}
+
+#home-form #h-submit {
+  min-height: 40px;
+  height: 40px;
+}
+
+#home-history-header {
+  align-items: stretch;
+}
+
+#home-history-header .section-title {
+  min-height: 34px;
+}
+
+#home-calendar-open-btn {
+  min-height: 34px;
+  height: auto;
+}
+
 #page-home .main > :where(.card, .section-header),
 #page-trips .main > .card,
 #page-trip-detail .main > .card,
@@ -316,7 +368,9 @@ input.form-input-amount {
 }
 
 #page-home .home-records-wrap {
+  padding-right: 0;
   padding-bottom: 0;
+  padding-left: 0;
 }
 
 .record-item {
@@ -331,6 +385,8 @@ input.form-input-amount {
 }
 
 #page-home .home-records-wrap .record-item {
+  margin-right: 0;
+  margin-left: 0;
   padding-top: 10px;
   padding-bottom: 10px;
 }
@@ -340,8 +396,8 @@ input.form-input-amount {
 }
 
 #page-home .home-records-wrap .show-more-btn {
-  width: calc(100% + 16px);
-  margin: 2px -8px 0;
+  width: 100%;
+  margin: 2px 0 0;
   padding: 8px 10px 6px;
   border-radius: 0;
 }

@@ -14,7 +14,8 @@
 }
 
 .note-card.is-editing > .note-card-topline,
-.note-card.is-editing > .note-card-content {
+.note-card.is-editing > .note-card-content,
+.note-card.is-editing.is-expanded > .note-card-content {
   display: none;
 }
 

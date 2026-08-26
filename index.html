@@ -336,17 +336,16 @@
 
       <!-- Add expense form -->
       <div class="card card--workspace" id="home-entry-card">
-        <div class="card-header">
+        <div class="card-header card-header--toggle-row" id="home-form-header-toggle" role="button" tabindex="0" aria-expanded="true" aria-controls="home-form" title="收合／展開新增消費" onclick="homeEntryFormHeaderClick(event)" onkeydown="homeEntryFormHeaderKeydown(event)">
           <div class="card-title-block">
-            <div class="card-kicker">日常帳</div>
             <div class="card-title">
-              <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
               新增消費
             </div>
           </div>
-          <button class="toggle-btn" onclick="toggleCollapsible('home-form','home-toggle-icon')">
+          <span class="toggle-btn toggle-btn--header-decor" aria-hidden="true">
             <svg id="home-toggle-icon" viewBox="0 0 24 24"><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>
-          </button>
+          </span>
         </div>
         <div id="home-form" class="collapsible-panel is-open">
           <div class="collapsible-panel__inner card-body">
@@ -407,7 +406,7 @@
 
       <!-- History -->
       <div>
-        <div class="section-header" style="margin-bottom:8px">
+        <div class="section-header" id="home-history-header" style="margin-bottom:8px">
           <div class="section-title">
             <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
             歷史紀錄

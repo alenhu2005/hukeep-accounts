@@ -62,6 +62,17 @@ import {
 } from './shared.js';
 
 // ── Home form ────────────────────────────────────────────────────────────────
+export function homeEntryFormHeaderClick(e) {
+  if (e?.target?.closest?.('button, a, input, textarea, select')) return;
+  toggleCollapsible('home-form', 'home-toggle-icon', 'home-form-header-toggle');
+}
+
+export function homeEntryFormHeaderKeydown(e) {
+  if (e.repeat || (e.key !== 'Enter' && e.key !== ' ')) return;
+  e.preventDefault();
+  toggleCollapsible('home-form', 'home-toggle-icon', 'home-form-header-toggle');
+}
+
 export function setHomePaidBy(val) {
   appState.homePaidBy = val;
   ['胡', '詹'].forEach(v => document.getElementById('pb-' + v).classList.toggle('active', v === val));

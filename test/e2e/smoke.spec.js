@@ -100,6 +100,15 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   await expect(page.locator('#bottom-nav')).toBeVisible();
   await expect(page.locator('#nav-home')).toContainText('日常');
   await expect(page.locator('#nav-notes')).toContainText('記事');
+  const homeFormHeader = page.locator('#home-form-header-toggle');
+  await expect(homeFormHeader.locator('.card-kicker')).toHaveCount(0);
+  await expect(homeFormHeader).toHaveAttribute('aria-expanded', 'true');
+  await homeFormHeader.click({ position: { x: 80, y: 24 } });
+  await expect(page.locator('#home-form')).not.toHaveClass(/is-open/);
+  await expect(homeFormHeader).toHaveAttribute('aria-expanded', 'false');
+  await homeFormHeader.press('Enter');
+  await expect(page.locator('#home-form')).toHaveClass(/is-open/);
+  await expect(homeFormHeader).toHaveAttribute('aria-expanded', 'true');
   const homeSearchLayout = await page.evaluate(() => {
     const card = document.querySelector('#page-home .home-history-card');
     const search = card?.querySelector('.record-search');
@@ -127,6 +136,52 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   expect(compactHomeHistory.itemPaddingBottom).toBeLessThanOrEqual(10);
   expect(compactHomeHistory.bottomGap).toBeLessThanOrEqual(2);
   await page.setViewportSize({ width: 360, height: 800 });
+  const compactHomeForm = await page.evaluate(() => {
+    const body = document.querySelector('#home-form .card-body');
+    const group = document.querySelector('#home-form .form-group');
+    const input = document.querySelector('#home-form .form-input');
+    const toggle = document.querySelector('#home-form .btn-toggle');
+    if (!body || !group || !input || !toggle) {
+      return { bodyPaddingTop: -1, groupMarginBottom: -1, inputHeight: -1, toggleHeight: -1 };
+    }
+    return {
+      bodyPaddingTop: Number.parseFloat(getComputedStyle(body).paddingTop),
+      groupMarginBottom: Number.parseFloat(getComputedStyle(group).marginBottom),
+      inputHeight: input.getBoundingClientRect().height,
+      toggleHeight: toggle.getBoundingClientRect().height,
+    };
+  });
+  expect(compactHomeForm.bodyPaddingTop).toBeLessThanOrEqual(12);
+  expect(compactHomeForm.groupMarginBottom).toBeLessThanOrEqual(12);
+  expect(compactHomeForm.inputHeight).toBeLessThanOrEqual(42);
+  expect(compactHomeForm.toggleHeight).toBeLessThanOrEqual(40);
+  const calendarHeaderAlignment = await page.evaluate(() => {
+    const title = document.querySelector('#home-history-header .section-title');
+    const button = document.getElementById('home-calendar-open-btn');
+    if (!title || !button) return { titleHeight: -1, buttonHeight: -1, centerDelta: -1 };
+    const titleRect = title.getBoundingClientRect();
+    const buttonRect = button.getBoundingClientRect();
+    return {
+      titleHeight: titleRect.height,
+      buttonHeight: buttonRect.height,
+      centerDelta: Math.abs(titleRect.top + titleRect.height / 2 - (buttonRect.top + buttonRect.height / 2)),
+    };
+  });
+  expect(Math.abs(calendarHeaderAlignment.titleHeight - calendarHeaderAlignment.buttonHeight)).toBeLessThanOrEqual(1);
+  expect(calendarHeaderAlignment.centerDelta).toBeLessThanOrEqual(1);
+  const homeRecordEdgeAlignment = await page.evaluate(() => {
+    const list = document.getElementById('home-records');
+    const item = list?.querySelector('.record-item');
+    if (!list || !item) return { leftDelta: -1, rightDelta: -1 };
+    const listRect = list.getBoundingClientRect();
+    const itemRect = item.getBoundingClientRect();
+    return {
+      leftDelta: Math.abs(itemRect.left - listRect.left),
+      rightDelta: Math.abs(itemRect.right - listRect.right),
+    };
+  });
+  expect(homeRecordEdgeAlignment.leftDelta).toBeLessThanOrEqual(1);
+  expect(homeRecordEdgeAlignment.rightDelta).toBeLessThanOrEqual(1);
   const mobileHomeWidth = await page.evaluate(() => ({
     viewport: window.innerWidth,
     document: document.documentElement.scrollWidth,
@@ -274,6 +329,18 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   await expect(restoredForcedNote).toHaveClass(/is-force-expanded/);
   await expect(restoredForcedNote).toHaveClass(/is-expanded/);
   await restoredForcedNote.click({ position: { x: 24, y: 24 } });
+  await expect(restoredForcedNote).toHaveClass(/is-expanded/);
+  await restoredForcedNote.getByRole('button', { name: '編輯記事' }).click();
+  await expect(restoredForcedNote).toHaveClass(/is-editing/);
+  await expect(restoredForcedNote.locator('#note-editor-card')).toBeVisible();
+  const forcedNoteEditDisplay = await restoredForcedNote.evaluate(card => ({
+    topline: getComputedStyle(card.querySelector('.note-card-topline')).display,
+    content: getComputedStyle(card.querySelector('.note-card-content')).display,
+    editor: getComputedStyle(card.querySelector('#note-editor-card')).display,
+  }));
+  expect(forcedNoteEditDisplay).toEqual({ topline: 'none', content: 'none', editor: 'block' });
+  await page.getByRole('button', { name: '關閉編輯器' }).click();
+  await expect(restoredForcedNote).not.toHaveClass(/is-editing/);
   await expect(restoredForcedNote).toHaveClass(/is-expanded/);
 
   await page.locator('#nav-trips').click();

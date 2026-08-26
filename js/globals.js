@@ -267,6 +267,8 @@ Object.assign(window, {
   toggleTripStatsPieCollapseModal: actions.toggleTripStatsPieCollapseModal,
   tripDetailFormHeaderClick: actions.tripDetailFormHeaderClick,
   tripDetailFormHeaderKeydown: actions.tripDetailFormHeaderKeydown,
+  homeEntryFormHeaderClick: actions.homeEntryFormHeaderClick,
+  homeEntryFormHeaderKeydown: actions.homeEntryFormHeaderKeydown,
   setHomePaidBy: actions.setHomePaidBy,
   setHomeSplitMode: actions.setHomeSplitMode,
   submitDailyRecord: actions.submitDailyRecord,
