@@ -192,6 +192,10 @@ button {
   align-items: stretch;
 }
 
+#home-history-section {
+  margin-top: -10px;
+}
+
 #home-history-header .section-title {
   min-height: 34px;
 }
@@ -389,6 +393,7 @@ input.form-input-amount {
   margin-left: 0;
   padding-top: 10px;
   padding-bottom: 10px;
+  border-radius: 0;
 }
 
 #page-home .home-records-wrap .record-item + .record-item {

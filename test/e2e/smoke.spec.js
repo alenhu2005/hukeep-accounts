@@ -20,6 +20,14 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
       date: '2026-08-25',
     })),
     {
+      type: 'settlement',
+      action: 'add',
+      id: 'settlement-seed-1',
+      amount: 50,
+      paidBy: '詹',
+      date: '2026-08-25',
+    },
+    {
       type: 'trip',
       action: 'add',
       id: 'trip-seed-1',
@@ -155,6 +163,14 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   expect(compactHomeForm.groupMarginBottom).toBeLessThanOrEqual(12);
   expect(compactHomeForm.inputHeight).toBeLessThanOrEqual(42);
   expect(compactHomeForm.toggleHeight).toBeLessThanOrEqual(40);
+  const homeHistorySectionGap = await page.evaluate(() => {
+    const entry = document.getElementById('home-entry-card');
+    const historyHeader = document.getElementById('home-history-header');
+    if (!entry || !historyHeader) return -1;
+    return historyHeader.getBoundingClientRect().top - entry.getBoundingClientRect().bottom;
+  });
+  expect(homeHistorySectionGap).toBeGreaterThanOrEqual(4);
+  expect(homeHistorySectionGap).toBeLessThanOrEqual(8);
   const calendarHeaderAlignment = await page.evaluate(() => {
     const title = document.querySelector('#home-history-header .section-title');
     const button = document.getElementById('home-calendar-open-btn');
@@ -182,6 +198,10 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   });
   expect(homeRecordEdgeAlignment.leftDelta).toBeLessThanOrEqual(1);
   expect(homeRecordEdgeAlignment.rightDelta).toBeLessThanOrEqual(1);
+  const homeSettlementRadius = await page.locator('#home-records .record-item.is-settlement').first().evaluate(
+    element => getComputedStyle(element).borderRadius,
+  );
+  expect(homeSettlementRadius).toBe('0px');
   const mobileHomeWidth = await page.evaluate(() => ({
     viewport: window.innerWidth,
     document: document.documentElement.scrollWidth,

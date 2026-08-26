@@ -1,4 +1,4 @@
-import { marked, Renderer } from 'marked';
+import { marked, Renderer } from './vendor/marked.esm.js';
 import { esc } from './utils.js';
 
 const renderer = new Renderer();
