@@ -1635,6 +1635,49 @@ html.dark #d-add-payer-row-btn {
   color: #f0b90b !important;
 }
 
+/* Keep the current type and icon scale while arranging the summary into two compact rows. */
+#balance-card .balance-content {
+  padding: 5px 12px;
+}
+
+#balance-card .balance-copy {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 6px;
+  row-gap: 0;
+}
+
+#balance-card .balance-label {
+  grid-column: 1;
+  grid-row: 1;
+  white-space: nowrap;
+}
+
+#balance-card .balance-main {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+  margin: 0;
+  white-space: nowrap;
+}
+
+#balance-card .balance-who {
+  grid-column: 1;
+  grid-row: 2;
+  white-space: nowrap;
+}
+
+#balance-card .balance-sub {
+  grid-column: 2;
+  grid-row: 2;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 @media (max-width: 420px) {
   .header {
     padding: 12px 14px;

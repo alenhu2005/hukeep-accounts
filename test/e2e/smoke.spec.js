@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test';
 import { fileURLToPath } from 'node:url';
 
+test.setTimeout(60_000);
+
 const NOTE_PHOTO_FIXTURE = fileURLToPath(new URL('../../icons/icon-512.png', import.meta.url));
 
 test('loads built app, navigates tabs, and registers service worker', async ({ page }, testInfo) => {
@@ -143,7 +145,96 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   expect(compactHomeHistory.itemPaddingTop).toBeLessThanOrEqual(10);
   expect(compactHomeHistory.itemPaddingBottom).toBeLessThanOrEqual(10);
   expect(compactHomeHistory.bottomGap).toBeLessThanOrEqual(2);
-  await page.setViewportSize({ width: 360, height: 800 });
+  await page.setViewportSize({ width: 378, height: 784 });
+  const compactBalanceCard = await page.evaluate(() => {
+    const card = document.getElementById('balance-card');
+    const icon = card?.querySelector('.balance-icon');
+    const iconSvg = card?.querySelector('.balance-icon svg');
+    const label = card?.querySelector('.balance-label');
+    const main = card?.querySelector('.balance-main');
+    const who = card?.querySelector('.balance-who');
+    if (!card || !icon || !iconSvg || !label || !main || !who) {
+      return {
+        cardHeight: -1,
+        iconSize: -1,
+        iconSvgSize: -1,
+        labelFontSize: -1,
+        mainFontSize: -1,
+        whoFontSize: -1,
+      };
+    }
+    return {
+      cardHeight: card.getBoundingClientRect().height,
+      iconSize: icon.getBoundingClientRect().height,
+      iconSvgSize: iconSvg.getBoundingClientRect().height,
+      labelFontSize: Number.parseFloat(getComputedStyle(label).fontSize),
+      mainFontSize: Number.parseFloat(getComputedStyle(main).fontSize),
+      whoFontSize: Number.parseFloat(getComputedStyle(who).fontSize),
+    };
+  });
+  expect(compactBalanceCard.cardHeight).toBeLessThanOrEqual(60);
+  expect(compactBalanceCard.iconSize).toBe(40);
+  expect(compactBalanceCard.iconSvgSize).toBe(19);
+  expect(compactBalanceCard.labelFontSize).toBe(10);
+  expect(compactBalanceCard.mainFontSize).toBe(23);
+  expect(compactBalanceCard.whoFontSize).toBe(11);
+  const mobileHomeHeader = await page.evaluate(() => {
+    const header = document.querySelector('#page-home > .header');
+    if (!header) {
+      return {
+        left: -1,
+        rightGap: -1,
+        top: -1,
+        height: -1,
+        radius: '',
+        backgroundColor: '',
+        backdropFilter: '',
+        boxShadow: '',
+      };
+    }
+    const rect = header.getBoundingClientRect();
+    const style = getComputedStyle(header);
+    return {
+      left: rect.left,
+      rightGap: window.innerWidth - rect.right,
+      top: rect.top,
+      height: rect.height,
+      radius: style.borderRadius,
+      backgroundColor: style.backgroundColor,
+      backdropFilter: style.backdropFilter,
+      boxShadow: style.boxShadow,
+    };
+  });
+  expect(Math.abs(mobileHomeHeader.left)).toBeLessThanOrEqual(1);
+  expect(Math.abs(mobileHomeHeader.rightGap)).toBeLessThanOrEqual(1);
+  expect(Math.abs(mobileHomeHeader.top)).toBeLessThanOrEqual(1);
+  expect(mobileHomeHeader.height).toBeLessThanOrEqual(52);
+  expect(mobileHomeHeader.radius).toBe('0px');
+  expect(mobileHomeHeader.backgroundColor).toBe('rgb(255, 255, 255)');
+  expect(mobileHomeHeader.backdropFilter).toBe('none');
+  expect(mobileHomeHeader.boxShadow).toBe('none');
+  const squareHeaderTools = await page.evaluate(() => {
+    const selectors = ['#backup-open-btn', '#theme-toggle'];
+    return selectors.map(selector => {
+      const button = document.querySelector(selector);
+      if (!button) return { width: -1, height: -1, radius: '' };
+      const rect = button.getBoundingClientRect();
+      return {
+        width: rect.width,
+        height: rect.height,
+        radius: getComputedStyle(button).borderRadius,
+      };
+    });
+  });
+  for (const tool of squareHeaderTools) {
+    expect(Math.abs(tool.width - tool.height)).toBeLessThanOrEqual(1);
+    expect(tool.radius).toBe('8px');
+  }
+  await page.evaluate(() => window.scrollTo(0, 320));
+  await expect.poll(async () => page.locator('#page-home > .header').evaluate(
+    header => Math.abs(header.getBoundingClientRect().top),
+  )).toBeLessThanOrEqual(1);
+  await page.evaluate(() => window.scrollTo(0, 0));
   const compactHomeForm = await page.evaluate(() => {
     const body = document.querySelector('#home-form .card-body');
     const group = document.querySelector('#home-form .form-group');
@@ -366,6 +457,9 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   await page.locator('#nav-trips').click();
   await expect(page.locator('#nav-trips')).toHaveClass(/active/);
   await expect(page.locator('.trip-card-wrap[data-trip-id="trip-seed-1"]')).toBeVisible();
+  await page.locator('#page-trips > .header .btn', { hasText: '新增行程' }).click();
+  await expect(page.locator('#create-trip-card')).toBeVisible();
+  await expect(page.locator('#create-trip-card .card-kicker')).toHaveCount(0);
   await page.evaluate(() => window.navigate('tripDetail', 'trip-seed-1'));
   await expect(page.locator('#detail-name')).toHaveText('東京');
   await expect(page.locator('#d-paidby-toggles .btn-toggle.active')).toHaveText('小明');
@@ -494,6 +588,67 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   await page.waitForTimeout(650);
   await page.screenshot({ path: testInfo.outputPath('note-expanded-mobile-dark.png'), fullPage: true });
   await page.locator('.note-card', { hasText: '東京行前清單' }).click({ position: { x: 24, y: 24 } });
+
+  const mobileHeaderRoutes = [
+    { route: 'home', selector: '#page-home > .header' },
+    { route: 'notes', selector: '#page-notes > .header' },
+    { route: 'trips', selector: '#page-trips > .header' },
+    { route: 'tripDetail', id: 'trip-seed-1', selector: '#page-trip-detail > .header' },
+    { route: 'analysis', selector: '#page-analysis > .header' },
+  ];
+  for (const { route, id, selector } of mobileHeaderRoutes) {
+    await page.evaluate(({ nextRoute, routeId }) => {
+      window.scrollTo(0, 0);
+      window.navigate(nextRoute, routeId);
+    }, { nextRoute: route, routeId: id });
+    await expect(page.locator(selector)).toBeVisible();
+    await page.waitForTimeout(500);
+    if (route === 'tripDetail') {
+      await page.locator('#detail-name').evaluate(element => {
+        element.textContent = '台南有很多公園';
+      });
+    }
+    const headerBar = await page.locator(selector).evaluate(header => {
+      const rect = header.getBoundingClientRect();
+      const style = getComputedStyle(header);
+      return {
+        left: rect.left,
+        rightGap: window.innerWidth - rect.right,
+        height: rect.height,
+        radius: style.borderRadius,
+        backgroundColor: style.backgroundColor,
+        backdropFilter: style.backdropFilter,
+        boxShadow: style.boxShadow,
+      };
+    });
+    expect(Math.abs(headerBar.left)).toBeLessThanOrEqual(1);
+    expect(Math.abs(headerBar.rightGap)).toBeLessThanOrEqual(1);
+    expect(headerBar.height).toBeLessThanOrEqual(52);
+    expect(headerBar.radius).toBe('0px');
+    expect(headerBar.backgroundColor).toBe('rgb(24, 26, 32)');
+    expect(headerBar.backdropFilter).toBe('none');
+    expect(headerBar.boxShadow).toBe('none');
+    if (route === 'tripDetail') {
+      const detailHeaderLayout = await page.locator(selector).evaluate(header => {
+        const visibleItems = [
+          header.querySelector('.back-btn'),
+          header.querySelector('#detail-name'),
+          header.querySelector('#detail-count'),
+          header.querySelector('.trip-header-stats-btn'),
+          header.querySelector('.trip-lottery-trigger'),
+          ...header.querySelectorAll('#trip-header-actions > *'),
+        ].filter(element => element && getComputedStyle(element).display !== 'none');
+        const rects = visibleItems.map(element => element.getBoundingClientRect());
+        return {
+          centerDelta: Math.max(...rects.map(rect => rect.top + rect.height / 2))
+            - Math.min(...rects.map(rect => rect.top + rect.height / 2)),
+          overlaps: rects.some((rect, index) => index > 0 && rect.left < rects[index - 1].right - 1),
+        };
+      });
+      expect(detailHeaderLayout.centerDelta).toBeLessThanOrEqual(1);
+      expect(detailHeaderLayout.overlaps).toBe(false);
+    }
+  }
 
   const serviceWorkerScope = await page.evaluate(async () => {
     if (!('serviceWorker' in navigator)) return '';

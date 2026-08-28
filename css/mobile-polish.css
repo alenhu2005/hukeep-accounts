@@ -11,12 +11,25 @@
     padding: 12px 0 118px;
   }
 
-  .header {
-    min-height: 60px;
-    margin-top: calc(env(safe-area-inset-top) + 8px);
-    padding: 10px 12px;
-    border-radius: 16px;
+  #app .header {
+    top: 0;
+    width: calc(100% + 20px);
+    min-height: calc(50px + env(safe-area-inset-top));
+    margin: 0 -10px;
+    padding: calc(7px + env(safe-area-inset-top)) 22px 7px;
+    border: 0;
+    border-bottom: 1px solid var(--border);
+    border-radius: 0;
     gap: 8px;
+    background: #fff;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    transition: border-color 0.25s ease;
+  }
+
+  html.dark #app .header {
+    background: #181a20;
   }
 
   .header-icon {
@@ -37,12 +50,20 @@
     font-size: 10.5px;
   }
 
-  .header-icon-btn,
-  #theme-toggle,
-  .back-btn {
+  #app .header .header-icon-btn,
+  #app .header #theme-toggle,
+  #app .header .back-btn {
     width: 36px;
     height: 36px;
-    border-radius: 10px;
+    min-height: 36px;
+    border-radius: 8px;
+  }
+
+  #app .header .btn {
+    height: 36px;
+    min-height: 36px;
+    padding-block: 0;
+    border-radius: 8px;
   }
 
   .card,
@@ -67,13 +88,11 @@
 @media (max-width: 430px) {
   #page-trip-detail > .header {
     display: grid;
-    grid-template-columns: 36px minmax(0, 1fr) 36px 36px minmax(36px, auto);
-    grid-template-areas:
-      "back count stats lottery actions"
-      "name name name name name";
+    grid-template-columns: 36px minmax(0, 1fr) auto auto auto auto;
+    grid-template-areas: "back name count stats lottery actions";
     align-items: center;
     column-gap: 8px;
-    row-gap: 6px;
+    row-gap: 0;
   }
 
   #page-trip-detail .back-btn {
@@ -122,16 +141,16 @@
 
   #page-trip-detail #detail-name {
     grid-area: name;
-    width: 100% !important;
-    max-width: 100% !important;
+    width: auto !important;
+    max-width: none !important;
     flex-basis: auto !important;
     margin: 0 !important;
     font-size: 16px !important;
     line-height: 1.22;
-    white-space: normal;
-    overflow: visible;
-    text-overflow: clip;
-    word-break: break-word;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: normal;
   }
 
   #trip-members-card .card-body {
