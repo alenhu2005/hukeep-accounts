@@ -77,14 +77,24 @@ import { animateOverlayIn } from './motion.js';
 import { clearLedgerLocalStorage } from './api.js';
 import { toast } from './utils.js';
 
-let lbScale = 1, lbX = 0, lbY = 0, lbPinchDist = 0, lbPanning = false, lbStartX = 0, lbStartY = 0, lbOrigX = 0, lbOrigY = 0;
+let lbScale = 1,
+  lbX = 0,
+  lbY = 0,
+  lbPinchDist = 0,
+  lbPanning = false,
+  lbStartX = 0,
+  lbStartY = 0,
+  lbOrigX = 0,
+  lbOrigY = 0;
 
 function lbApply() {
   const wrap = document.getElementById('photo-lightbox-wrap');
   if (wrap) wrap.style.transform = `translate(${lbX}px,${lbY}px) scale(${lbScale})`;
 }
 function lbReset() {
-  lbScale = 1; lbX = 0; lbY = 0;
+  lbScale = 1;
+  lbX = 0;
+  lbY = 0;
   const wrap = document.getElementById('photo-lightbox-wrap');
   if (wrap) wrap.style.transform = '';
 }
@@ -107,44 +117,57 @@ function closePhotoLightbox() {
 
 (function initLightboxGestures() {
   let lastTap = 0;
-  function dist(t) { return Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY); }
-  document.addEventListener('touchstart', e => {
-    const lb = document.getElementById('photo-lightbox');
-    if (!lb || !lb.classList.contains('open')) return;
-    const wrap = document.getElementById('photo-lightbox-wrap');
-    if (!wrap || !wrap.contains(e.target)) return;
-    if (e.touches.length === 2) {
-      e.preventDefault();
-      lbPinchDist = dist(e.touches);
-      lbPanning = false;
-    } else if (e.touches.length === 1 && lbScale > 1) {
-      lbPanning = true;
-      lbStartX = e.touches[0].clientX;
-      lbStartY = e.touches[0].clientY;
-      lbOrigX = lbX;
-      lbOrigY = lbY;
-    }
-  }, { passive: false });
+  function dist(t) {
+    return Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+  }
+  document.addEventListener(
+    'touchstart',
+    (e) => {
+      const lb = document.getElementById('photo-lightbox');
+      if (!lb || !lb.classList.contains('open')) return;
+      const wrap = document.getElementById('photo-lightbox-wrap');
+      if (!wrap || !wrap.contains(e.target)) return;
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        lbPinchDist = dist(e.touches);
+        lbPanning = false;
+      } else if (e.touches.length === 1 && lbScale > 1) {
+        lbPanning = true;
+        lbStartX = e.touches[0].clientX;
+        lbStartY = e.touches[0].clientY;
+        lbOrigX = lbX;
+        lbOrigY = lbY;
+      }
+    },
+    { passive: false },
+  );
 
-  document.addEventListener('touchmove', e => {
-    const lb = document.getElementById('photo-lightbox');
-    if (!lb || !lb.classList.contains('open')) return;
-    if (e.touches.length === 2 && lbPinchDist > 0) {
-      e.preventDefault();
-      const d = dist(e.touches);
-      lbScale = Math.max(1, Math.min(5, lbScale * (d / lbPinchDist)));
-      lbPinchDist = d;
-      if (lbScale <= 1.05) { lbX = 0; lbY = 0; }
-      lbApply();
-    } else if (e.touches.length === 1 && lbPanning) {
-      e.preventDefault();
-      lbX = lbOrigX + (e.touches[0].clientX - lbStartX);
-      lbY = lbOrigY + (e.touches[0].clientY - lbStartY);
-      lbApply();
-    }
-  }, { passive: false });
+  document.addEventListener(
+    'touchmove',
+    (e) => {
+      const lb = document.getElementById('photo-lightbox');
+      if (!lb || !lb.classList.contains('open')) return;
+      if (e.touches.length === 2 && lbPinchDist > 0) {
+        e.preventDefault();
+        const d = dist(e.touches);
+        lbScale = Math.max(1, Math.min(5, lbScale * (d / lbPinchDist)));
+        lbPinchDist = d;
+        if (lbScale <= 1.05) {
+          lbX = 0;
+          lbY = 0;
+        }
+        lbApply();
+      } else if (e.touches.length === 1 && lbPanning) {
+        e.preventDefault();
+        lbX = lbOrigX + (e.touches[0].clientX - lbStartX);
+        lbY = lbOrigY + (e.touches[0].clientY - lbStartY);
+        lbApply();
+      }
+    },
+    { passive: false },
+  );
 
-  document.addEventListener('touchend', e => {
+  document.addEventListener('touchend', (e) => {
     const lb = document.getElementById('photo-lightbox');
     if (!lb || !lb.classList.contains('open')) return;
     if (e.touches.length < 2) lbPinchDist = 0;
@@ -152,12 +175,23 @@ function closePhotoLightbox() {
       lbPanning = false;
       const now = Date.now();
       if (now - lastTap < 300) {
-        if (lbScale > 1.05) { lbScale = 1; lbX = 0; lbY = 0; } else { lbScale = 2.5; }
+        if (lbScale > 1.05) {
+          lbScale = 1;
+          lbX = 0;
+          lbY = 0;
+        } else {
+          lbScale = 2.5;
+        }
         lbApply();
       }
       lastTap = now;
     }
-    if (lbScale <= 1.05) { lbScale = 1; lbX = 0; lbY = 0; lbApply(); }
+    if (lbScale <= 1.05) {
+      lbScale = 1;
+      lbX = 0;
+      lbY = 0;
+      lbApply();
+    }
   });
 })();
 
@@ -171,7 +205,10 @@ function closePhotoLightbox() {
 })();
 
 async function clearLocalCache() {
-  const ok = await showConfirm('清除本地快取？', '將清除本機暫存的帳務資料，下次開啟會重新從伺服器載入。');
+  const ok = await showConfirm(
+    '清除本地快取？',
+    '將清除本機暫存的帳務資料，下次開啟會重新從伺服器載入。',
+  );
   if (!ok) return;
   clearLedgerLocalStorage();
   try {

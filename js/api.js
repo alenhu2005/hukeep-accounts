@@ -38,7 +38,7 @@ import { upgradeClientStorageSchema } from './sync/storage-schema.js';
 import { emitRowsSynced } from './sync-events.js';
 
 function sleep(ms) {
-  return new Promise(r => setTimeout(r, ms));
+  return new Promise((r) => setTimeout(r, ms));
 }
 
 function jitterBackoff(attempt, baseMs) {
@@ -80,14 +80,17 @@ function readSyncTimestampFromStorage() {
 }
 
 function rememberSchemaWarnings(source, warnings) {
-  appState.schemaWarnings = warnings.map(w => ({
+  appState.schemaWarnings = warnings.map((w) => ({
     source,
     index: w.index,
     type: w.type,
-    issues: w.issues.map(issue => issue.code),
+    issues: w.issues.map((issue) => issue.code),
   }));
   if (warnings.length > 0) {
-    console.warn(`[schema] ignored or normalized ${warnings.length} row(s) from ${source}`, warnings);
+    console.warn(
+      `[schema] ignored or normalized ${warnings.length} row(s) from ${source}`,
+      warnings,
+    );
   }
 }
 
@@ -129,7 +132,7 @@ export function loadCache() {
       ...(notes ? JSON.parse(notes) : []),
     ];
     appState.allRows = normalizeRows(cachedRows, {
-      onWarnings: warnings => rememberSchemaWarnings('cache', warnings),
+      onWarnings: (warnings) => rememberSchemaWarnings('cache', warnings),
     });
     pruneStalePendingSyncFlags(appState.allRows, readPostOutbox());
     const ts = readSyncTimestampFromStorage();
@@ -156,9 +159,18 @@ function stripBase64Fields(r) {
 
 export function saveCache() {
   try {
-    localStorage.setItem(CACHE_DAILY, JSON.stringify(appState.allRows.filter(isDailyRow).map(stripBase64Fields)));
-    localStorage.setItem(CACHE_TRIP, JSON.stringify(appState.allRows.filter(isTripRow).map(stripBase64Fields)));
-    localStorage.setItem(CACHE_NOTES, JSON.stringify(appState.allRows.filter(isNoteRow).map(stripBase64Fields)));
+    localStorage.setItem(
+      CACHE_DAILY,
+      JSON.stringify(appState.allRows.filter(isDailyRow).map(stripBase64Fields)),
+    );
+    localStorage.setItem(
+      CACHE_TRIP,
+      JSON.stringify(appState.allRows.filter(isTripRow).map(stripBase64Fields)),
+    );
+    localStorage.setItem(
+      CACHE_NOTES,
+      JSON.stringify(appState.allRows.filter(isNoteRow).map(stripBase64Fields)),
+    );
   } catch (e) {
     if (e && e.name === 'QuotaExceededError') {
       toast('儲存空間已滿，快取寫入失敗');
@@ -218,7 +230,7 @@ export async function fetchHistoryRows(params = {}) {
   const res = await fetchGetWithRetry(`${API_URL}?${search.toString()}`);
   const raw = await res.json();
   return Array.isArray(raw)
-    ? normalizeRows(raw, { onWarnings: warnings => rememberSchemaWarnings('history', warnings) })
+    ? normalizeRows(raw, { onWarnings: (warnings) => rememberSchemaWarnings('history', warnings) })
     : [];
 }
 
@@ -282,7 +294,9 @@ export async function loadData(opts = {}) {
       return true;
     }
 
-    let fresh = normalizeRows(raw, { onWarnings: warnings => rememberSchemaWarnings('sync', warnings) });
+    let fresh = normalizeRows(raw, {
+      onWarnings: (warnings) => rememberSchemaWarnings('sync', warnings),
+    });
 
     // 試算表為準：不再用本機列補 GAS 缺欄；未送出且仍在 POST 佇列者才併回。
     fresh = mergeFreshWithOutboxBackedPending(localSnapshot, fresh, readPostOutbox());
@@ -517,6 +531,10 @@ export async function flushPostOutbox(opts = {}) {
     }
   }
   appState.syncStatus =
-    postOutboxLength() > 0 ? 'cache_only' : appState.allRows.length ? 'synced' : appState.syncStatus;
+    postOutboxLength() > 0
+      ? 'cache_only'
+      : appState.allRows.length
+        ? 'synced'
+        : appState.syncStatus;
   updateSyncUI();
 }

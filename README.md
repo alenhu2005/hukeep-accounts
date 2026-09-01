@@ -25,14 +25,14 @@
 
 ## 技術棧與架構
 
-| 層級 | 技術 |
-|------|------|
-| 前端 | HTML / CSS / 原生 JavaScript（ES Modules），Vite build |
-| 資料持久化 | Google 試算表（經 GAS Web App） |
-| 本機快取 | `localStorage`（日常／出遊分鍵儲存） |
-| 離線 | POST 佇列（FIFO）、Service Worker 靜態快取 |
-| 測試 | [Vitest](https://vitest.dev/) + Playwright smoke test |
-| PWA | `manifest.json` + `sw.js` |
+| 層級       | 技術                                                   |
+| ---------- | ------------------------------------------------------ |
+| 前端       | HTML / CSS / 原生 JavaScript（ES Modules），Vite build |
+| 資料持久化 | Google 試算表（經 GAS Web App）                        |
+| 本機快取   | `localStorage`（日常／出遊分鍵儲存）                   |
+| 離線       | POST 佇列（FIFO）、Service Worker 靜態快取             |
+| 測試       | [Vitest](https://vitest.dev/) + Playwright smoke test  |
+| PWA        | `manifest.json` + `sw.js`                              |
 
 ```mermaid
 flowchart TB
@@ -82,7 +82,8 @@ flowchart TB
 ### 分析頁
 
 - 週期：本週／本月／本年（台北時區，見 `js/time.js`）。
-- 兩人付出統計、分類圓餅（可切換顯示分類／比例／金額）。
+- 緊湊摘要：期間總額、筆數、平均單筆與兩人付款比例集中在同一區塊。
+- 分類圓餅與排行整合顯示，仍可切換分類／比例／金額標示。
 - 含賭博時之輸贏／合計呈現與說明文案。
 
 ### 記事本與 Markdown
@@ -90,32 +91,32 @@ flowchart TB
 - 記事會經 GAS 與試算表同步，可置頂、附加圖片，或勾選「強制展開」讓該篇在所有裝置固定顯示完整內容且不能收合。
 - 編輯器保留原始 Markdown 符號，記事卡片則顯示排版結果。一般 `http://`、`https://` 與 `www.` 網址可直接點擊，並以新分頁開啟。
 
-| 功能 | Markdown 寫法 | 顯示結果 |
-|------|---------------|----------|
-| 段落 | 段落之間空一行 | 分開的文字段落 |
-| 一級標題 | `# 標題` | 大標題 |
-| 二至六級標題 | `## 標題` 到 `###### 標題` | 不同層級標題 |
-| 替代標題 | 標題下一行輸入 `===` 或 `---` | 一級或二級標題 |
-| 粗體 | `**重要**` 或 `__重要__` | **重要** |
-| 斜體 | `*補充*` 或 `_補充_` | *補充* |
-| 粗斜體 | `***非常重要***` | ***非常重要*** |
-| 刪除線 | `~~取消~~` | ~~取消~~ |
-| 無序清單 | `- 項目`、`* 項目` 或 `+ 項目` | 項目清單 |
-| 有序清單 | `1. 第一項` | 編號清單 |
-| 巢狀清單 | 子項目前縮排兩個以上空格 | 多層清單 |
-| 待辦清單 | `- [ ] 未完成`、`- [x] 完成` | 唯讀勾選清單 |
-| 引用 | `> 引用內容` | 引用區塊 |
-| 行內程式碼 | `` `程式碼` `` | 等寬字程式碼 |
-| 程式碼區塊 | 三個反引號包住多行內容 | 可橫向捲動的程式碼區塊 |
-| 縮排程式碼 | 每行前方輸入四個空格 | 程式碼區塊 |
-| 分隔線 | `---`、`***` 或 `___` | 水平分隔線 |
-| 文字連結 | `[OpenAI](https://openai.com)` | 可點擊的新分頁連結 |
-| 參考連結 | `[OpenAI][官網]` 並另寫 `[官網]: https://openai.com` | 可重複使用的連結 |
-| 自動連結 | `https://example.com` 或 `www.example.com` | 可點擊的新分頁連結 |
-| 尖括號連結 | `<https://example.com>` | 可點擊的新分頁連結 |
-| 表格 | `\| 欄一 \| 欄二 \|` 搭配下一行分隔列 | 可橫向捲動的表格 |
-| 換行 | 直接換行 | 保留為畫面換行 |
-| 跳脫符號 | `\*不是斜體\*` | 顯示 Markdown 符號本身 |
+| 功能         | Markdown 寫法                                        | 顯示結果               |
+| ------------ | ---------------------------------------------------- | ---------------------- |
+| 段落         | 段落之間空一行                                       | 分開的文字段落         |
+| 一級標題     | `# 標題`                                             | 大標題                 |
+| 二至六級標題 | `## 標題` 到 `###### 標題`                           | 不同層級標題           |
+| 替代標題     | 標題下一行輸入 `===` 或 `---`                        | 一級或二級標題         |
+| 粗體         | `**重要**` 或 `__重要__`                             | **重要**               |
+| 斜體         | `*補充*` 或 `_補充_`                                 | _補充_                 |
+| 粗斜體       | `***非常重要***`                                     | **_非常重要_**         |
+| 刪除線       | `~~取消~~`                                           | ~~取消~~               |
+| 無序清單     | `- 項目`、`* 項目` 或 `+ 項目`                       | 項目清單               |
+| 有序清單     | `1. 第一項`                                          | 編號清單               |
+| 巢狀清單     | 子項目前縮排兩個以上空格                             | 多層清單               |
+| 待辦清單     | `- [ ] 未完成`、`- [x] 完成`                         | 唯讀勾選清單           |
+| 引用         | `> 引用內容`                                         | 引用區塊               |
+| 行內程式碼   | `` `程式碼` ``                                       | 等寬字程式碼           |
+| 程式碼區塊   | 三個反引號包住多行內容                               | 可橫向捲動的程式碼區塊 |
+| 縮排程式碼   | 每行前方輸入四個空格                                 | 程式碼區塊             |
+| 分隔線       | `---`、`***` 或 `___`                                | 水平分隔線             |
+| 文字連結     | `[OpenAI](https://openai.com)`                       | 可點擊的新分頁連結     |
+| 參考連結     | `[OpenAI][官網]` 並另寫 `[官網]: https://openai.com` | 可重複使用的連結       |
+| 自動連結     | `https://example.com` 或 `www.example.com`           | 可點擊的新分頁連結     |
+| 尖括號連結   | `<https://example.com>`                              | 可點擊的新分頁連結     |
+| 表格         | `\| 欄一 \| 欄二 \|` 搭配下一行分隔列                | 可橫向捲動的表格       |
+| 換行         | 直接換行                                             | 保留為畫面換行         |
+| 跳脫符號     | `\*不是斜體\*`                                       | 顯示 Markdown 符號本身 |
 
 基於安全考量，原始 HTML 只會顯示為文字，`javascript:` 等非 HTTP(S) 連結不會啟用；Markdown 圖片語法 `![說明](網址)` 只顯示說明文字，不載入遠端圖片。記事圖片請使用編輯器內的「加入圖片」。
 
@@ -132,30 +133,30 @@ flowchart TB
 
 根目錄主要檔案：
 
-| 路徑 | 說明 |
-|------|------|
-| [index.html](index.html) | 唯一 HTML 入口；含 `<base>` 修正（GitHub Pages 子路徑）、PWA meta |
-| [css/](css/) | 全站樣式（依用途分多檔，載入順序見 `index.html`） |
-| [manifest.json](manifest.json) | PWA 名稱、圖示、`start_url` |
-| [sw.js](sw.js) | 開發/舊靜態流程用 Service Worker；正式部署由 `scripts/prepare-dist.mjs` 產生 `dist/sw.js` |
-| [vite.config.js](vite.config.js) | Vite 建置設定；GitHub Pages 子路徑 base 為 `/hukeep-accounts/` |
-| [.github/workflows/ci.yml](.github/workflows/ci.yml) | GitHub Actions 驗證：lint、Vitest、build、Playwright smoke |
-| [.github/workflows/deploy.yml](.github/workflows/deploy.yml) | CI 成功後建置並發布 `dist/` 到 Pages |
-| [.nojekyll](.nojekyll) | GitHub Pages 不使用 Jekyll |
+| 路徑                                                         | 說明                                                                                      |
+| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| [index.html](index.html)                                     | 唯一 HTML 入口；含 `<base>` 修正（GitHub Pages 子路徑）、PWA meta                         |
+| [css/](css/)                                                 | 全站樣式（依用途分多檔，載入順序見 `index.html`）                                         |
+| [manifest.json](manifest.json)                               | PWA 名稱、圖示、`start_url`                                                               |
+| [sw.js](sw.js)                                               | 開發/舊靜態流程用 Service Worker；正式部署由 `scripts/prepare-dist.mjs` 產生 `dist/sw.js` |
+| [vite.config.js](vite.config.js)                             | Vite 建置設定；GitHub Pages 子路徑 base 為 `/hukeep-accounts/`                            |
+| [.github/workflows/ci.yml](.github/workflows/ci.yml)         | GitHub Actions 驗證：lint、Vitest、build、Playwright smoke                                |
+| [.github/workflows/deploy.yml](.github/workflows/deploy.yml) | CI 成功後建置並發布 `dist/` 到 Pages                                                      |
+| [.nojekyll](.nojekyll)                                       | GitHub Pages 不使用 Jekyll                                                                |
 
 `js/` 模組職責精簡對照：
 
-| 區塊 | 代表檔案 |
-|------|----------|
-| 啟動／路由 | `main.js`、`bootstrap.js`、`router.js`、`navigation.js` |
-| 狀態 | `state.js`、`state-accessors.js`、`render-registry.js` |
-| API／快取／離線 | `api.js`、`offline-queue.js`、`js/sync/*.js`、`config.js` |
-| 資料與模型 | `data.js`、`js/data/*.js`、`model.js` |
-| 商業邏輯 | `finance.js`、`trip-stats.js`、`category.js`、`time.js` |
-| 畫面 | `views-home.js`、`views-trips.js`、`views-trip-detail.js`、`js/views-trip-detail/*.js`、`views-analysis.js`、`views-shared.js` |
-| 互動 | `actions.js`、`js/actions/*.js`、`dialog.js`、`globals.js`（掛載 `window` 供 inline 呼叫） |
-| 動效 | `motion.js`、`css/motion.css`、`js/vendor/*`、`css/vendor/*` |
-| 其他 | `pie-chart.js`、`sync-ui.js`、`sync-pause.js`、`session-ui.js`、`device-info.js`、`diagnostics.js`、`pwa-update.js`、`utils.js` |
+| 區塊            | 代表檔案                                                                                                                        |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| 啟動／路由      | `main.js`、`bootstrap.js`、`router.js`、`navigation.js`                                                                         |
+| 狀態            | `state.js`、`state-accessors.js`、`render-registry.js`                                                                          |
+| API／快取／離線 | `api.js`、`offline-queue.js`、`js/sync/*.js`、`config.js`                                                                       |
+| 資料與模型      | `data.js`、`js/data/*.js`、`model.js`                                                                                           |
+| 商業邏輯        | `finance.js`、`trip-stats.js`、`category.js`、`time.js`                                                                         |
+| 畫面            | `views-home.js`、`views-trips.js`、`views-trip-detail.js`、`js/views-trip-detail/*.js`、`views-analysis.js`、`views-shared.js`  |
+| 互動            | `actions.js`、`js/actions/*.js`、`dialog.js`、`globals.js`（掛載 `window` 供 inline 呼叫）                                      |
+| 動效            | `motion.js`、`css/motion.css`、`js/vendor/*`、`css/vendor/*`                                                                    |
+| 其他            | `pie-chart.js`、`sync-ui.js`、`sync-pause.js`、`session-ui.js`、`device-info.js`、`diagnostics.js`、`pwa-update.js`、`utils.js` |
 
 模組邊界補充：
 
@@ -183,19 +184,19 @@ npm install
 
 ### 常用指令
 
-| 指令 | 說明 |
-|------|------|
-| `npm run dev` | 啟動 Vite 本機開發伺服器 |
-| `npm run lint` | 執行 ESLint |
-| `npm run format` | 用 Prettier 格式化專案 |
-| `npm run format:check` | 檢查 Prettier 格式（目前不併入 CI，避免一次重排既有檔案） |
-| `npm test` | 執行 Vitest（`test/*.test.js`） |
-| `npm run test:e2e` | 執行 Playwright smoke test（會 build 並 preview `dist/`） |
-| `npm run build` | 產生 `dist/`，並寫入 GitHub Pages/PWA 需要的靜態檔與 `dist/sw.js` |
-| `npm run preview` | 預覽 `dist/` 產物 |
-| `npm run deploy:check` | 部署前檢查設定、lint、Vitest、build 與 Playwright smoke |
-| `npm run icons:flatten` | 圖示處理（見 `scripts/flatten-app-icons.mjs`） |
-| `npm run icons:prepare` | 圖示處理（見 `scripts/prepare-app-icons.mjs`） |
+| 指令                    | 說明                                                              |
+| ----------------------- | ----------------------------------------------------------------- |
+| `npm run dev`           | 啟動 Vite 本機開發伺服器                                          |
+| `npm run lint`          | 執行 ESLint                                                       |
+| `npm run format`        | 用 Prettier 格式化專案                                            |
+| `npm run format:check`  | 檢查 Prettier 格式（目前不併入 CI，避免一次重排既有檔案）         |
+| `npm test`              | 執行 Vitest（`test/*.test.js`）                                   |
+| `npm run test:e2e`      | 執行 Playwright smoke test（會 build 並 preview `dist/`）         |
+| `npm run build`         | 產生 `dist/`，並寫入 GitHub Pages/PWA 需要的靜態檔與 `dist/sw.js` |
+| `npm run preview`       | 預覽 `dist/` 產物                                                 |
+| `npm run deploy:check`  | 部署前檢查設定、lint、Vitest、build 與 Playwright smoke           |
+| `npm run icons:flatten` | 圖示處理（見 `scripts/flatten-app-icons.mjs`）                    |
+| `npm run icons:prepare` | 圖示處理（見 `scripts/prepare-app-icons.mjs`）                    |
 
 ### 啟動本機開發
 
@@ -240,9 +241,9 @@ Vite 設定的 GitHub Pages base 是 `/hukeep-accounts/`；預覽正式產物時
 
 ### 選用：`window` 旗標（載入 main 前設定）
 
-| 旗標 | 效果 |
-|------|------|
-| `__LEDGER_APPEND_DEVICE__ = false` | POST 不附帶 `_clientDevice` |
+| 旗標                                  | 效果                                                |
+| ------------------------------------- | --------------------------------------------------- |
+| `__LEDGER_APPEND_DEVICE__ = false`    | POST 不附帶 `_clientDevice`                         |
 | `__LEDGER_APPEND_POSTED_AT__ = false` | POST 不附帶 `_clientPostedAt`（僅時分秒，不含日期） |
 
 詳見 [js/config.js](js/config.js) 註解。
@@ -281,17 +282,17 @@ Vite 設定的 GitHub Pages base 是 `/hukeep-accounts/`；預覽正式產物時
 
 ### localStorage 鍵一覽
 
-| 鍵 | 用途 |
-|----|------|
-| `gasRows_daily_v2` | 日常相關列快取 |
-| `gasRows_trip_v2` | 出遊相關列快取 |
-| `gasRows_notes_v1` | 共享記事列快取 |
+| 鍵                       | 用途                                  |
+| ------------------------ | ------------------------------------- |
+| `gasRows_daily_v2`       | 日常相關列快取                        |
+| `gasRows_trip_v2`        | 出遊相關列快取                        |
+| `gasRows_notes_v1`       | 共享記事列快取                        |
 | `ledger_sync_last_at_v1` | 上次成功自 GAS 拉取並寫入的時間（ms） |
-| `ledger_api_url_v1` | 覆寫 API URL |
-| `ledger_post_outbox_v1` | POST 離線佇列 |
-| `ledger_data_schema_v1` | 前端本地資料 schema 版本 |
-| `theme` | 深色模式偏好 |
-| 其他 | 工作階段還原等（見 `session-ui.js`） |
+| `ledger_api_url_v1`      | 覆寫 API URL                          |
+| `ledger_post_outbox_v1`  | POST 離線佇列                         |
+| `ledger_data_schema_v1`  | 前端本地資料 schema 版本              |
+| `theme`                  | 深色模式偏好                          |
+| 其他                     | 工作階段還原等（見 `session-ui.js`）  |
 
 舊版快取鍵在成功同步時會一併清除（`CACHE_LEGACY_KEYS`）。
 
@@ -305,11 +306,11 @@ Vite 設定的 GitHub Pages base 是 `/hukeep-accounts/`；預覽正式產物時
 
 **語意：** 以「胡」為基準的淨欠款。
 
-| `computeBalance` 結果 | 意義 |
-|----------------------|------|
-| 正數 | `USER_B` 欠 `USER_A` |
-| 負數 | `USER_A` 欠 `USER_B` |
-| 0 | 帳目已清 |
+| `computeBalance` 結果 | 意義                 |
+| --------------------- | -------------------- |
+| 正數                  | `USER_B` 欠 `USER_A` |
+| 負數                  | `USER_A` 欠 `USER_B` |
+| 0                     | 帳目已清             |
 
 **走帳順序：** 紀錄先依日期／時間排序（`getDailyRecords` → 新到舊），計算時**反轉為由舊到新**，逐筆更新 running balance（`nextDailyLedgerBalance`）。歷史列表旁的 running 小計、分析頁日／月變化皆共用同一函式。
 
@@ -317,11 +318,11 @@ Vite 設定的 GitHub Pages base 是 `/hukeep-accounts/`；預覽正式產物時
 
 僅 `type === 'daily'` 且未撤回者計入。
 
-| 分攤模式 | 規則 |
-|---------|------|
-| **均分** | 各負擔 `amount / 2`（保留浮點，如 101 → 50.5） |
-| **只有胡／只有詹** | 全額算在指定一方 |
-| **兩人付** | `(paidHu - paidZhan) / 2` |
+| 分攤模式           | 規則                                           |
+| ------------------ | ---------------------------------------------- |
+| **均分**           | 各負擔 `amount / 2`（保留浮點，如 101 → 50.5） |
+| **只有胡／只有詹** | 全額算在指定一方                               |
+| **兩人付**         | `(paidHu - paidZhan) / 2`                      |
 
 付款方為「胡」時，增量 = 詹的分攤額；付款方為「詹」時，增量 = −胡的分攤額。
 
@@ -340,11 +341,11 @@ Vite 設定的 GitHub Pages base 是 `/hukeep-accounts/`；預覽正式產物時
 
 #### 顯示 vs 計算
 
-| 用途 | 規則 | 位置 |
-|------|------|------|
-| 首頁大數字、還款確認 | `Math.ceil` 整數 | `views-home.js`、`actions/home-daily.js` |
-| 精確欠款對帳 | 浮點原文 | 備份選單、`backup.js` → `describeDailyBalanceExact` |
-| 文字備份開頭 | 同上 | `allRowsToBackupText` |
+| 用途                 | 規則             | 位置                                                |
+| -------------------- | ---------------- | --------------------------------------------------- |
+| 首頁大數字、還款確認 | `Math.ceil` 整數 | `views-home.js`、`actions/home-daily.js`            |
+| 精確欠款對帳         | 浮點原文         | 備份選單、`backup.js` → `describeDailyBalanceExact` |
+| 文字備份開頭         | 同上             | `allRowsToBackupText`                               |
 
 ### 出遊分帳（`computeSettlements`）
 
@@ -366,11 +367,11 @@ Vite 設定的 GitHub Pages base 是 `/hukeep-accounts/`；預覽正式產物時
 
 ### 測試對照
 
-| 檔案 | 相關案例 |
-|------|---------|
-| `test/finance.test.js` | 均分浮點、還款扣精確值、出遊分攤／匯差、賭博 |
-| `test/trip-stats.test.js` | 行程摘要、已記錄還款抵銷 |
-| `test/refactor-regression.test.js` | settlement、voided、outbox 合併 golden |
+| 檔案                               | 相關案例                                     |
+| ---------------------------------- | -------------------------------------------- |
+| `test/finance.test.js`             | 均分浮點、還款扣精確值、出遊分攤／匯差、賭博 |
+| `test/trip-stats.test.js`          | 行程摘要、已記錄還款抵銷                     |
+| `test/refactor-regression.test.js` | settlement、voided、outbox 合併 golden       |
 
 ---
 
@@ -437,17 +438,17 @@ npm test
 npm run test:e2e
 ```
 
-| 檔案 | 涵蓋方向 |
-|------|----------|
-| `test/finance.test.js` | 日常結餘、還款扣精確值、出遊分攤／匯差、賭博 |
-| `test/data.test.js` | 事件列轉顯示資料、stale settlement 過濾 |
-| `test/offline-queue.test.js` | 離線佇列與 pending 合併 |
+| 檔案                               | 涵蓋方向                                                                      |
+| ---------------------------------- | ----------------------------------------------------------------------------- |
+| `test/finance.test.js`             | 日常結餘、還款扣精確值、出遊分攤／匯差、賭博                                  |
+| `test/data.test.js`                | 事件列轉顯示資料、stale settlement 過濾                                       |
+| `test/offline-queue.test.js`       | 離線佇列與 pending 合併                                                       |
 | `test/refactor-regression.test.js` | fixture / golden 回歸（`voided`、`closed`、rename、settlement、outbox merge） |
-| `test/trip-stats.test.js` | 行程統計摘要 |
-| `test/time.test.js` | 台北時區、分析週期 |
-| `test/utils.test.js` | 工具函式 |
-| `test/actions-shared.test.js` | 未同步還款列丟棄等 actions 共用邏輯 |
-| `test/e2e/smoke.spec.js` | GitHub Pages 子路徑、主要分頁切換與 Service Worker scope |
+| `test/trip-stats.test.js`          | 行程統計摘要                                                                  |
+| `test/time.test.js`                | 台北時區、分析週期                                                            |
+| `test/utils.test.js`               | 工具函式                                                                      |
+| `test/actions-shared.test.js`      | 未同步還款列丟棄等 actions 共用邏輯                                           |
+| `test/e2e/smoke.spec.js`           | GitHub Pages 子路徑、主要分頁切換與 Service Worker scope                      |
 
 目前共 **93** 項 Vitest 測試，另有 Playwright smoke test。設定檔：[vitest.config.js](vitest.config.js)、[playwright.config.js](playwright.config.js)。
 
@@ -455,27 +456,27 @@ npm run test:e2e
 
 ## 疑難排解
 
-| 現象 | 建議 |
-|------|------|
-| 線上版仍是舊 UI | 強制重新整理（`Cmd+Shift+R` / `Ctrl+Shift+R`）；或關閉分頁重開；檢查 `sw.js` 快取版本是否已更新 |
-| 長期「僅快取」或同步失敗 | 確認 `API_URL`、GAS 部署權限、試算表連結是否正常 |
-| 不確定目前吃哪個 API 或快取版本 | 開啟「備份與匯出」→ 診斷面板，使用「複製診斷報告」貼出同步、版本、API 來源與 Service Worker 狀態 |
-| 日常記帳有更新、還款在試算表看不到 | 確認是否開啟 **`日常還款`** 分頁（非 `日常消費`、非舊版 `日常`） |
-| 行程狀態或已撤回資料看起來被加回來 | 先強制重新整理一次；current-state 版前端會清掉舊快取 / 舊 outbox，避免舊事件模型覆蓋新資料 |
-| 新增後對方看不到 | 確認對方也完成同步；背景輪詢或手動重新整理 |
-| 儲存空間／Quota | 快取含大量資料或照片 metadata 時可能觸頂；備份後使用「清除本地快取」再同步 |
-| ES Module 載入失敗 | 勿用 `file://`；改用本機 HTTP 伺服器 |
+| 現象                               | 建議                                                                                             |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------ |
+| 線上版仍是舊 UI                    | 強制重新整理（`Cmd+Shift+R` / `Ctrl+Shift+R`）；或關閉分頁重開；檢查 `sw.js` 快取版本是否已更新  |
+| 長期「僅快取」或同步失敗           | 確認 `API_URL`、GAS 部署權限、試算表連結是否正常                                                 |
+| 不確定目前吃哪個 API 或快取版本    | 開啟「備份與匯出」→ 診斷面板，使用「複製診斷報告」貼出同步、版本、API 來源與 Service Worker 狀態 |
+| 日常記帳有更新、還款在試算表看不到 | 確認是否開啟 **`日常還款`** 分頁（非 `日常消費`、非舊版 `日常`）                                 |
+| 行程狀態或已撤回資料看起來被加回來 | 先強制重新整理一次；current-state 版前端會清掉舊快取 / 舊 outbox，避免舊事件模型覆蓋新資料       |
+| 新增後對方看不到                   | 確認對方也完成同步；背景輪詢或手動重新整理                                                       |
+| 儲存空間／Quota                    | 快取含大量資料或照片 metadata 時可能觸頂；備份後使用「清除本地快取」再同步                       |
+| ES Module 載入失敗                 | 勿用 `file://`；改用本機 HTTP 伺服器                                                             |
 
 ---
 
 ## 維運與文件索引
 
-| 文件 | 內容 |
-|------|------|
-| [docs/project-structure.md](docs/project-structure.md) | 檔案地圖（依職責分類） |
-| [docs/workflow.md](docs/workflow.md) | 開發順序與同步重點 |
-| [docs/operations-checklist.md](docs/operations-checklist.md) | 部署、驗收、排錯 |
-| [docs/gas程式碼.md](docs/gas程式碼.md) | GAS 與試算表邏輯參考 |
+| 文件                                                         | 內容                   |
+| ------------------------------------------------------------ | ---------------------- |
+| [docs/project-structure.md](docs/project-structure.md)       | 檔案地圖（依職責分類） |
+| [docs/workflow.md](docs/workflow.md)                         | 開發順序與同步重點     |
+| [docs/operations-checklist.md](docs/operations-checklist.md) | 部署、驗收、排錯       |
+| [docs/gas程式碼.md](docs/gas程式碼.md)                       | GAS 與試算表邏輯參考   |
 
 修改建議對照：
 

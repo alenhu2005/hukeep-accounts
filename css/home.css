@@ -1,15 +1,39 @@
 /* Balance card, settlement rows */
 /* ── Balance card ── */
-.balance-bar { height: 4px; background: var(--primary); }
-.balance-bar.success { background: var(--success); }
-.balance-bar.danger  { background: var(--danger); }
-.balance-content { padding: 20px 16px; display: flex; align-items: center; gap: 16px; }
-.balance-icon {
-  width: 48px; height: 48px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+.balance-bar {
+  height: 4px;
+  background: var(--primary);
 }
-.balance-icon svg { width: 24px; height: 24px; }
-.balance-label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+.balance-bar.success {
+  background: var(--success);
+}
+.balance-bar.danger {
+  background: var(--danger);
+}
+.balance-content {
+  padding: 20px 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.balance-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.balance-icon svg {
+  width: 24px;
+  height: 24px;
+}
+.balance-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
 .balance-main {
   font-size: 28px;
   font-weight: 700;
@@ -17,8 +41,14 @@
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
 }
-.balance-sub { font-size: 11px; color: var(--text-muted); }
-.balance-who { font-size: 12px; color: var(--text-muted); }
+.balance-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.balance-who {
+  font-size: 12px;
+  color: var(--text-muted);
+}
 
 /* 日常：與結算金額刷動同步的整頁區塊進場（僅在觸發金額動畫時套用） */
 @keyframes homeRevealIn {
@@ -45,21 +75,54 @@
 }
 
 /* ── Settlement rows ── */
-.settlement-list { padding: 14px 16px; }
+.settlement-list {
+  padding: 14px 16px;
+}
 .settlement-header {
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 10px;
 }
-.settlement-header span { font-size: 13px; color: var(--text-muted); font-weight: 500; }
-.settlement-header-meta { font-size: 11px !important; white-space: normal; text-align: right; max-width: 58%; line-height: 1.35; }
-.settlement-row {
-  display: flex; align-items: center; gap: 8px;
-  background: #fffbeb; border-radius: 8px; padding: 8px 12px; margin-bottom: 6px;
+.settlement-header span {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 500;
 }
-.settlement-row:last-child { margin-bottom: 0; }
-.settlement-name { font-size: 13px; font-weight: 600; color: #92400e; }
-.settlement-arrow { font-size: 14px; color: #d97706; }
-.settlement-amount { font-size: 13px; font-weight: 700; color: #92400e; margin-left: auto; }
+.settlement-header-meta {
+  font-size: 11px !important;
+  white-space: normal;
+  text-align: right;
+  max-width: 58%;
+  line-height: 1.35;
+}
+.settlement-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fffbeb;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 6px;
+}
+.settlement-row:last-child {
+  margin-bottom: 0;
+}
+.settlement-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #92400e;
+}
+.settlement-arrow {
+  font-size: 14px;
+  color: #d97706;
+}
+.settlement-amount {
+  font-size: 13px;
+  font-weight: 700;
+  color: #92400e;
+  margin-left: auto;
+}
 
 .settlement-list--visual .settlement-row--visual {
   display: block;
@@ -149,7 +212,9 @@ html.dark .settlement-list--visual .settlement-row--visual {
 }
 .settlement-collapse-panel-inner {
   padding: 0 0 2px;
-  transition: padding-top 0.38s var(--ease-soft), padding-bottom 0.38s var(--ease-soft);
+  transition:
+    padding-top 0.38s var(--ease-soft),
+    padding-bottom 0.38s var(--ease-soft);
 }
 .settlement-pill {
   width: 28px;
@@ -270,7 +335,11 @@ html.dark .settlement-compare-grad {
 
 .balance-bar {
   height: 6px;
-  background: linear-gradient(90deg, color-mix(in srgb, var(--primary) 78%, white 12%), var(--primary-dark));
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--primary) 78%, white 12%),
+    var(--primary-dark)
+  );
 }
 
 .balance-content {
@@ -281,20 +350,25 @@ html.dark .settlement-compare-grad {
 }
 
 .balance-content::after {
-  content: "";
+  content: '';
   position: absolute;
   width: 84px;
   height: 84px;
   top: -34px;
   right: -18px;
   border-radius: 50%;
-  background: radial-gradient(circle, color-mix(in srgb, var(--primary) 14%, transparent) 0%, transparent 72%);
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--primary) 14%, transparent) 0%,
+    transparent 72%
+  );
   pointer-events: none;
 }
 
 .balance-icon {
   width: 40px;
   height: 40px;
+  flex: 0 0 40px;
   border-radius: 13px;
   box-shadow: 0 12px 24px color-mix(in srgb, var(--primary) 16%, transparent);
 }

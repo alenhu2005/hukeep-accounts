@@ -1,5 +1,5 @@
 // Bump this to force clients to refresh cached assets.
-const CACHE_NAME = 'ledger-v91';
+const CACHE_NAME = 'ledger-v93';
 
 const STATIC_ASSETS = [
   './',
@@ -11,6 +11,7 @@ const STATIC_ASSETS = [
   './css/forms-controls.css',
   './css/records-history.css',
   './css/analysis.css',
+  './css/analysis-redesign.css',
   './css/trip-cards.css',
   './css/members-rare.css',
   './css/trip-forms-collapsible.css',
@@ -95,29 +96,29 @@ const STATIC_ASSETS = [
   './js/views-trip-detail/orchestration.js',
 ];
 
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS)),
-  );
+self.addEventListener('install', (event) => {
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS)));
   self.skipWaiting();
 });
 
-self.addEventListener('activate', event => {
+self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))),
+      .then((keys) =>
+        Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))),
+      ),
   );
   self.clients.claim();
 });
 
-self.addEventListener('message', event => {
+self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
 });
 
-self.addEventListener('fetch', event => {
+self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
   if (url.origin !== self.location.origin) return;
@@ -126,10 +127,10 @@ self.addEventListener('fetch', event => {
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
-        .then(response => {
+        .then((response) => {
           if (response.ok) {
             const clone = response.clone();
-            caches.open(CACHE_NAME).then(c => c.put(event.request, clone));
+            caches.open(CACHE_NAME).then((c) => c.put(event.request, clone));
           }
           return response;
         })
@@ -141,10 +142,10 @@ self.addEventListener('fetch', event => {
   if (url.pathname.endsWith('.js') || url.pathname.endsWith('.css')) {
     event.respondWith(
       fetch(event.request)
-        .then(response => {
+        .then((response) => {
           if (response.ok) {
             const clone = response.clone();
-            caches.open(CACHE_NAME).then(c => c.put(event.request, clone));
+            caches.open(CACHE_NAME).then((c) => c.put(event.request, clone));
           }
           return response;
         })
@@ -154,12 +155,12 @@ self.addEventListener('fetch', event => {
   }
 
   event.respondWith(
-    caches.match(event.request).then(cached => {
+    caches.match(event.request).then((cached) => {
       const fetching = fetch(event.request)
-        .then(response => {
+        .then((response) => {
           if (response.ok) {
             const clone = response.clone();
-            caches.open(CACHE_NAME).then(c => c.put(event.request, clone));
+            caches.open(CACHE_NAME).then((c) => c.put(event.request, clone));
           }
           return response;
         })

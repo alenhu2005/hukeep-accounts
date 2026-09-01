@@ -90,7 +90,13 @@ function playAnalysisCountUps(root) {
 }
 
 function isVoidedRecord(row) {
-  return row?._voided === true || row?.voided === true || String(row?.voided || '').trim().toLowerCase() === 'true';
+  return (
+    row?._voided === true ||
+    row?.voided === true ||
+    String(row?.voided || '')
+      .trim()
+      .toLowerCase() === 'true'
+  );
 }
 
 function dailySpendAmount(row) {
@@ -104,14 +110,64 @@ function dailySpendAmount(row) {
   return parseFloat(row.amount) || 0;
 }
 
+/** Builds all derived values used by the compact daily analysis workspace. */
+export function buildDailyAnalysisModel(rows, meta) {
+  const expenses = (rows || []).filter((row) => row?.type === 'daily' && !isVoidedRecord(row));
+  const payerTotals = { [USER_A]: 0, [USER_B]: 0 };
+  const categoryTotals = {};
+  let total = 0;
+
+  for (const row of expenses) {
+    const amount = dailySpendAmount(row);
+    total += amount;
+    if (row.splitMode === '兩人付') {
+      payerTotals[USER_A] += parseFloat(row.paidHu) || 0;
+      payerTotals[USER_B] += parseFloat(row.paidZhan) || 0;
+    } else if (row.paidBy === USER_A || row.paidBy === USER_B) {
+      payerTotals[row.paidBy] += amount;
+    }
+    const category = String(row.category || '未分類').trim() || '未分類';
+    categoryTotals[category] = (categoryTotals[category] || 0) + amount;
+  }
+
+  const roundedTotal = Math.round(total);
+  const payerRows = [USER_A, USER_B]
+    .map((name) => {
+      const amount = Math.round(payerTotals[name] || 0);
+      return {
+        name,
+        amount,
+        pct: roundedTotal > 0 ? Math.round((amount / roundedTotal) * 100) : 0,
+      };
+    })
+    .sort((a, b) => b.amount - a.amount || a.name.localeCompare(b.name));
+  const categoryRows = Object.entries(categoryTotals)
+    .map(([name, amount]) => ({
+      name,
+      amount: Math.round(amount),
+      pct: roundedTotal > 0 ? Math.round((amount / roundedTotal) * 100) : 0,
+    }))
+    .sort((a, b) => b.amount - a.amount || a.name.localeCompare(b.name));
+  return {
+    fromStr: meta.fromStr,
+    toStr: meta.toStr,
+    periodLabel: meta.periodLabel,
+    total: roundedTotal,
+    expenseCount: expenses.length,
+    average: expenses.length ? Math.round(roundedTotal / expenses.length) : 0,
+    payerRows,
+    categoryRows,
+  };
+}
+
 export function buildMonthlyReportModel(allRecords, fromStr, toStr) {
-  const periodRows = (allRecords || []).filter(row => {
+  const periodRows = (allRecords || []).filter((row) => {
     const d = String(row?.date || '').slice(0, 10);
     return d && d >= fromStr && d <= toStr && !isVoidedRecord(row);
   });
-  const expenses = periodRows.filter(row => row.type === 'daily');
+  const expenses = periodRows.filter((row) => row.type === 'daily');
   const settlements = periodRows
-    .filter(row => row.type === 'settlement')
+    .filter((row) => row.type === 'settlement')
     .sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
 
   const payerTotals = { [USER_A]: 0, [USER_B]: 0 };
@@ -132,12 +188,16 @@ export function buildMonthlyReportModel(allRecords, fromStr, toStr) {
   }
 
   const payerRows = [USER_A, USER_B]
-    .map(name => ({ name, amount: Math.round(payerTotals[name] || 0) }))
+    .map((name) => ({ name, amount: Math.round(payerTotals[name] || 0) }))
     .sort((a, b) => b.amount - a.amount || a.name.localeCompare(b.name));
   const categoryRows = Object.entries(categoryTotals)
-    .map(([name, amount]) => ({ name, amount: Math.round(amount), pct: total > 0 ? Math.round((amount / total) * 100) : 0 }))
+    .map(([name, amount]) => ({
+      name,
+      amount: Math.round(amount),
+      pct: total > 0 ? Math.round((amount / total) * 100) : 0,
+    }))
     .sort((a, b) => b.amount - a.amount || a.name.localeCompare(b.name));
-  const settlementRows = settlements.map(row => ({
+  const settlementRows = settlements.map((row) => ({
     date: String(row.date || '').slice(0, 10),
     paidBy: row.paidBy || '',
     amount: Math.round(parseFloat(row.amount) || 0),
@@ -155,7 +215,7 @@ export function buildMonthlyReportModel(allRecords, fromStr, toStr) {
   };
 }
 
-function renderMonthlyReportSection(model) {
+function renderMonthlyReportSection(model, title = '月結報表') {
   if (!model || (model.expenseCount === 0 && model.settlementCount === 0)) return '';
   const topPayer = model.total > 0 ? model.payerRows[0] : null;
   const secondPayer = model.total > 0 ? model.payerRows[1] : null;
@@ -178,7 +238,7 @@ function renderMonthlyReportSection(model) {
   const settlementRows = model.settlementRows.length
     ? model.settlementRows
         .map(
-          row => `<div class="monthly-report-settlement">
+          (row) => `<div class="monthly-report-settlement">
         <span>${esc(row.date)}</span>
         <span>${esc(row.paidBy)}還款</span>
         <strong>NT$${row.amount.toLocaleString()}</strong>
@@ -189,22 +249,21 @@ function renderMonthlyReportSection(model) {
 
   const detailHtml = expanded
     ? `<div class="monthly-report-detail" id="monthly-report-detail">
-    <p class="monthly-report-desc">自動整理本月日常帳，方便月底對帳。</p>
     <div class="monthly-report-summary">
-      <div class="monthly-report-summary-card">
-        <span>誰付比較多</span>
-        <strong>${esc(topPayer?.name || '尚無')}</strong>
-        <small>${topPayer ? `NT$${topPayer.amount.toLocaleString()}${payerDiff ? `，多付 NT$${payerDiff.toLocaleString()}` : ''}` : '尚無付款資料'}</small>
+      <div class="monthly-report-summary-item">
+        <span>付款較多</span>
+        <strong>${esc(topPayer?.name || '尚無')} ${topPayer ? `NT$${topPayer.amount.toLocaleString()}` : ''}</strong>
+        <small>${payerDiff ? `差 NT$${payerDiff.toLocaleString()}` : '金額相同'}</small>
       </div>
-      <div class="monthly-report-summary-card">
-        <span>分類第一名</span>
+      <div class="monthly-report-summary-item">
+        <span>最高分類</span>
         <strong>${esc(topCategory?.name || '尚無')}</strong>
-        <small>${topCategory ? `NT$${topCategory.amount.toLocaleString()} · ${topCategory.pct}%` : '尚無分類資料'}</small>
+        <small>${topCategory ? `${topCategory.pct}% · NT$${topCategory.amount.toLocaleString()}` : '尚無分類'}</small>
       </div>
-      <div class="monthly-report-summary-card">
-        <span>還款紀錄</span>
+      <div class="monthly-report-summary-item">
+        <span>還款</span>
         <strong>${model.settlementCount} 筆</strong>
-        <small>${model.settlementCount ? '已納入本月整理' : '本月尚未還款'}</small>
+        <small>${model.settlementCount ? '已列入整理' : '本月尚無'}</small>
       </div>
     </div>
     <div class="monthly-report-columns">
@@ -220,16 +279,18 @@ function renderMonthlyReportSection(model) {
   </div>`
     : '';
 
-  return `<section class="monthly-report-card${expanded ? ' monthly-report-card--expanded' : ' monthly-report-card--collapsed'}" aria-label="月結報表">
+  return `<section class="monthly-report-card${expanded ? ' monthly-report-card--expanded' : ' monthly-report-card--collapsed'}" aria-label="${esc(title)}">
     <button type="button" class="monthly-report-toggle" onclick="toggleMonthlyReport()" aria-expanded="${expanded ? 'true' : 'false'}" aria-controls="monthly-report-detail">
       <span class="monthly-report-toggle-main">
-        <span class="monthly-report-kicker">月結報表</span>
+        <span class="monthly-report-kicker">${esc(title)}</span>
         <strong>NT$${model.total.toLocaleString()}</strong>
       </span>
       <span class="monthly-report-toggle-meta">
         ${model.expenseCount} 筆消費${topCategory ? ` · ${esc(topCategory.name)} ${topCategory.pct}%` : ''}${model.settlementCount ? ` · ${model.settlementCount} 筆還款` : ''}
       </span>
-      <span class="monthly-report-toggle-icon" aria-hidden="true">${expanded ? '收合' : '展開'}</span>
+      <span class="monthly-report-toggle-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="${expanded ? 'M7.4 15.4 12 10.8l4.6 4.6L18 14l-6-6-6 6 1.4 1.4Z' : 'M7.4 8.6 12 13.2l4.6-4.6L18 10l-6 6-6-6 1.4-1.4Z'}"/></svg>
+      </span>
     </button>
     ${detailHtml}
   </section>`;
@@ -295,6 +356,32 @@ export function clearAnalysisDayFilter() {
   appState.analysisFilterDate = null;
   appState.analysisMonthlyReportExpanded = false;
   renderAnalysis();
+}
+
+function renderDailyAnalysisOverview(model) {
+  const payerRows = model.payerRows
+    .map(
+      (row) => `<div class="daily-analysis-payer-row">
+      <span>${esc(row.name)}付</span>
+      <strong data-analysis-count="${row.amount}" data-analysis-mode="currency">${prefersReducedMotion() ? `NT$${row.amount.toLocaleString()}` : 'NT$0'}</strong>
+      <small>${row.pct}%</small>
+    </div>`,
+    )
+    .join('');
+  const payerA = model.payerRows.find((row) => row.name === USER_A)?.pct || 0;
+  return `<section class="daily-analysis-overview" aria-label="支出摘要">
+    <div class="daily-analysis-total">
+      <span>${esc(model.periodLabel)}</span>
+      <strong data-analysis-count="${model.total}" data-analysis-mode="currency">${prefersReducedMotion() ? `NT$${model.total.toLocaleString()}` : 'NT$0'}</strong>
+      <small>${model.expenseCount} 筆 · 平均 NT$${model.average.toLocaleString()}</small>
+    </div>
+    <div class="daily-analysis-payers">
+      ${payerRows}
+      <div class="daily-analysis-payer-meter" aria-label="${esc(USER_A)} ${payerA}%，${esc(USER_B)} ${Math.max(0, 100 - payerA)}%">
+        <span style="width:${Math.max(0, Math.min(100, payerA))}%"></span>
+      </div>
+    </div>
+  </section>`;
 }
 
 /** @param {import('./model.js').LedgerRow[]} allDaily */
@@ -485,12 +572,12 @@ function analysisWeekNavHtml(weekStartSunday, today, statsByDate, filterDate) {
 
 function analysisMonthNavHtml(ym, today, statsByDate, filterDate) {
   const cells = buildCalendarGridCells(ym);
-  const monthDates = cells.filter(c => c.day != null).map(c => c.dateStr);
+  const monthDates = cells.filter((c) => c.day != null).map((c) => c.dateStr);
   const deltaByDate = computeDateRunningDeltas(getDailyRecords(), monthDates);
   const numRows = cells.length / 7;
   const rows = [];
   for (let row = 0; row < numRows; row++) {
-    const rowCells = cells.slice(row * 7, row * 7 + 7).map(cell => {
+    const rowCells = cells.slice(row * 7, row * 7 + 7).map((cell) => {
       if (cell.day == null) {
         return '<div class="analysis-cal-cell analysis-cal-cell--empty" aria-hidden="true"></div>';
       }
@@ -519,7 +606,7 @@ function analysisMonthNavHtml(ym, today, statsByDate, filterDate) {
     rows.push(`<div class="analysis-cal-row">${rowCells.join('')}</div>`);
   }
   const wdLabels = ['日', '一', '二', '三', '四', '五', '六'];
-  const wdRow = wdLabels.map(w => `<div class="analysis-cal-wd">${esc(w)}</div>`).join('');
+  const wdRow = wdLabels.map((w) => `<div class="analysis-cal-wd">${esc(w)}</div>`).join('');
   const label = formatMonthLabelZh(ym);
   return `<div class="analysis-period-nav analysis-period-nav--month">
     <div class="analysis-cal-nav-row">
@@ -573,7 +660,10 @@ function analysisYearNavHtml(displayYear, allDaily) {
 function buildAnalysisPeriodNav(period, allDaily, filterDate) {
   const today = todayStr();
   const statsByDate = statsByDateFromDaily(allDaily);
-  const weekStartSunday = addDaysTaipei(getSundayOfWeekContaining(today), appState.analysisWeekOffset * 7);
+  const weekStartSunday = addDaysTaipei(
+    getSundayOfWeekContaining(today),
+    appState.analysisWeekOffset * 7,
+  );
   const monthYm = shiftYm(currentYm(), appState.analysisMonthOffset);
   const y0 = parseInt(today.slice(0, 4), 10);
   const displayYear = y0 + appState.analysisYearOffset;
@@ -595,14 +685,11 @@ function buildAnalysisHistorySection(selectedDate, recordsForDay) {
       : emptyHTML('這天沒有紀錄', '再點同一天可回到整段分析');
   return `<section class="analysis-history-section">
     <div class="analysis-history-head">
-      <div>
-        <div class="analysis-history-kicker">當日明細</div>
+      <div class="analysis-history-heading">
         <div class="analysis-history-title">${esc(selectedDate)}</div>
-        <div class="analysis-history-sub">點卡片可直接檢視或編輯原始紀錄</div>
+        <div class="analysis-history-kicker">當日明細</div>
       </div>
-      <div class="analysis-history-count-wrap">
-        <div class="analysis-history-count">${recordsForDay.length} 筆</div>
-      </div>
+      <div class="analysis-history-count">${recordsForDay.length} 筆</div>
     </div>
     <div class="analysis-history-list">${body}</div>
   </section>`;
@@ -646,7 +733,7 @@ export function renderAnalysis() {
   }
 
   const allRecords = getDailyRecords();
-  const allDaily = allRecords.filter(r => !r._voided && r.type === 'daily');
+  const allDaily = allRecords.filter((r) => !r._voided && r.type === 'daily');
   const periodNav = buildAnalysisPeriodNav(
     appState.analysisPeriod,
     allDaily,
@@ -656,44 +743,32 @@ export function renderAnalysis() {
     ? `<div class="analysis-filter-clear-wrap"><button type="button" class="analysis-filter-clear btn btn-ghost btn-sm" onclick="clearAnalysisDayFilter()">顯示整段期間</button></div>`
     : '';
 
-  const records = allDaily.filter(r => r.date >= fromStr && r.date <= toStr);
+  const records = allDaily.filter((r) => r.date >= fromStr && r.date <= toStr);
+  const analysisModel = buildDailyAnalysisModel(records, { fromStr, toStr, periodLabel });
   const selectedDayHistory =
     appState.analysisFilterDate && fromStr === toStr
-      ? allRecords.filter(r => r.date === appState.analysisFilterDate)
+      ? allRecords.filter((r) => r.date === appState.analysisFilterDate)
       : [];
   const historySectionHtml =
     appState.analysisFilterDate && fromStr === toStr
       ? buildAnalysisHistorySection(appState.analysisFilterDate, selectedDayHistory)
       : '';
   const monthlyReportHtml =
-    appState.analysisPeriod === 'month' && !appState.analysisFilterDate
-      ? renderMonthlyReportSection(buildMonthlyReportModel(allRecords, fromStr, toStr))
+    appState.analysisPeriod !== 'week' && !appState.analysisFilterDate
+      ? renderMonthlyReportSection(
+          buildMonthlyReportModel(allRecords, fromStr, toStr),
+          appState.analysisPeriod === 'year' ? '年結報表' : '月結報表',
+        )
       : '';
 
-  let total = 0;
-  let huTotal = 0;
-  let zhanTotal = 0;
-  const catTotals = {};
-  for (const r of records) {
-    const a = parseFloat(r.amount) || 0;
-    if (r.splitMode === '兩人付') {
-      const hu = parseFloat(r.paidHu) || 0;
-      const zhan = parseFloat(r.paidZhan) || 0;
-      huTotal += hu;
-      zhanTotal += zhan;
-      total += hu + zhan;
-    } else {
-      total += a;
-      if (r.paidBy === USER_A) huTotal += a;
-      else if (r.paidBy === USER_B) zhanTotal += a;
-    }
-    const cat = r.category || '未分類';
-    catTotals[cat] = (catTotals[cat] || 0) + a;
-  }
+  const total = analysisModel.total;
+  const catTotals = Object.fromEntries(
+    analysisModel.categoryRows.map((row) => [row.name, row.amount]),
+  );
 
   const tabs = ['week', 'month', 'year']
     .map(
-      p =>
+      (p) =>
         `<button type="button" class="analysis-tab${appState.analysisPeriod === p ? ' active' : ''}" onclick="setAnalysisPeriod('${p}')" aria-pressed="${appState.analysisPeriod === p ? 'true' : 'false'}">
       ${{ week: '本週', month: '本月', year: '本年' }[p]}
     </button>`,
@@ -702,26 +777,25 @@ export function renderAnalysis() {
 
   if (records.length === 0) {
     el.innerHTML = `
-      <div class="analysis-tabs">${tabs}</div>
-      ${periodNav}
-      ${filterClearHtml}
-      <div class="analysis-period">${esc(periodLabel)}</div>
-      ${monthlyReportHtml}
-      <div class="analysis-empty">
-        <div class="analysis-empty-icon" aria-hidden="true">📊</div>
-        <div class="analysis-empty-text">${esc(periodLabel)} 尚無支出紀錄</div>
-      </div>
-      ${historySectionHtml}`;
+      <div class="daily-analysis-shell">
+        <div class="analysis-tabs">${tabs}</div>
+        ${periodNav}
+        ${filterClearHtml}
+        <div class="analysis-empty">
+          <div class="analysis-empty-text"><strong>${esc(periodLabel)}</strong><span>尚無支出紀錄</span></div>
+        </div>
+        ${historySectionHtml}
+      </div>`;
     if (appState.analysisFilterDate && el.querySelector('.analysis-history-list')) {
       bindScrollReveal(el, '.analysis-history-section, .record-item', { enabled: true });
     }
     return;
   }
 
-  const huR = Math.round(huTotal);
-  const zhanR = Math.round(zhanTotal);
-
-  const { gambleTotal, nonGamblingTotal, nonGamblingSlices } = gamblingSplitFromCatTotals(catTotals, total);
+  const { gambleTotal, nonGamblingTotal, nonGamblingSlices } = gamblingSplitFromCatTotals(
+    catTotals,
+    total,
+  );
   const gambleR = Math.round(gambleTotal);
   const nonGamR = Math.round(nonGamblingTotal);
   const pieDenom = nonGamblingTotal;
@@ -760,7 +834,7 @@ export function renderAnalysis() {
       <div class="analysis-gamble-pl-grid" role="table" aria-label="賭博輸贏">
       ${gamblePlHead}
       ${[USER_A, USER_B]
-        .map(name => {
+        .map((name) => {
           const x = dailyGamblePl[name];
           const wR = Math.round(x.win);
           const lR = Math.round(x.lose);
@@ -809,40 +883,40 @@ export function renderAnalysis() {
       ${makePieChartSVG(pieSlices, pieDenom > 0 ? pieDenom : 1, labelOpts)}
     </div>`;
 
-  const statHuStart = prefersReducedMotion() ? `NT$${huR.toLocaleString()}` : 'NT$0';
-  const statZhanStart = prefersReducedMotion() ? `NT$${zhanR.toLocaleString()}` : 'NT$0';
   const totalPctStart = prefersReducedMotion() ? '100%' : '0%';
   const pieLegendAmtStart = prm ? `NT$${nonGamR.toLocaleString()}` : 'NT$0';
 
   el.innerHTML = `
-    <div class="analysis-tabs">${tabs}</div>
-    ${periodNav}
-    ${filterClearHtml}
-    <div class="analysis-period">${esc(periodLabel)}</div>
-    <div class="analysis-stats-grid">
-      <div class="analysis-stat-card">
-        <div class="analysis-stat-label">${esc(USER_A)} 付出</div>
-        <div class="analysis-stat-val analysis-stat-val--hu" data-analysis-count="${huR}" data-analysis-mode="currency">${statHuStart}</div>
-      </div>
-      <div class="analysis-stat-card">
-        <div class="analysis-stat-label">${esc(USER_B)} 付出</div>
-        <div class="analysis-stat-val analysis-stat-val--zhan" data-analysis-count="${zhanR}" data-analysis-mode="currency">${statZhanStart}</div>
-      </div>
-    </div>
-    ${monthlyReportHtml}
-    ${gamblePlCard}
-    ${pieToggles}
-    ${pieBlock}
-    <div class="analysis-legend-card">
-      ${legend}
-      <div class="analysis-legend-row analysis-legend-row--total" style="--legend-n:${legendIdx}">
-        <div class="analysis-legend-swatch analysis-legend-swatch--empty"></div>
-        <div class="analysis-legend-name analysis-legend-name--total">合計</div>
-        <div class="analysis-legend-pct" data-analysis-count="100" data-analysis-mode="pct">${totalPctStart}</div>
-        <div class="analysis-legend-amt analysis-legend-amt--total" data-analysis-count="${nonGamR}" data-analysis-mode="currency">${pieLegendAmtStart}</div>
-      </div>
-    </div>
-    ${historySectionHtml}`;
+    <div class="daily-analysis-shell">
+      <div class="analysis-tabs">${tabs}</div>
+      ${periodNav}
+      ${filterClearHtml}
+      ${renderDailyAnalysisOverview(analysisModel)}
+      ${historySectionHtml}
+      ${monthlyReportHtml}
+      ${gamblePlCard}
+      <section class="daily-analysis-breakdown" aria-label="分類支出">
+        <div class="daily-analysis-section-head">
+          <div class="daily-analysis-section-title">
+            <strong>分類支出</strong>
+            <small>一般支出 NT$${nonGamR.toLocaleString()}</small>
+          </div>
+          ${pieToggles}
+        </div>
+        <div class="daily-analysis-breakdown-body">
+          ${pieBlock}
+          <div class="daily-analysis-legend">
+            ${legend}
+            <div class="analysis-legend-row analysis-legend-row--total" style="--legend-n:${legendIdx}">
+              <div class="analysis-legend-swatch analysis-legend-swatch--empty"></div>
+              <div class="analysis-legend-name analysis-legend-name--total">合計</div>
+              <div class="analysis-legend-pct" data-analysis-count="100" data-analysis-mode="pct">${totalPctStart}</div>
+              <div class="analysis-legend-amt analysis-legend-amt--total" data-analysis-count="${nonGamR}" data-analysis-mode="currency">${pieLegendAmtStart}</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>`;
 
   playAnalysisCountUps(el);
   if (appState.analysisFilterDate && el.querySelector('.analysis-history-list')) {

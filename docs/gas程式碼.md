@@ -134,7 +134,7 @@ GAS 仍支援把 `photoDataUrl` / `avatarDataUrl` 上傳到 Google Drive，再�
 1. 建立或打開綁定試算表的 Apps Script 專案
 2. 將 [gas/current-state.gs](../gas/current-state.gs) 內容貼上
 3. 視需要設定 Script Properties：
-   - `GEMINI_API_KEY`
+   - `GEMINI_API_KEY`：用於消費項目自動分類
    - `PHOTO_FOLDER_ID`
 4. 部署為 Web App
 5. 把新 URL 更新到 [js/config.js](../js/config.js)

@@ -5,7 +5,9 @@ test.setTimeout(60_000);
 
 const NOTE_PHOTO_FIXTURE = fileURLToPath(new URL('../../icons/icon-512.png', import.meta.url));
 
-test('loads built app, navigates tabs, and registers service worker', async ({ page }, testInfo) => {
+test('loads built app, navigates tabs, and registers service worker', async ({
+  page,
+}, testInfo) => {
   const consoleErrors = [];
   const requestFailures = [];
   const badResponses = [];
@@ -50,22 +52,24 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
     },
   ];
 
-  page.on('console', msg => {
+  page.on('console', (msg) => {
     if (msg.type() === 'error' || msg.type() === 'warning') {
       consoleErrors.push(msg.text());
     }
   });
-  page.on('requestfailed', request => {
-    requestFailures.push(`${request.method()} ${request.url()} ${request.failure()?.errorText || ''}`);
+  page.on('requestfailed', (request) => {
+    requestFailures.push(
+      `${request.method()} ${request.url()} ${request.failure()?.errorText || ''}`,
+    );
   });
-  page.on('response', response => {
+  page.on('response', (response) => {
     if (response.url().includes('/hukeep-accounts/') && response.status() >= 400) {
       badResponses.push(`${response.status()} ${response.url()}`);
     }
   });
 
-  let serverRows = seedRows.map(row => ({ ...row }));
-  await page.route(/https:\/\/script\.google(?:usercontent)?\.com\/.*/, async route => {
+  let serverRows = seedRows.map((row) => ({ ...row }));
+  await page.route(/https:\/\/script\.google(?:usercontent)?\.com\/.*/, async (route) => {
     if (route.request().method() === 'POST') {
       const payload = JSON.parse(route.request().postData() || '{}');
       if (payload.type === 'note' && payload.photoDataUrl !== undefined) {
@@ -75,15 +79,17 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
       }
       if (payload.type === 'note' && payload.action === 'add') {
         serverRows = [
-          ...serverRows.filter(row => !(row.type === 'note' && row.id === payload.id)),
+          ...serverRows.filter((row) => !(row.type === 'note' && row.id === payload.id)),
           { ...payload, action: 'add' },
         ];
       } else if (payload.type === 'note' && payload.action === 'edit') {
-        serverRows = serverRows.map(row =>
-          row.type === 'note' && row.id === payload.id ? { ...row, ...payload, action: 'add' } : row,
+        serverRows = serverRows.map((row) =>
+          row.type === 'note' && row.id === payload.id
+            ? { ...row, ...payload, action: 'add' }
+            : row,
         );
       } else if (payload.type === 'note' && payload.action === 'delete') {
-        serverRows = serverRows.filter(row => !(row.type === 'note' && row.id === payload.id));
+        serverRows = serverRows.filter((row) => !(row.type === 'note' && row.id === payload.id));
       }
       await route.fulfill({
         status: 200,
@@ -134,7 +140,8 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
     const card = document.querySelector('#page-home .home-history-card');
     const item = card?.querySelector('.record-item');
     const more = card?.querySelector('.show-more-btn');
-    if (!card || !item || !more) return { itemPaddingTop: -1, itemPaddingBottom: -1, bottomGap: -1 };
+    if (!card || !item || !more)
+      return { itemPaddingTop: -1, itemPaddingBottom: -1, bottomGap: -1 };
     const itemStyle = getComputedStyle(item);
     return {
       itemPaddingTop: Number.parseFloat(itemStyle.paddingTop),
@@ -146,6 +153,7 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   expect(compactHomeHistory.itemPaddingBottom).toBeLessThanOrEqual(10);
   expect(compactHomeHistory.bottomGap).toBeLessThanOrEqual(2);
   await page.setViewportSize({ width: 378, height: 784 });
+  await page.waitForTimeout(900);
   const compactBalanceCard = await page.evaluate(() => {
     const card = document.getElementById('balance-card');
     const icon = card?.querySelector('.balance-icon');
@@ -215,7 +223,7 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   expect(mobileHomeHeader.boxShadow).toBe('none');
   const squareHeaderTools = await page.evaluate(() => {
     const selectors = ['#backup-open-btn', '#theme-toggle'];
-    return selectors.map(selector => {
+    return selectors.map((selector) => {
       const button = document.querySelector(selector);
       if (!button) return { width: -1, height: -1, radius: '' };
       const rect = button.getBoundingClientRect();
@@ -231,9 +239,13 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
     expect(tool.radius).toBe('8px');
   }
   await page.evaluate(() => window.scrollTo(0, 320));
-  await expect.poll(async () => page.locator('#page-home > .header').evaluate(
-    header => Math.abs(header.getBoundingClientRect().top),
-  )).toBeLessThanOrEqual(1);
+  await expect
+    .poll(async () =>
+      page
+        .locator('#page-home > .header')
+        .evaluate((header) => Math.abs(header.getBoundingClientRect().top)),
+    )
+    .toBeLessThanOrEqual(1);
   await page.evaluate(() => window.scrollTo(0, 0));
   const compactHomeForm = await page.evaluate(() => {
     const body = document.querySelector('#home-form .card-body');
@@ -271,10 +283,14 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
     return {
       titleHeight: titleRect.height,
       buttonHeight: buttonRect.height,
-      centerDelta: Math.abs(titleRect.top + titleRect.height / 2 - (buttonRect.top + buttonRect.height / 2)),
+      centerDelta: Math.abs(
+        titleRect.top + titleRect.height / 2 - (buttonRect.top + buttonRect.height / 2),
+      ),
     };
   });
-  expect(Math.abs(calendarHeaderAlignment.titleHeight - calendarHeaderAlignment.buttonHeight)).toBeLessThanOrEqual(1);
+  expect(
+    Math.abs(calendarHeaderAlignment.titleHeight - calendarHeaderAlignment.buttonHeight),
+  ).toBeLessThanOrEqual(1);
   expect(calendarHeaderAlignment.centerDelta).toBeLessThanOrEqual(1);
   const homeRecordEdgeAlignment = await page.evaluate(() => {
     const list = document.getElementById('home-records');
@@ -289,9 +305,10 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   });
   expect(homeRecordEdgeAlignment.leftDelta).toBeLessThanOrEqual(1);
   expect(homeRecordEdgeAlignment.rightDelta).toBeLessThanOrEqual(1);
-  const homeSettlementRadius = await page.locator('#home-records .record-item.is-settlement').first().evaluate(
-    element => getComputedStyle(element).borderRadius,
-  );
+  const homeSettlementRadius = await page
+    .locator('#home-records .record-item.is-settlement')
+    .first()
+    .evaluate((element) => getComputedStyle(element).borderRadius);
   expect(homeSettlementRadius).toBe('0px');
   const mobileHomeWidth = await page.evaluate(() => ({
     viewport: window.innerWidth,
@@ -306,14 +323,18 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   await expect(page.locator('#page-notes')).toHaveClass(/active/);
   await page.locator('#new-note-btn').click();
   await page.locator('#note-title-input').fill('東京行前清單');
-  await page.locator('#note-body-input').fill(
-    '**護照**\n*充電器*\n\n- 轉接頭\n- 交通卡\n\n雨傘\n常備藥\n第七行完整內容\nhttps://example.com/guide',
-  );
+  await page
+    .locator('#note-body-input')
+    .fill(
+      '**護照**\n*充電器*\n\n- 轉接頭\n- 交通卡\n\n雨傘\n常備藥\n第七行完整內容\nhttps://example.com/guide',
+    );
   await page.locator('#note-photo-input').setInputFiles(NOTE_PHOTO_FIXTURE);
   await expect(page.locator('#note-photo-preview')).toBeVisible();
   await page.locator('#save-note-btn').click();
   await expect(page.locator('.note-card', { hasText: '東京行前清單' })).toBeVisible();
-  await expect.poll(() => serverRows.some(row => row.type === 'note' && row.title === '東京行前清單')).toBe(true);
+  await expect
+    .poll(() => serverRows.some((row) => row.type === 'note' && row.title === '東京行前清單'))
+    .toBe(true);
 
   await page.reload({ waitUntil: 'networkidle' });
   await page.locator('#nav-notes').click();
@@ -324,10 +345,17 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   await expect(restoredNote.locator('.note-card-body em')).toHaveText('充電器');
   await expect(restoredNote.locator('.note-card-body li')).toHaveCount(2);
   await expect(restoredNote.locator('.note-card-photo')).toBeVisible();
-  await expect(restoredNote.locator('.note-link')).toHaveAttribute('href', 'https://example.com/guide');
+  await expect(restoredNote.locator('.note-link')).toHaveAttribute(
+    'href',
+    'https://example.com/guide',
+  );
   await expect(restoredNote.locator('.note-link')).toHaveAttribute('target', '_blank');
-  await page.context().route('https://example.com/**', route =>
-    route.fulfill({ status: 200, contentType: 'text/html', body: '<title>External note link</title>' }),
+  await page.context().route('https://example.com/**', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'text/html',
+      body: '<title>External note link</title>',
+    }),
   );
   const popupPromise = page.waitForEvent('popup');
   await restoredNote.locator('.note-link').click();
@@ -336,7 +364,7 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   expect(linkedPage.url()).toBe('https://example.com/guide');
   await linkedPage.close();
 
-  const collapsedBodyStyle = await restoredNote.locator('.note-card-body').evaluate(element => ({
+  const collapsedBodyStyle = await restoredNote.locator('.note-card-body').evaluate((element) => ({
     color: getComputedStyle(element).color,
     fontSize: getComputedStyle(element).fontSize,
     lineHeight: getComputedStyle(element).lineHeight,
@@ -345,32 +373,37 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   await expect(restoredNote).toHaveClass(/is-expanded/);
   await expect(restoredNote).toHaveAttribute('aria-expanded', 'true');
   const expandAnimationCount = await restoredNote.evaluate(
-    element => element.getAnimations().filter(animation => animation.playState === 'running').length,
+    (element) =>
+      element.getAnimations().filter((animation) => animation.playState === 'running').length,
   );
   expect(expandAnimationCount).toBeGreaterThan(0);
-  const expandAnimationDurations = await restoredNote.evaluate(element =>
-    element.getAnimations({ subtree: true }).map(animation => Number(animation.effect?.getTiming().duration) || 0),
+  const expandAnimationDurations = await restoredNote.evaluate((element) =>
+    element
+      .getAnimations({ subtree: true })
+      .map((animation) => Number(animation.effect?.getTiming().duration) || 0),
   );
   expect(Math.max(...expandAnimationDurations)).toBeGreaterThanOrEqual(440);
-  const expandedBodyStyle = await restoredNote.locator('.note-card-body').evaluate(element => ({
+  const expandedBodyStyle = await restoredNote.locator('.note-card-body').evaluate((element) => ({
     color: getComputedStyle(element).color,
     fontSize: getComputedStyle(element).fontSize,
     lineHeight: getComputedStyle(element).lineHeight,
   }));
   expect(expandedBodyStyle).toEqual(collapsedBodyStyle);
-  const expansionContentTransforms = await restoredNote.locator('.note-card-content').evaluate(element =>
-    element
-      .getAnimations()
-      .flatMap(animation => animation.effect?.getKeyframes?.() || [])
-      .map(frame => frame.transform)
-      .filter(Boolean),
-  );
+  const expansionContentTransforms = await restoredNote
+    .locator('.note-card-content')
+    .evaluate((element) =>
+      element
+        .getAnimations()
+        .flatMap((animation) => animation.effect?.getKeyframes?.() || [])
+        .map((frame) => frame.transform)
+        .filter(Boolean),
+    );
   expect(expansionContentTransforms).toEqual([]);
   await expect(restoredNote.locator('.note-card-body')).toContainText('第七行完整內容');
   await expect(restoredNote.locator('.note-card-photo')).toBeVisible();
-  const expandedBodyFits = await restoredNote.locator('.note-card-body').evaluate(element =>
-    element.scrollHeight <= element.clientHeight + 1,
-  );
+  const expandedBodyFits = await restoredNote
+    .locator('.note-card-body')
+    .evaluate((element) => element.scrollHeight <= element.clientHeight + 1);
   expect(expandedBodyFits).toBe(true);
   await restoredNote.click({ position: { x: 24, y: 24 } });
   await expect(restoredNote).not.toHaveClass(/is-expanded/);
@@ -384,9 +417,9 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   expect(scrollBeforeEdit).toBeGreaterThan(0);
   await restoredNote.getByRole('button', { name: '編輯記事' }).click();
   await expect(page.locator('#note-editor-card')).toBeVisible();
-  const noteEditorBodyFits = await page.locator('#note-body-input').evaluate(
-    element => element.scrollHeight <= element.clientHeight + 1,
-  );
+  const noteEditorBodyFits = await page
+    .locator('#note-body-input')
+    .evaluate((element) => element.scrollHeight <= element.clientHeight + 1);
   expect(noteEditorBodyFits).toBe(true);
   const editorUsesOriginalNoteCard = await page.evaluate(() => {
     const card = document.querySelector('.note-card[data-note-id]');
@@ -428,15 +461,21 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   await expect(forcedNote).toHaveClass(/is-force-expanded/);
   await expect(forcedNote).toHaveClass(/is-expanded/);
   await expect(forcedNote).toHaveAttribute('aria-expanded', 'true');
-  await expect.poll(() =>
-    serverRows.some(row => row.type === 'note' && row.title === '固定展開記事' && row.forceExpanded === true),
-  ).toBe(true);
+  await expect
+    .poll(() =>
+      serverRows.some(
+        (row) => row.type === 'note' && row.title === '固定展開記事' && row.forceExpanded === true,
+      ),
+    )
+    .toBe(true);
   await forcedNote.click({ position: { x: 24, y: 24 } });
   await expect(forcedNote).toHaveClass(/is-expanded/);
   await expect(forcedNote).not.toHaveAttribute('tabindex');
   await page.reload({ waitUntil: 'networkidle' });
   await page.locator('#nav-notes').click();
-  const restoredForcedNote = page.locator('#notes-list .note-card', { hasText: '固定展開記事' }).first();
+  const restoredForcedNote = page
+    .locator('#notes-list .note-card', { hasText: '固定展開記事' })
+    .first();
   await expect(restoredForcedNote).toHaveClass(/is-force-expanded/);
   await expect(restoredForcedNote).toHaveClass(/is-expanded/);
   await restoredForcedNote.click({ position: { x: 24, y: 24 } });
@@ -444,7 +483,7 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   await restoredForcedNote.getByRole('button', { name: '編輯記事' }).click();
   await expect(restoredForcedNote).toHaveClass(/is-editing/);
   await expect(restoredForcedNote.locator('#note-editor-card')).toBeVisible();
-  const forcedNoteEditDisplay = await restoredForcedNote.evaluate(card => ({
+  const forcedNoteEditDisplay = await restoredForcedNote.evaluate((card) => ({
     topline: getComputedStyle(card.querySelector('.note-card-topline')).display,
     content: getComputedStyle(card.querySelector('.note-card-content')).display,
     editor: getComputedStyle(card.querySelector('#note-editor-card')).display,
@@ -468,6 +507,46 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
 
   await page.locator('#nav-analysis').click();
   await expect(page.locator('#nav-analysis')).toHaveClass(/active/);
+  await page.setViewportSize({ width: 378, height: 784 });
+  await page.getByRole('button', { name: '本年' }).click();
+  await expect(page.locator('.daily-analysis-overview')).toBeVisible();
+  await expect(page.locator('.daily-analysis-ai')).toHaveCount(0);
+  await expect(page.locator('#analysis-content .analysis-stat-card')).toHaveCount(0);
+  await expect(page.locator('#analysis-content .analysis-legend-card')).toHaveCount(0);
+  const analysisLayout = await page.evaluate(() => {
+    const overview = document.querySelector('.daily-analysis-overview');
+    return {
+      pageHeight: document.documentElement.scrollHeight,
+      overviewHeight: overview?.getBoundingClientRect().height || -1,
+      nestedCards: overview?.querySelectorAll('.analysis-stat-card, .card').length ?? -1,
+      pageWidth: document.documentElement.scrollWidth,
+      viewportWidth: window.innerWidth,
+    };
+  });
+  expect(analysisLayout.overviewHeight).toBeLessThanOrEqual(150);
+  expect(analysisLayout.nestedCards).toBe(0);
+  expect(analysisLayout.pageHeight).toBeLessThanOrEqual(1250);
+  expect(analysisLayout.pageWidth).toBeLessThanOrEqual(analysisLayout.viewportWidth);
+  await page.waitForTimeout(1000);
+  await page.screenshot({ path: testInfo.outputPath('daily-analysis-light.png') });
+  await page.evaluate(() => window.toggleTheme());
+  await expect(page.locator('html')).toHaveClass(/dark/);
+  await page.waitForTimeout(1000);
+  const darkAnalysisLayout = await page.evaluate(() => ({
+    pageWidth: document.documentElement.scrollWidth,
+    viewportWidth: window.innerWidth,
+  }));
+  expect(darkAnalysisLayout.pageWidth).toBeLessThanOrEqual(darkAnalysisLayout.viewportWidth);
+  await page.screenshot({ path: testInfo.outputPath('daily-analysis-dark.png') });
+  await page.evaluate(() => window.toggleTheme());
+  await expect(page.locator('html')).not.toHaveClass(/dark/);
+  await expect(page.locator('.monthly-report-card')).toContainText('年結報表');
+  const annualReportStyle = await page.locator('.monthly-report-card').evaluate((report) => {
+    const style = getComputedStyle(report);
+    return { backgroundColor: style.backgroundColor, borderRadius: style.borderRadius };
+  });
+  expect(annualReportStyle.backgroundColor).toBe('rgba(0, 0, 0, 0)');
+  expect(annualReportStyle.borderRadius).toBe('0px');
 
   await page.setViewportSize({ width: 360, height: 800 });
   serverRows = [
@@ -487,16 +566,22 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   const noteUpdateBanner = page.locator('#note-update-banner');
   await expect(noteUpdateBanner).toBeVisible();
   await expect(page.locator('#note-update-title')).toHaveText('其他裝置新增的記事');
-  const noticeAnimationCount = await noteUpdateBanner.evaluate(element =>
-    element.getAnimations({ subtree: true }).filter(animation => animation.playState === 'running').length,
+  const noticeAnimationCount = await noteUpdateBanner.evaluate(
+    (element) =>
+      element
+        .getAnimations({ subtree: true })
+        .filter((animation) => animation.playState === 'running').length,
   );
   expect(noticeAnimationCount).toBeGreaterThan(0);
-  const noticeFitsViewport = await noteUpdateBanner.evaluate(element => {
+  const noticeFitsViewport = await noteUpdateBanner.evaluate((element) => {
     const rect = element.getBoundingClientRect();
     return rect.left >= -1 && rect.right <= window.innerWidth + 1;
   });
   expect(noticeFitsViewport).toBe(true);
-  await page.screenshot({ path: testInfo.outputPath('new-note-banner-mobile.png'), fullPage: false });
+  await page.screenshot({
+    path: testInfo.outputPath('new-note-banner-mobile.png'),
+    fullPage: false,
+  });
   await page.locator('#note-update-view').click();
   const syncedNote = page.locator('.note-card[data-note-id="remote-note-seed-1"]');
   await expect(page.locator('#page-notes')).toHaveClass(/active/);
@@ -506,19 +591,16 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
 
   await page.locator('#nav-notes').click();
   await expect(page.locator('#page-notes')).toHaveClass(/active/);
-  const mobileNotesSearchHeight = await page.locator('.notes-search').evaluate(
-    element => element.getBoundingClientRect().height,
-  );
+  const mobileNotesSearchHeight = await page
+    .locator('.notes-search')
+    .evaluate((element) => element.getBoundingClientRect().height);
   expect(mobileNotesSearchHeight).toBeLessThanOrEqual(44);
   await expect(page.locator('.note-card', { hasText: '東京行前清單' })).toHaveCount(1);
   const mobileNote = page.locator('.note-card', { hasText: '東京行前清單' });
   const controlsWithTapHighlight = await page.evaluate(() =>
     Array.from(document.querySelectorAll('button, [role="button"]'))
-      .filter(
-        element =>
-          getComputedStyle(element).webkitTapHighlightColor !== 'rgba(0, 0, 0, 0)',
-      )
-      .map(element => element.id || element.getAttribute('aria-label') || element.className)
+      .filter((element) => getComputedStyle(element).webkitTapHighlightColor !== 'rgba(0, 0, 0, 0)')
+      .map((element) => element.id || element.getAttribute('aria-label') || element.className)
       .slice(0, 10),
   );
   expect(controlsWithTapHighlight).toEqual([]);
@@ -549,7 +631,10 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   });
   expect(mobileNoteOptionsFit).toBe(true);
   await page.waitForTimeout(650);
-  await page.screenshot({ path: testInfo.outputPath('note-editor-inline-mobile.png'), fullPage: true });
+  await page.screenshot({
+    path: testInfo.outputPath('note-editor-inline-mobile.png'),
+    fullPage: true,
+  });
   await page.getByRole('button', { name: '關閉編輯器' }).click();
   await page.locator('#new-note-btn').click();
   await expect(page.locator('#note-editor-card')).toBeVisible();
@@ -566,7 +651,7 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
       viewportWidth: window.innerWidth,
       documentWidth: document.documentElement.scrollWidth,
       navItems: document.querySelectorAll('#bottom-nav .nav-btn').length,
-      outsideViewport: selectors.filter(selector => {
+      outsideViewport: selectors.filter((selector) => {
         const rect = document.querySelector(selector)?.getBoundingClientRect();
         return !rect || rect.left < -1 || rect.right > window.innerWidth + 1;
       }),
@@ -583,11 +668,18 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
   await page.evaluate(() => document.documentElement.classList.add('dark'));
   await expect(page.locator('.note-card').first()).toHaveCSS('background-color', 'rgb(30, 35, 41)');
   await page.screenshot({ path: testInfo.outputPath('notes-mobile-dark.png'), fullPage: true });
-  await page.locator('.note-card', { hasText: '東京行前清單' }).click({ position: { x: 24, y: 24 } });
+  await page
+    .locator('.note-card', { hasText: '東京行前清單' })
+    .click({ position: { x: 24, y: 24 } });
   await expect(page.locator('.note-card', { hasText: '東京行前清單' })).toHaveClass(/is-expanded/);
   await page.waitForTimeout(650);
-  await page.screenshot({ path: testInfo.outputPath('note-expanded-mobile-dark.png'), fullPage: true });
-  await page.locator('.note-card', { hasText: '東京行前清單' }).click({ position: { x: 24, y: 24 } });
+  await page.screenshot({
+    path: testInfo.outputPath('note-expanded-mobile-dark.png'),
+    fullPage: true,
+  });
+  await page
+    .locator('.note-card', { hasText: '東京行前清單' })
+    .click({ position: { x: 24, y: 24 } });
 
   const mobileHeaderRoutes = [
     { route: 'home', selector: '#page-home > .header' },
@@ -597,18 +689,21 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
     { route: 'analysis', selector: '#page-analysis > .header' },
   ];
   for (const { route, id, selector } of mobileHeaderRoutes) {
-    await page.evaluate(({ nextRoute, routeId }) => {
-      window.scrollTo(0, 0);
-      window.navigate(nextRoute, routeId);
-    }, { nextRoute: route, routeId: id });
+    await page.evaluate(
+      ({ nextRoute, routeId }) => {
+        window.scrollTo(0, 0);
+        window.navigate(nextRoute, routeId);
+      },
+      { nextRoute: route, routeId: id },
+    );
     await expect(page.locator(selector)).toBeVisible();
     await page.waitForTimeout(500);
     if (route === 'tripDetail') {
-      await page.locator('#detail-name').evaluate(element => {
+      await page.locator('#detail-name').evaluate((element) => {
         element.textContent = '台南有很多公園';
       });
     }
-    const headerBar = await page.locator(selector).evaluate(header => {
+    const headerBar = await page.locator(selector).evaluate((header) => {
       const rect = header.getBoundingClientRect();
       const style = getComputedStyle(header);
       return {
@@ -629,7 +724,7 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
     expect(headerBar.backdropFilter).toBe('none');
     expect(headerBar.boxShadow).toBe('none');
     if (route === 'tripDetail') {
-      const detailHeaderLayout = await page.locator(selector).evaluate(header => {
+      const detailHeaderLayout = await page.locator(selector).evaluate((header) => {
         const visibleItems = [
           header.querySelector('.back-btn'),
           header.querySelector('#detail-name'),
@@ -637,12 +732,15 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
           header.querySelector('.trip-header-stats-btn'),
           header.querySelector('.trip-lottery-trigger'),
           ...header.querySelectorAll('#trip-header-actions > *'),
-        ].filter(element => element && getComputedStyle(element).display !== 'none');
-        const rects = visibleItems.map(element => element.getBoundingClientRect());
+        ].filter((element) => element && getComputedStyle(element).display !== 'none');
+        const rects = visibleItems.map((element) => element.getBoundingClientRect());
         return {
-          centerDelta: Math.max(...rects.map(rect => rect.top + rect.height / 2))
-            - Math.min(...rects.map(rect => rect.top + rect.height / 2)),
-          overlaps: rects.some((rect, index) => index > 0 && rect.left < rects[index - 1].right - 1),
+          centerDelta:
+            Math.max(...rects.map((rect) => rect.top + rect.height / 2)) -
+            Math.min(...rects.map((rect) => rect.top + rect.height / 2)),
+          overlaps: rects.some(
+            (rect, index) => index > 0 && rect.left < rects[index - 1].right - 1,
+          ),
         };
       });
       expect(detailHeaderLayout.centerDelta).toBeLessThanOrEqual(1);
@@ -656,7 +754,7 @@ test('loads built app, navigates tabs, and registers service worker', async ({ p
     while (Date.now() < deadline) {
       const registration = await navigator.serviceWorker.getRegistration();
       if (registration?.scope) return registration.scope;
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
     return '';
   });
